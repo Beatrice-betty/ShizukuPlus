@@ -12,7 +12,7 @@
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="16"
+        android:strokeWidth="26"
         android:strokeLineJoin="round"
         android:pathData="M 311.0,224.0 L 266.75,300.64 L 178.25,300.64 L 134.0,224.0 L 178.25,147.36 L 266.75,147.36 Z" />
     <!-- Plus badge centred on the hexagon's top-right vertex (266.75, 147.36), matching
