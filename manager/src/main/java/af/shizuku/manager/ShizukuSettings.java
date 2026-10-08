@@ -274,9 +274,27 @@ public class ShizukuSettings {
         return getPreferences().getBoolean(Keys.KEY_EXPRESSIVE_SHAPES, true);
     }
 
-    /** "classic" (default) or "timeline". */
+    /** "timeline" (default) or "classic". */
     public static String getChangelogStyle() {
-        return getPreferences().getString(Keys.KEY_CHANGELOG_STYLE, "classic");
+        return getPreferences().getString(Keys.KEY_CHANGELOG_STYLE, "timeline");
+    }
+
+    public static void setChangelogStyle(String style) {
+        getPreferences().edit().putString(Keys.KEY_CHANGELOG_STYLE, style).apply();
+    }
+
+    /** Whether the one-time "choose your changelog style" prompt has been answered or skipped. */
+    public static boolean isChangelogStylePrompted() {
+        return getPreferences().contains("changelog_style_prompted");
+    }
+
+    public static void setChangelogStylePrompted() {
+        getPreferences().edit().putBoolean("changelog_style_prompted", true).apply();
+    }
+
+    /** True for installs that predate the style prompt: they have finished onboarding or seen a changelog. */
+    public static boolean isReturningUser() {
+        return getPreferences().getBoolean("onboarding_seen", false) || getLastSeenChangelogVersion() != -1;
     }
 
     public static boolean isExpressiveAnimationsEnabled() {

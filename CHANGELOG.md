@@ -43,7 +43,7 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 ### 🎨 UI / Visual Polish
 
 #### Changelog
-- **New optional "Timeline" changelog style** (Settings → Personalization → Changelog style; "Classic" remains the default) — releases sit on a vertical rail with a glowing node each, newest open and older folded. Changes are grouped into tonal cards (Features, Fixes, UI & polish, Docs, Other) with icon chips, long sections fold behind "Show more", inline `code` renders as chips, and recent releases show relative dates ("2 days ago"). Latest / Installed / Pre-release / New badges and a version summary card sit on top. Filter by change type, sort by newest, oldest or most changes, and older releases load as you scroll. Design inspired by Morphe Manager.
+- **New "Timeline" changelog style, now the default** (Settings → Personalization → Changelog style switches back to "Classic"; existing users get a one-time chooser with previews of both) — releases sit on a vertical rail with a glowing node each, newest open and older folded. Changes are grouped into tonal cards (Features, Fixes, UI & polish, Docs, Other) with icon chips, long sections fold behind "Show more", inline `code` renders as chips, and recent releases show relative dates ("2 days ago"). Latest / Installed / Pre-release / New badges and a version summary card sit on top. Filter by change type, sort by newest, oldest or most changes, and older releases load as you scroll. Design inspired by Morphe Manager.
 
 #### Activity Log
 - **Filter and sort the activity log** — filter chips by event type (Start, Stop, Permission, App, Watchdog, System) and a sort menu (newest, oldest, by app).

@@ -1252,6 +1252,12 @@
     <string name="changelog_tag_new">New</string>
     <string name="settings_changelog_style">Changelog style</string>
     <string name="changelog_style_classic">Classic</string>
+    <string name="changelog_style_classic_desc">One release at a time, with version chips</string>
+    <string name="changelog_style_timeline_desc">All releases on a rail, grouped, filterable</string>
+    <string name="changelog_style_sheet_title">Choose your changelog style</string>
+    <string name="changelog_style_sheet_subtitle">What\'s New has a new look. Pick the one you prefer.</string>
+    <string name="changelog_style_sheet_hint">You can change this anytime in Settings → Personalization.</string>
+    <string name="changelog_style_sheet_confirm">Use this style</string>
     <string name="changelog_style_timeline">Timeline</string>
     <string name="changelog_kind_features">Features</string>
     <string name="changelog_kind_fixes">Fixes</string>

@@ -41,7 +41,7 @@ class MainActivity : HomeActivity() {
             // Show what's new after an update. Separate from the Sentry-quota-reset version
             // tracking in ShizukuApplication.onCreate() — that one bumps its own flag before any
             // Activity runs, so this needs its own last-seen key or it would never see an advance.
-            checkAndShowChangelog()
+            maybePromptChangelogStyle()
 
             Timber.d("MainActivity onCreate complete")
             Sentry.addBreadcrumb(Breadcrumb("MainActivity onCreate complete"))
@@ -100,6 +100,34 @@ class MainActivity : HomeActivity() {
      *
      * Supports both the new "r{N}" tag format and the legacy "v{semver}.r{N}" format.
      */
+    /**
+     * Returning users get a one-time chance to choose between the Timeline (new default) and Classic
+     * changelog before the What's New dialog opens; fresh installs just get the default.
+     */
+    private fun maybePromptChangelogStyle() {
+        if (ShizukuSettings.isChangelogStylePrompted()) {
+            checkAndShowChangelog()
+            return
+        }
+        if (!ShizukuSettings.isReturningUser()) {
+            ShizukuSettings.setChangelogStylePrompted()
+            checkAndShowChangelog()
+            return
+        }
+        supportFragmentManager.setFragmentResultListener(
+            af.shizuku.manager.home.ChangelogStyleSheet.RESULT_KEY,
+            this,
+        ) { _, _ -> checkAndShowChangelog() }
+        try {
+            af.shizuku.manager.home.ChangelogStyleSheet()
+                .show(supportFragmentManager, af.shizuku.manager.home.ChangelogStyleSheet.TAG)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to show changelog style sheet")
+            ShizukuSettings.setChangelogStylePrompted()
+            checkAndShowChangelog()
+        }
+    }
+
     private fun checkAndShowChangelog() {
         val currentCode =
             try {
