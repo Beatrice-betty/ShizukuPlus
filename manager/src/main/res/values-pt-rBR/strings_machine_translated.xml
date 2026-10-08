@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MACHINE-ASSISTED TRANSLATIONS (Brazilian Portuguese) - NEEDS NATIVE REVIEW.
+  Drafted with AI assistance to fill missing strings. If you are a native speaker, please review
+  and correct these, then move each corrected string into strings.xml (delete it here: a key
+  must live in only one file). Thank you! See TRANSLATING.md.
+-->
+<resources>
+    <string name="home_wireless_adb_button_reconnect">Reconectar</string>
+    <string name="settings_tcp_randomize_port">Aleatorizar porta TCP</string>
+    <string name="settings_tcp_randomize_port_summary">Escolhe uma porta aleatória na faixa alta (49152–65535) para reduzir a exposição a scanners de portas</string>
+    <string name="snackbar_tcp_port_randomized">Porta TCP aleatorizada para %1$d</string>
+    <string name="settings_tcp_auto_close_port">Fechar porta TCP automaticamente ao parar</string>
+    <string name="settings_tcp_auto_close_port_summary">Desativa a depuração sem fio quando o Shizuku para, fechando a porta TCP de escuta do ADB</string>
+    <string name="activity_log_sort_by_app">Por app</string>
+    <string name="activity_log_type_start">Início</string>
+    <string name="activity_log_type_stop">Parada</string>
+    <string name="activity_log_type_permission">Permissão</string>
+    <string name="activity_log_type_app_mgmt">App</string>
+    <string name="activity_log_type_watchdog">Watchdog</string>
+    <string name="activity_log_type_system">Sistema</string>
+    <string name="activity_log_type_other">Evento</string>
+    <string name="settings_changelog_style">Estilo do changelog</string>
+    <string name="changelog_style_classic">Clássico</string>
+    <string name="changelog_style_classic_desc">Uma versão por vez, com chips de versão</string>
+    <string name="changelog_style_timeline_desc">Todas as versões em uma linha, agrupadas e filtráveis</string>
+    <string name="changelog_style_sheet_title">Escolha o estilo do changelog</string>
+    <string name="changelog_style_sheet_subtitle">As Novidades têm um novo visual. Escolha o que preferir.</string>
+    <string name="changelog_style_sheet_hint">Você pode alterar isso a qualquer momento em Configurações → Personalização.</string>
+    <string name="changelog_style_sheet_confirm">Usar este estilo</string>
+    <string name="changelog_style_timeline">Linha do tempo</string>
+    <string name="changelog_kind_features">Recursos</string>
+    <string name="changelog_kind_fixes">Correções</string>
+    <string name="changelog_kind_ui">Interface &amp; acabamento</string>
+    <string name="changelog_kind_docs">Documentação</string>
+    <string name="changelog_kind_other">Outros</string>
+    <string name="changelog_filter_all">Todos</string>
+    <string name="changelog_filter_empty">Nenhuma alteração corresponde a este filtro.</string>
+    <string name="changelog_sort_newest">Mais recentes primeiro</string>
+    <string name="changelog_sort_oldest">Mais antigas primeiro</string>
+    <string name="changelog_sort_most_changes">Mais alterações</string>
+    <string name="changelog_badge_latest">Mais recente</string>
+    <string name="changelog_badge_installed">Instalada</string>
+    <string name="changelog_badge_prerelease">Pré-lançamento</string>
+    <string name="changelog_badge_new">Nova</string>
+    <string name="changelog_show_more">Mostrar mais %d</string>
+    <string name="changelog_show_less">Mostrar menos</string>
+    <string name="changelog_older_retry">Não foi possível carregar versões mais antigas. Tentar novamente</string>
+    <string name="changelog_summary_new_releases">%d novas versões</string>
+    <string name="changelog_summary_up_to_date">Você está atualizado</string>
+    <string name="settings_sync_peer_title">Sincronizar com %1$s</string>
+    <string name="settings_sync_peer_summary_installed">%1$s está instalado • Toque para sincronizar as configurações</string>
+    <string name="settings_sync_peer_summary_not_installed">%1$s não está instalado neste dispositivo</string>
+    <string name="settings_sync_peer_not_installed_dialog">%1$s não está instalado no momento. Ao instalar %1$s para testes ou como substituto direto, você poderá importar e sincronizar as configurações entre os dois apps sem complicações.</string>
+    <string name="settings_sync_peer_import">Importar configurações de %1$s</string>
+    <string name="settings_sync_peer_export">Exportar configurações para %1$s</string>
+    <string name="settings_sync_peer_import_success">Configurações importadas de %1$s com sucesso</string>
+    <string name="settings_sync_peer_export_success">Configurações exportadas para %1$s com sucesso</string>
+    <string name="settings_sync_peer_failed">Falha ao sincronizar as configurações com %1$s. Verifique se os dois apps estão instalados e atualizados.</string>
+    <string name="settings_auto_sync_peer_title">Sincronização automática com %1$s</string>
+    <string name="settings_auto_sync_peer_summary">Sincroniza automaticamente preferências e configurações ao alternar entre os apps</string>
+    <string name="compat_hub_uninstall_btn">Desinstalar Hub</string>
+</resources>

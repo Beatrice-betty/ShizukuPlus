@@ -411,19 +411,25 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             int userId = UserHandleCompat.getUserId(android.os.Process.myUid());
             java.util.List<PackageInfo> packages =
                 InstalledPackagesCompat.getInstalledPackagesNoThrow(PackageManager.GET_PERMISSIONS, userId);
-            int granted = 0;
+            // Grant each (package, permission) pair only once: re-granting on every restart silently
+            // undid manual `pm revoke` calls (#571).
+            java.util.Set<String> already = configManager.getAutoGrantedPermissions();
+            java.util.List<String> newlyGranted = new java.util.ArrayList<>();
             for (PackageInfo pi : packages) {
                 if (pi.requestedPermissions == null) continue;
                 for (String perm : pi.requestedPermissions) {
                     if (perm == null || !SHELL_GRANTABLE_PERMISSIONS.contains(perm)) continue;
+                    String key = pi.packageName + "|" + perm;
+                    if (already.contains(key)) continue;
                     try {
                         Android17Compat.grantRuntimePermission(pi.packageName, perm, userId);
-                        granted++;
+                        newlyGranted.add(key);
                     } catch (Throwable ignored) {
                     }
                 }
             }
-            LOGGER.i("autoGrant: granted/refreshed %d privileged permission grants", granted);
+            configManager.addAutoGrantedPermissions(newlyGranted);
+            LOGGER.i("autoGrant: granted %d new privileged permission grants (%d already handled)", newlyGranted.size(), already.size());
         } catch (Throwable e) {
             LOGGER.w(e, "autoGrant: scan failed");
         }

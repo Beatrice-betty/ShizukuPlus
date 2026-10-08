@@ -301,6 +301,24 @@ public class ShizukuConfigManager extends ConfigManager {
         }
     }
 
+    public java.util.Set<String> getAutoGrantedPermissions() {
+        synchronized (this) {
+            if (config.autoGrantedPermissions == null) config.autoGrantedPermissions = new java.util.ArrayList<>();
+            return new java.util.HashSet<>(config.autoGrantedPermissions);
+        }
+    }
+
+    public void addAutoGrantedPermissions(java.util.Collection<String> keys) {
+        if (keys.isEmpty()) return;
+        synchronized (this) {
+            if (config.autoGrantedPermissions == null) config.autoGrantedPermissions = new java.util.ArrayList<>();
+            java.util.Set<String> merged = new java.util.LinkedHashSet<>(config.autoGrantedPermissions);
+            merged.addAll(keys);
+            config.autoGrantedPermissions = new java.util.ArrayList<>(merged);
+            scheduleWriteLocked();
+        }
+    }
+
     public void markPermGrantMigrationDone() {
         synchronized (this) {
             config.permGrantMigrationDone = true;

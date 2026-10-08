@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MACHINE-ASSISTED TRANSLATIONS (Ukrainian) - NEEDS NATIVE REVIEW.
+  Drafted with AI assistance to fill missing strings. If you are a native speaker, please review
+  and correct these, then move each corrected string into strings.xml (delete it here: a key
+  must live in only one file). Thank you! See TRANSLATING.md.
+-->
+<resources>
+    <string name="home_wireless_adb_button_reconnect">Підключити знову</string>
+    <string name="settings_tcp_randomize_port">Випадковий порт TCP</string>
+    <string name="settings_tcp_randomize_port_summary">Вибирати випадковий порт із високого діапазону (49152–65535), щоб зменшити ризик виявлення сканерами портів</string>
+    <string name="snackbar_tcp_port_randomized">Порт TCP змінено на %1$d</string>
+    <string name="settings_tcp_auto_close_port">Автоматично закривати порт TCP при зупинці</string>
+    <string name="settings_tcp_auto_close_port_summary">Вимикати бездротове налагодження, коли Shizuku зупиняється, і закривати порт ADB TCP</string>
+    <string name="activity_log_sort_by_app">За застосунком</string>
+    <string name="activity_log_type_start">Запуск</string>
+    <string name="activity_log_type_stop">Зупинка</string>
+    <string name="activity_log_type_permission">Дозвіл</string>
+    <string name="activity_log_type_app_mgmt">Застосунок</string>
+    <string name="activity_log_type_watchdog">Watchdog</string>
+    <string name="activity_log_type_system">Система</string>
+    <string name="activity_log_type_other">Подія</string>
+    <string name="settings_changelog_style">Стиль списку змін</string>
+    <string name="changelog_style_classic">Класичний</string>
+    <string name="changelog_style_classic_desc">Один випуск за раз, з позначками версій</string>
+    <string name="changelog_style_timeline_desc">Усі випуски на одній стрічці, згруповані, з фільтрами</string>
+    <string name="changelog_style_sheet_title">Оберіть стиль списку змін</string>
+    <string name="changelog_style_sheet_subtitle">Розділ «Що нового» має новий вигляд. Оберіть той, що вам до вподоби.</string>
+    <string name="changelog_style_sheet_hint">Це можна змінити будь-коли в Налаштуваннях → Персоналізація.</string>
+    <string name="changelog_style_sheet_confirm">Використати цей стиль</string>
+    <string name="changelog_style_timeline">Стрічка</string>
+    <string name="changelog_kind_features">Функції</string>
+    <string name="changelog_kind_fixes">Виправлення</string>
+    <string name="changelog_kind_ui">Інтерфейс і вдосконалення</string>
+    <string name="changelog_kind_docs">Документація</string>
+    <string name="changelog_kind_other">Інше</string>
+    <string name="changelog_filter_all">Усі</string>
+    <string name="changelog_filter_empty">Немає змін, що відповідають фільтру.</string>
+    <string name="changelog_sort_newest">Спочатку нові</string>
+    <string name="changelog_sort_oldest">Спочатку старі</string>
+    <string name="changelog_sort_most_changes">Найбільше змін</string>
+    <string name="changelog_badge_latest">Остання</string>
+    <string name="changelog_badge_installed">Встановлено</string>
+    <string name="changelog_badge_prerelease">Пререліз</string>
+    <string name="changelog_badge_new">Нове</string>
+    <string name="changelog_show_more">Показати ще %d</string>
+    <string name="changelog_show_less">Показати менше</string>
+    <string name="changelog_older_retry">Не вдалося завантажити старіші випуски. Повторити</string>
+    <string name="changelog_summary_new_releases">Нових випусків: %d</string>
+    <string name="changelog_summary_up_to_date">У вас остання версія</string>
+    <string name="settings_sync_peer_title">Синхронізація з %1$s</string>
+    <string name="settings_sync_peer_summary_installed">%1$s встановлено • Торкніться, щоб синхронізувати налаштування</string>
+    <string name="settings_sync_peer_summary_not_installed">%1$s не встановлено на цьому пристрої</string>
+    <string name="settings_sync_peer_not_installed_dialog">%1$s наразі не встановлено. Коли ви встановите %1$s для тестування або як пряму заміну, ви зможете безперешкодно імпортувати та синхронізувати налаштування між обома застосунками.</string>
+    <string name="settings_sync_peer_import">Імпортувати налаштування з %1$s</string>
+    <string name="settings_sync_peer_export">Експортувати налаштування до %1$s</string>
+    <string name="settings_sync_peer_import_success">Налаштування успішно імпортовано з %1$s</string>
+    <string name="settings_sync_peer_export_success">Налаштування успішно експортовано до %1$s</string>
+    <string name="settings_sync_peer_failed">Не вдалося синхронізувати налаштування з %1$s. Переконайтеся, що обидва застосунки встановлено й оновлено.</string>
+    <string name="settings_auto_sync_peer_title">Автосинхронізація з %1$s</string>
+    <string name="settings_auto_sync_peer_summary">Автоматично синхронізувати параметри та конфігурації під час перемикання між застосунками</string>
+    <string name="compat_hub_uninstall_btn">Видалити Hub</string>
+</resources>

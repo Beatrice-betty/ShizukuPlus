@@ -43,7 +43,8 @@ def placeholders(s):
 
 def fix_escapes(v):
     if v.lstrip().startswith('<![CDATA['):
-        return v
+        # aapt still processes escapes inside CDATA: apostrophes must be backslash-escaped.
+        return re.sub(r"(?<!\\)'", r"\\'", v)
     if v.strip().startswith('"') and v.strip().endswith('"'):
         return v
     v = re.sub(r"(?<!\\)'", r"\\'", v)

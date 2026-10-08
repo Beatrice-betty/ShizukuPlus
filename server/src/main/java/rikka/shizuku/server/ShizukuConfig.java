@@ -22,6 +22,11 @@ public class ShizukuConfig {
     @SerializedName("permGrantMigrationDone")
     public boolean permGrantMigrationDone = false;
 
+    // "package|permission" pairs the root auto-grant bridge has already granted once. They are never
+    // re-granted, so a manual `pm revoke` survives server restarts (#571).
+    @SerializedName("autoGrantedPermissions")
+    public List<String> autoGrantedPermissions = new ArrayList<>();
+
     public static class PackageEntry extends ConfigPackageEntry {
 
         @SerializedName("uid")
