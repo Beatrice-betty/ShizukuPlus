@@ -104,6 +104,15 @@
             android:icon="@drawable/ic_settings_suggest_24" />
 
         <rikka.preference.SimpleMenuPreference
+            android:key="changelog_style"
+            android:title="@string/settings_changelog_style"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="classic"
+            android:entries="@array/changelog_styles"
+            android:entryValues="@array/changelog_styles_value"
+            android:icon="@drawable/ic_article_24" />
+
+        <rikka.preference.SimpleMenuPreference
             android:key="icon_style"
             android:title="@string/settings_icon_style"
             app:useSimpleSummaryProvider="true"

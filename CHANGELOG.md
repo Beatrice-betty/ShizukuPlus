@@ -42,6 +42,9 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 
 ### 🎨 UI / Visual Polish
 
+#### Changelog
+- **New optional "Timeline" changelog style** (Settings → Personalization → Changelog style; "Classic" remains the default) — releases sit on a vertical rail with a glowing node each, newest open and older folded. Changes are grouped into tonal cards (Features, Fixes, UI & polish, Docs, Other) with icon chips, long sections fold behind "Show more", inline `code` renders as chips, and recent releases show relative dates ("2 days ago"). Latest / Installed / Pre-release / New badges and a version summary card sit on top. Filter by change type, sort by newest, oldest or most changes, and older releases load as you scroll. Design inspired by Morphe Manager.
+
 #### Activity Log
 - **Redesigned activity log** — each entry now shows a colour-coded event type (start, stop, permission, app, watchdog, system) with a tonal app icon and accent bar. Shizuku now also logs when an app connects, requests permission, or binds a user service.
 - **Haptics and motion polish** — Start/ADB buttons give a tap, onboarding switches use proper on/off haptics, and the status-dot pulse now respects the expressive-animations setting.

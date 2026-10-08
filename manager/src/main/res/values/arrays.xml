@@ -136,4 +136,14 @@
         <item>SLATE</item>
     </string-array>
 
+
+    <string-array name="changelog_styles">
+        <item>@string/changelog_style_classic</item>
+        <item>@string/changelog_style_timeline</item>
+    </string-array>
+
+    <string-array name="changelog_styles_value">
+        <item>classic</item>
+        <item>timeline</item>
+    </string-array>
 </resources>

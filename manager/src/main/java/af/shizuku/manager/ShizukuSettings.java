@@ -144,6 +144,7 @@ public class ShizukuSettings {
         public static final String KEY_EXPRESSIVE_SHAPES = "expressive_shapes";
         public static final String KEY_SENTRY_LIMIT_REACHED = "sentry_limit_reached";
         public static final String KEY_EXPRESSIVE_ANIMATIONS = "expressive_animations";
+        public static final String KEY_CHANGELOG_STYLE = "changelog_style";
         public static final String KEY_HAPTIC_FEEDBACK = "haptic_feedback";
         public static final String KEY_ICON_STYLE = "icon_style";
         public static final String KEY_ICON_COLOR_MODE = "icon_color_mode";
@@ -271,6 +272,11 @@ public class ShizukuSettings {
 
     public static boolean isExpressiveShapesEnabled() {
         return getPreferences().getBoolean(Keys.KEY_EXPRESSIVE_SHAPES, true);
+    }
+
+    /** "classic" (default) or "timeline". */
+    public static String getChangelogStyle() {
+        return getPreferences().getString(Keys.KEY_CHANGELOG_STYLE, "classic");
     }
 
     public static boolean isExpressiveAnimationsEnabled() {

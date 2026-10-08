@@ -39,6 +39,7 @@ object UpdateChecker {
         val publishedAt: String,
         val body: String,
         val isNew: Boolean = false,
+        val isPrerelease: Boolean = false,
     )
 
     data class UpdateInfo(
@@ -221,6 +222,30 @@ object UpdateChecker {
      * this continues collecting releases up to [maxReleases] so the What's New dialog has both
      * all new updates and previous releases available.
      */
+    /** One page (1-based) of releases, newest first; null on failure so callers can offer a retry. */
+    suspend fun fetchReleasesPage(
+        page: Int,
+        perPage: Int = 15,
+    ): List<ReleaseEntry>? =
+        withContext(Dispatchers.IO) {
+            try {
+                val arr = fetchJson("$RELEASES_URL?per_page=$perPage&page=$page") as? JSONArray ?: return@withContext null
+                (0 until arr.length()).mapNotNull { i ->
+                    val obj = arr.getJSONObject(i)
+                    val tag = obj.optString("tag_name", "").ifBlank { return@mapNotNull null }
+                    ReleaseEntry(
+                        tagName = tag,
+                        publishedAt = obj.optString("published_at", ""),
+                        body = obj.optString("body", ""),
+                        isPrerelease = obj.optBoolean("prerelease", false),
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).w(e, "Failed to fetch releases page $page")
+                null
+            }
+        }
+
     suspend fun fetchReleasesSince(
         sinceVersionCode: Int,
         maxReleases: Int = 25,
@@ -245,6 +270,7 @@ object UpdateChecker {
                                 publishedAt = obj.optString("published_at", ""),
                                 body = obj.optString("body", ""),
                                 isNew = isNew,
+                                isPrerelease = obj.optBoolean("prerelease", false),
                             ),
                         )
                         if (result.size >= maxReleases) break

@@ -44,6 +44,7 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         val date: String,
         val body: String,
         val isNew: Boolean = false,
+        val isPrerelease: Boolean = false,
     )
 
     companion object {
@@ -64,6 +65,7 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
                             put("date", r.publishedAt)
                             put("body", r.body)
                             put("is_new", r.isNew)
+                            put("is_prerelease", r.isPrerelease)
                         },
                     )
                 }
@@ -112,7 +114,15 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View = inflater.inflate(R.layout.dialog_changelog, container, false)
+    ): View =
+        inflater.inflate(
+            if (useTimeline()) R.layout.dialog_changelog_timeline else R.layout.dialog_changelog,
+            container,
+            false,
+        )
+
+    // "Classic" stays the default; the timeline style is opt-in via Settings > Personalization.
+    private fun useTimeline() = af.shizuku.manager.ShizukuSettings.getChangelogStyle() == "timeline"
 
     override fun onViewCreated(
         view: View,
@@ -122,6 +132,11 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
 
         val tagName = arguments?.getString(ARG_TAG_NAME) ?: ""
         val releases = parseReleases(arguments?.getString(ARG_RELEASES_JSON))
+
+        if (useTimeline()) {
+            setupTimeline(view, releases, tagName)
+            return
+        }
 
         var currentSelectedTag = tagName
         val versionText = view.findViewById<TextView>(R.id.version_text)
@@ -377,6 +392,28 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
+    private fun setupTimeline(
+        view: View,
+        releases: List<ReleaseItem>,
+        tagName: String,
+    ) {
+        val controller =
+            af.shizuku.manager.home.changelog
+                .TimelineChangelogController(this, view, releases)
+        controller.setup()
+        view.findViewById<MaterialButton>(R.id.btn_github).setOnClickListener {
+            val tag = controller.selectedTag.ifBlank { tagName }
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/thejaustin/ShizukuPlus/releases/tag/$tag")),
+                )
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to open release page for $tag")
+            }
+        }
+        view.findViewById<MaterialButton>(R.id.btn_close).setOnClickListener { dismissAllowingStateLoss() }
+    }
+
     override fun onStart() {
         super.onStart()
         val dlg = dialog as? BottomSheetDialog ?: return
@@ -401,6 +438,7 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
                         date = obj.optString("date", ""),
                         body = obj.optString("body", ""),
                         isNew = obj.optBoolean("is_new", false),
+                        isPrerelease = obj.optBoolean("is_prerelease", false),
                     )
                 }.filter { it.tag.isNotBlank() }
         } catch (e: Exception) {
