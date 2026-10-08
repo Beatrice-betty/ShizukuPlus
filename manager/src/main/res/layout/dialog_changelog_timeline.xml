@@ -52,6 +52,13 @@
             app:chipIcon="@drawable/ic_outline_expand_more_24" />
     </LinearLayout>
 
+    <include
+        android:id="@+id/style_picker"
+        layout="@layout/view_changelog_style_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

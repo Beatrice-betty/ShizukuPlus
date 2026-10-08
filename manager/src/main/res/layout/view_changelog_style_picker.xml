@@ -3,36 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
-
-    <com.google.android.material.bottomsheet.BottomSheetDragHandleView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/margin_horizontal"
+    android:paddingBottom="8dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/margin_horizontal"
         android:text="@string/changelog_style_sheet_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall" />
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/margin_horizontal"
-        android:paddingTop="4dp"
-        android:paddingBottom="16dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="10dp"
         android:text="@string/changelog_style_sheet_subtitle"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textAppearance="?attr/textAppearanceBodySmall"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/margin_horizontal">
-
-        <com.google.android.material.card.MaterialCardView
+        android:orientation="horizontal">
+<com.google.android.material.card.MaterialCardView
             android:id="@+id/card_timeline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -50,10 +44,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="10dp">
+                android:padding="8dp">
                 <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="170dp">
+                    android:layout_height="112dp">
                     <include layout="@layout/preview_changelog_timeline" />
                 </FrameLayout>
                 <TextView
@@ -70,8 +64,7 @@
                     android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
+<com.google.android.material.card.MaterialCardView
             android:id="@+id/card_classic"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -89,10 +82,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="10dp">
+                android:padding="8dp">
                 <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="170dp">
+                    android:layout_height="112dp">
                     <include layout="@layout/preview_changelog_classic" />
                 </FrameLayout>
                 <TextView
@@ -111,22 +104,27 @@
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/margin_horizontal"
-        android:paddingTop="12dp"
-        android:text="@string/changelog_style_sheet_hint"
-        android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="8dp">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_confirm"
-        style="@style/Widget.Material3.Button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/margin_horizontal"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="@dimen/m3e_spacing_large"
-        android:text="@string/changelog_style_sheet_confirm" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/changelog_style_sheet_hint"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_confirm"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/changelog_style_sheet_confirm" />
+    </LinearLayout>
 </LinearLayout>

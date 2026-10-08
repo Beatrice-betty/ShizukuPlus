@@ -62,6 +62,13 @@
 
     </LinearLayout>
 
+    <include
+        android:id="@+id/style_picker"
+        layout="@layout/view_changelog_style_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
     <!-- Notes body — expands to fill available space, scrollable -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/notes_scroll"

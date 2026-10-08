@@ -101,8 +101,8 @@ class MainActivity : HomeActivity() {
      * Supports both the new "r{N}" tag format and the legacy "v{semver}.r{N}" format.
      */
     /**
-     * Returning users get a one-time chance to choose between the Timeline (new default) and Classic
-     * changelog before the What's New dialog opens; fresh installs just get the default.
+     * Returning users see the style chooser inside What's New once (forcing the dialog open even
+     * without a version bump); fresh installs just get the default.
      */
     private fun maybePromptChangelogStyle() {
         if (ShizukuSettings.isChangelogStylePrompted()) {
@@ -111,24 +111,11 @@ class MainActivity : HomeActivity() {
         }
         if (!ShizukuSettings.isReturningUser()) {
             ShizukuSettings.setChangelogStylePrompted()
-            checkAndShowChangelog()
-            return
         }
-        supportFragmentManager.setFragmentResultListener(
-            af.shizuku.manager.home.ChangelogStyleSheet.RESULT_KEY,
-            this,
-        ) { _, _ -> checkAndShowChangelog() }
-        try {
-            af.shizuku.manager.home.ChangelogStyleSheet()
-                .show(supportFragmentManager, af.shizuku.manager.home.ChangelogStyleSheet.TAG)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to show changelog style sheet")
-            ShizukuSettings.setChangelogStylePrompted()
-            checkAndShowChangelog()
-        }
+        checkAndShowChangelog(forceStylePicker = ShizukuSettings.isReturningUser())
     }
 
-    private fun checkAndShowChangelog() {
+    private fun checkAndShowChangelog(forceStylePicker: Boolean = false) {
         val currentCode =
             try {
                 packageManager.getPackageInfo(packageName, 0).versionCode
@@ -136,7 +123,7 @@ class MainActivity : HomeActivity() {
                 0
             }
         val lastSeenCode = ShizukuSettings.getLastSeenChangelogVersion()
-        if (currentCode <= lastSeenCode) return
+        if (currentCode <= lastSeenCode && !forceStylePicker) return
 
         val versionSuffix = BuildConfig.VERSION_NAME.removePrefix("Shizuku+ ").trim()
         val tagName =
@@ -171,7 +158,7 @@ class MainActivity : HomeActivity() {
             if (isFinishing || isDestroyed) return@launch
             try {
                 ChangelogDialogFragment
-                    .newInstance(releases, tagName)
+                    .newInstance(releases, tagName, showStylePicker = forceStylePicker)
                     .show(supportFragmentManager, ChangelogDialogFragment.TAG)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to show changelog dialog")

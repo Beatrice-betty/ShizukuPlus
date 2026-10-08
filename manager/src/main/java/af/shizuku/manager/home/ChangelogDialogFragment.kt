@@ -51,10 +51,12 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         const val TAG = "ChangelogDialogFragment"
         private const val ARG_RELEASES_JSON = "releases_json"
         private const val ARG_TAG_NAME = "tag_name"
+        private const val ARG_STYLE_PICKER = "style_picker"
 
         fun newInstance(
             releases: List<UpdateChecker.ReleaseEntry>,
             currentTagName: String,
+            showStylePicker: Boolean = false,
         ): ChangelogDialogFragment =
             ChangelogDialogFragment().apply {
                 val arr = JSONArray()
@@ -73,6 +75,7 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
                     Bundle().apply {
                         putString(ARG_RELEASES_JSON, arr.toString())
                         putString(ARG_TAG_NAME, currentTagName)
+                        putBoolean(ARG_STYLE_PICKER, showStylePicker)
                     }
             }
 
@@ -133,6 +136,7 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         val tagName = arguments?.getString(ARG_TAG_NAME) ?: ""
         val releases = parseReleases(arguments?.getString(ARG_RELEASES_JSON))
 
+        bindStylePicker(view)
         if (useTimeline()) {
             setupTimeline(view, releases, tagName)
             return
@@ -392,6 +396,50 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
+    /**
+     * First-run chooser shown inside What's New for returning users: picking a style re-renders the
+     * real changelog in it straight away, so the choice is a live preview rather than a guess.
+     */
+    private fun bindStylePicker(view: View) {
+        val picker = view.findViewById<View>(R.id.style_picker) ?: return
+        if (arguments?.getBoolean(ARG_STYLE_PICKER, false) != true) return
+        picker.visibility = View.VISIBLE
+        val cards =
+            mapOf(
+                "timeline" to picker.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_timeline),
+                "classic" to picker.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_classic),
+            )
+        val current = af.shizuku.manager.ShizukuSettings.getChangelogStyle()
+        cards.forEach { (key, card) ->
+            val on = key == current
+            card.isChecked = on
+            card.strokeColor =
+                com.google.android.material.color.MaterialColors.getColor(
+                    card,
+                    if (on) androidx.appcompat.R.attr.colorPrimary else com.google.android.material.R.attr.colorOutlineVariant,
+                )
+            card.setOnClickListener {
+                if (key == af.shizuku.manager.ShizukuSettings.getChangelogStyle()) return@setOnClickListener
+                HapticUtils.toggleOn(it)
+                af.shizuku.manager.ShizukuSettings.setChangelogStyle(key)
+                // Re-inflate the dialog content in the newly chosen style.
+                parentFragmentManager
+                    .beginTransaction()
+                    .detach(this)
+                    .commitNowAllowingStateLoss()
+                parentFragmentManager
+                    .beginTransaction()
+                    .attach(this)
+                    .commitAllowingStateLoss()
+            }
+        }
+        view.findViewById<MaterialButton>(R.id.btn_confirm).setOnClickListener {
+            HapticUtils.success(it)
+            af.shizuku.manager.ShizukuSettings.setChangelogStylePrompted()
+            picker.animate().alpha(0f).setDuration(180L).withEndAction { picker.visibility = View.GONE }.start()
+        }
+    }
+
     private fun setupTimeline(
         view: View,
         releases: List<ReleaseItem>,
@@ -412,6 +460,14 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
             }
         }
         view.findViewById<MaterialButton>(R.id.btn_close).setOnClickListener { dismissAllowingStateLoss() }
+    }
+
+    override fun onDestroyView() {
+        // Closing What's New also retires the one-time style prompt (not on rotation).
+        if (activity?.isChangingConfigurations != true && arguments?.getBoolean(ARG_STYLE_PICKER, false) == true) {
+            af.shizuku.manager.ShizukuSettings.setChangelogStylePrompted()
+        }
+        super.onDestroyView()
     }
 
     override fun onStart() {
