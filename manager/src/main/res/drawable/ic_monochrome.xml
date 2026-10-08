@@ -15,9 +15,9 @@
         android:strokeWidth="16"
         android:strokeLineJoin="round"
         android:pathData="M 311.0,224.0 L 266.75,300.64 L 178.25,300.64 L 134.0,224.0 L 178.25,147.36 L 266.75,147.36 Z" />
-    <!-- Plus badge — upper-right shoulder of the hexagon (centre 285,170).
-         Coordinates kept in sync with ic_launcher_foreground.xml (×4 viewport scale). -->
+    <!-- Plus badge centred on the hexagon's top-right vertex (266.75, 147.36), matching
+         ic_launcher_foreground.xml (66.69, 36.84 in 108-unit space, x4 here). -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M 277.88,141.50 h 14.25 v 21.38 h 21.38 v 14.25 h -21.38 v 21.38 h -14.25 v -21.38 h -21.38 v -14.25 h 21.38 z" />
+        android:pathData="M 259.63,118.86 h 14.25 v 21.38 h 21.38 v 14.25 h -21.38 v 21.38 h -14.25 v -21.38 h -21.38 v -14.25 h 21.38 z" />
 </vector>
