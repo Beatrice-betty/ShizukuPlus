@@ -6,6 +6,7 @@ import af.shizuku.manager.database.ActivityLogManager
 import af.shizuku.manager.database.ActivityLogRecord
 import af.shizuku.manager.databinding.ItemActivityLogBinding
 import af.shizuku.manager.utils.AppIconCache
+import af.shizuku.manager.utils.HapticUtils
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -33,8 +34,96 @@ import java.util.Date
 import java.util.Locale
 
 class ActivityLogFragment : Fragment() {
+    private enum class Sort(
+        val label: Int,
+    ) {
+        NEWEST(R.string.changelog_sort_newest),
+        OLDEST(R.string.changelog_sort_oldest),
+        BY_APP(R.string.activity_log_sort_by_app),
+    }
+
     private val adapter = LogAdapter()
     private lateinit var emptyStateView: EmptyStateView
+    private var allRecords: List<ActivityLogRecord> = emptyList()
+    private val selectedTypes = mutableSetOf<ActivityEventType>()
+    private var sort = Sort.NEWEST
+    private var listView: View? = null
+
+    private fun applyFilterSort() {
+        val filtered = allRecords.filter { selectedTypes.isEmpty() || it.eventType in selectedTypes }
+        val sorted =
+            when (sort) {
+                Sort.NEWEST -> filtered.sortedByDescending { it.timestamp }
+                Sort.OLDEST -> filtered.sortedBy { it.timestamp }
+                Sort.BY_APP -> filtered.sortedWith(compareBy({ it.appName.lowercase() }, { -it.timestamp }))
+            }
+        adapter.submitList(sorted)
+        val isEmpty = sorted.isEmpty()
+        emptyStateView.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        listView?.visibility = if (isEmpty) View.GONE else View.VISIBLE
+    }
+
+    private fun buildFilterBar(parent: android.widget.LinearLayout) {
+        val ctx = parent.context
+        val d = resources.displayMetrics.density
+        val group =
+            com.google.android.material.chip.ChipGroup(ctx).apply {
+                isSingleLine = true
+                chipSpacingHorizontal = (8 * d).toInt()
+            }
+        val sortChip =
+            com.google.android.material.chip.Chip(ctx).apply {
+                setText(sort.label)
+                chipIcon = androidx.core.content.ContextCompat.getDrawable(ctx, R.drawable.ic_outline_expand_more_24)
+                isChipIconVisible = true
+                setOnClickListener { anchor ->
+                    HapticUtils.tap(anchor)
+                    android.widget.PopupMenu(ctx, anchor).apply {
+                        Sort.values().forEachIndexed { i, s -> menu.add(0, i, i, s.label) }
+                        setOnMenuItemClickListener { item ->
+                            sort = Sort.values()[item.itemId]
+                            (anchor as? com.google.android.material.chip.Chip)?.setText(sort.label)
+                            HapticUtils.segmentTick(anchor)
+                            applyFilterSort()
+                            true
+                        }
+                    }.show()
+                }
+            }
+        group.addView(sortChip)
+        ActivityEventType.values().forEach { type ->
+            group.addView(
+                com.google.android.material.chip.Chip(ctx).apply {
+                    setText(typeLabel(type))
+                    isCheckable = true
+                    setOnClickListener {
+                        HapticUtils.segmentTick(this)
+                        if (!selectedTypes.remove(type)) selectedTypes.add(type)
+                        applyFilterSort()
+                    }
+                },
+            )
+        }
+        val scroll =
+            android.widget.HorizontalScrollView(ctx).apply {
+                isHorizontalScrollBarEnabled = false
+                clipToPadding = false
+                setPadding((16 * d).toInt(), (4 * d).toInt(), (16 * d).toInt(), (4 * d).toInt())
+                addView(group)
+            }
+        parent.addView(scroll, 0)
+    }
+
+    private fun typeLabel(type: ActivityEventType) =
+        when (type) {
+            ActivityEventType.SERVICE_START -> R.string.activity_log_type_start
+            ActivityEventType.SERVICE_STOP -> R.string.activity_log_type_stop
+            ActivityEventType.PERMISSION -> R.string.activity_log_type_permission
+            ActivityEventType.APP_MANAGEMENT -> R.string.activity_log_type_app_mgmt
+            ActivityEventType.WATCHDOG -> R.string.activity_log_type_watchdog
+            ActivityEventType.SYSTEM -> R.string.activity_log_type_system
+            ActivityEventType.OTHER -> R.string.activity_log_type_other
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -65,14 +154,14 @@ class ActivityLogFragment : Fragment() {
         }
 
         binding.list.adapter = adapter
+        listView = binding.list
+        (binding.root as? android.widget.LinearLayout)?.let { buildFilterBar(it) }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 ActivityLogManager.logs.collectLatest { records ->
-                    adapter.submitList(records)
-                    val isEmpty = records.isEmpty()
-                    emptyStateView.visibility = if (isEmpty) View.VISIBLE else View.GONE
-                    binding.list.visibility = if (isEmpty) View.GONE else View.VISIBLE
+                    allRecords = records
+                    applyFilterSort()
                 }
             }
         }

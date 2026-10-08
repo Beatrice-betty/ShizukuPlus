@@ -2,19 +2,22 @@
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="432"
-    android:viewportHeight="432">
-    <!-- Flat-top hexagon, circumradius 120 units, centered at (216,216). Fills ~60 % of
-         the 432-unit viewport while staying inside the 132-unit adaptive-icon safe zone.
-         The previous hexagon (R≈88) was too small — only 41 % of the viewport — and its
-         plus badge was barely 5dp wide at 48dp icon size, making it invisible in practice
-         (issue #530). -->
+    android:viewportHeight="432"
+    android:tint="?attr/colorControlNormal">
+    <!-- Hexagon ring — flat-top hexagon matching the launcher art bounding box
+         (x: 134–311, y: 145–303 in 432-unit space, centre 222.5,224, r=88.5).
+         Stroke-only so the shape reads as the recognisable Shizuku hexagon outline
+         under one-colour themed-icon and notification-shade rendering, rather than
+         the opaque "+" blob shown previously. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="16"
+        android:strokeLineJoin="round"
+        android:pathData="M 311.0,224.0 L 266.75,300.64 L 178.25,300.64 L 134.0,224.0 L 178.25,147.36 L 266.75,147.36 Z" />
+    <!-- Plus badge — upper-right shoulder of the hexagon (centre 285,170).
+         Coordinates kept in sync with ic_launcher_foreground.xml (×4 viewport scale). -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M 336,216 L 276,112 L 156,112 L 96,216 L 156,320 L 276,320 Z" />
-    <!-- Plus badge centered exactly on the top-right vertex (276, 112). Half the badge
-         overlaps the hexagon fill so the outer arms — pointing up and right — read as a
-         clear plus badge after the launcher applies its single tint color. W=68, arm=20. -->
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M 266,78 h 20 v 24 h 24 v 20 h -24 v 24 h -20 v -24 h -24 v -20 h 24 Z" />
+        android:pathData="M 277.88,141.50 h 14.25 v 21.38 h 21.38 v 14.25 h -21.38 v 21.38 h -14.25 v -21.38 h -21.38 v -14.25 h 21.38 z" />
 </vector>
