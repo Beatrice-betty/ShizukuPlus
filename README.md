@@ -179,12 +179,18 @@ Full license texts and per-library details: [OPEN_SOURCE_LICENSES.md](OPEN_SOURC
 | [Ryfter](https://github.com/Ryfter) | mDNS timeout improvements, FGS subtype refactoring, notification UX |
 | [vvb2060](https://github.com/vvb2060) | AGP build system updates, LTO optimization, license clarifications |
 | [Haruue Icymoon](https://github.com/haruue) | Documentation & README improvements |
+| [djbclark](https://github.com/djbclark) | Fork-migration guide (`FORK_MIGRATION.md`); stock-API transaction-code, `onTransact` logging, locked-device ADB foreground-service, CI release-notes and bug-report link fixes (#572–#582) |
+| [Enursha](https://github.com/Enursha) | BinderContainer keep-rules and binder delivery to stock clients; manager "not running" status fix (#307, #308) |
 
 **Translation Contributors**
 
 | Language | Contributor |
 |----------|-------------|
-| Brazilian Portuguese | [odorizzioficial](https://github.com/odorizzioficial) |
+| Azerbaijani | [Figim](https://github.com/Figim) |
+| Brazilian Portuguese | [odorizzioficial](https://github.com/odorizzioficial), [ViictorNunes](https://github.com/ViictorNunes) |
+| Simplified Chinese | [Yizutt](https://github.com/Yizutt), [JeffioZ](https://github.com/JeffioZ), [qianyumeng0228](https://github.com/qianyumeng0228) |
+| Ukrainian | [insabon](https://github.com/insabon), [AmakerGame](https://github.com/AmakerGame) |
+| Urdu | [hamzaharoon1314](https://github.com/hamzaharoon1314) |
 | French | [Ryfter](https://github.com/Ryfter), [T. Clement](https://github.com/thibaultclement) |
 | Vietnamese | [ThePrimalPea](https://github.com/ThePrimalPea) |
 | Filipino | [IverCoder](https://github.com/IverCoder) |
@@ -193,6 +199,8 @@ Full license texts and per-library details: [OPEN_SOURCE_LICENSES.md](OPEN_SOURC
 
 *Plus many more via community translation through Weblate — thank you to all translators!*
 
+> **Machine-assisted drafts:** where a language was still incomplete, missing strings were filled with AI-assisted drafts in `strings_machine_translated.xml` and are **flagged for native review**. If you speak the language, corrections are very welcome — see [TRANSLATING.md](TRANSLATING.md).
+
 ### Acknowledgments
 - Special thanks to **AkayamiShurui42** for the proactive security research and stability patches (Reference: #239).
 - Thank you to **AlexeiCrystal** for identifying MIUI crash bugs and suggesting the Compat Hub workaround for legacy apps (#241, #242).
@@ -200,6 +208,7 @@ Full license texts and per-library details: [OPEN_SOURCE_LICENSES.md](OPEN_SOURC
 - Thank you to **Kevinco1** for feedback on root compat app detection issues (#243).
 - Thank you to **aragortsantiago6-beep** and **Scoop2389** (Pixel 9a) and **ConversionRituals** (Xiaomi) for on-device Android 16/17 testing, crash reports, and logs that drove the SDK 37 hidden-API and Local Network Protection compatibility fixes (#317, #323).
 - Thank you to **gmm96** for extensive multi-round logcat debugging across several builds that pinned down the Cached Apps Freezer binder-delivery bug (#371).
+- Thank you to **bilemke** for isolating the stock-API regression that led to removing the legacy binder proxy (#584), and to everyone who filed crash reports and tested builds recently.
 - Thank you to **[odorizzioficial](https://github.com/odorizzioficial)** for the complete Brazilian Portuguese translation (#409), and for the detailed report on the Samsung "Sleeping apps" Watchdog freeze (#415).
 
 </details>
