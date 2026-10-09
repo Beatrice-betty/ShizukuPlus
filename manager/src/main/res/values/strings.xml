@@ -1709,4 +1709,7 @@
     <string name="accessibility_card_show">Show card</string>
     <string name="accessibility_move_card_up">Move card up</string>
     <string name="accessibility_move_card_down">Move card down</string>
+    <string name="background_nudge_channel">Background protection</string>
+    <string name="background_nudge_title">Shizuku keeps getting stopped</string>
+    <string name="background_nudge_text">Your phone\'s battery manager may be restricting Shizuku in the background. Open Service Doctor to fix it.</string>
 </resources>

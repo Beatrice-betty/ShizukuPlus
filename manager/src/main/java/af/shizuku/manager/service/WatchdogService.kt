@@ -96,6 +96,12 @@ class WatchdogService : Service() {
                             consecutiveCrashes++
                             lastRestartMs = now
                             showCrashNotification()
+                            // Repeated crashes with no OS exemption usually mean an OEM battery manager
+                            // is killing it: send the user to the Service Doctor once (#476).
+                            if (consecutiveCrashes >= 2) {
+                                af.shizuku.manager.utils.BackgroundNudge
+                                    .maybePost(applicationContext)
+                            }
                             ActivityLogManager.log("Shizuku", applicationContext.packageName, "Watchdog: restarting after crash #$consecutiveCrashes")
                             ShizukuReceiverStarter.start(applicationContext)
                             Timber.tag(TAG).d("Watchdog: restart #$consecutiveCrashes (cooldown was ${cooldown}ms)")
