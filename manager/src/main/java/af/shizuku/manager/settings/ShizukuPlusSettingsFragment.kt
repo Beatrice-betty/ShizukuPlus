@@ -510,7 +510,7 @@ class ShizukuPlusSettingsFragment : BaseSettingsFragment() {
                     ),
                 "storage_proxy_enabled" to
                     listOf(
-                        "com.machiav3lli.neo_backup" to "Neo Backup",
+                        "com.machiav3lli.backup" to "Neo Backup",
                         "eu.darken.sdm" to "SD Maid",
                         "eu.darken.sdmse" to "SD Maid SE",
                     ),

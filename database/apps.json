@@ -67,7 +67,7 @@
       "verified": true,
       "enhancements": ["shell_interceptor", "network_governor_plus"]
     },
-    "com.machiav3lli.neo_backup": {
+    "com.machiav3lli.backup": {
       "description": "Neo Backup: Modern open-source backup solution.",
       "verified": true,
       "enhancements": ["storage_proxy"]

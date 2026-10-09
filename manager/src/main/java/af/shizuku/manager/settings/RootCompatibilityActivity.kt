@@ -646,7 +646,7 @@ class RootCompatibilityActivity : AppBarActivity() {
                         val url =
                             when (pkg) {
                                 "dev.ukanth.ufirewall" -> "https://f-droid.org/packages/dev.ukanth.ufirewall/"
-                                "com.machiav3lli.neo_backup" -> "https://f-droid.org/packages/com.machiav3lli.neo_backup/"
+                                "com.machiav3lli.backup" -> "https://f-droid.org/packages/com.machiav3lli.backup/"
                                 "samolego.canta" -> "https://f-droid.org/packages/samolego.canta/"
                                 "com.aistra.hail" -> "https://f-droid.org/packages/com.aistra.hail/"
                                 "thejaustin.afdroid" -> "https://github.com/thejaustin/afdroid/releases"

@@ -47,7 +47,8 @@ object RootCompatHelper {
         "com.ghisler.android.TotalCommander" to Pair("tcandroid3", "supath"),
         "com.jrummy.root.browserfree"    to Pair("es_preferences", "su_path"),
         "com.estrongs.android.pop"       to Pair("es_preferences", "su_path"),
-        "com.github.machiav3lli.backup"  to Pair("com.github.machiav3lli.backup_preferences", "custom_su_path")
+        "com.github.machiav3lli.backup"  to Pair("com.github.machiav3lli.backup_preferences", "custom_su_path"),
+        "com.machiav3lli.backup"         to Pair("com.machiav3lli.backup_preferences", "custom_su_path")
     )
 
     /**

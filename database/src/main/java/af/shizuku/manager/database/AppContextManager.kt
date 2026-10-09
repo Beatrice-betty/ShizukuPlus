@@ -90,7 +90,7 @@ object AppContextManager {
         put("com.estrongs.android.pop", AppMetadata("ES File Explorer: All-in-one file manager. SU path auto-configured via shared_prefs when running as root.", listOf(ENH_STORAGE), true, "Tools > Root Explorer > su path", rootSupportLevel = RootSupportLevel.FULL))
         put("com.github.machiav3lli.backup", AppMetadata("OAndBackupX: Open-source backup for root users. SU path auto-configured via shared_prefs.", listOf(ENH_STORAGE, ENH_SHELL), true, "Preferences > Advanced > Custom shell", rootSupportLevel = RootSupportLevel.ROOT_REQUIRED))
         put("com.jrummy.apps.build.prop.editor", AppMetadata("BuildProp Editor: Edit system properties. Fully functional rootless under Shizuku+ via build.prop shadow-copy redirection.", emptyList(), true, rootSupportLevel = RootSupportLevel.FULL))
-        put("com.machiav3lli.neo_backup", AppMetadata("Neo Backup: Modern open-source backup solution.", listOf(ENH_STORAGE), true, "Preferences > Advanced > Custom shell"))
+        put("com.machiav3lli.backup", AppMetadata("Neo Backup: Modern open-source backup solution.", listOf(ENH_STORAGE), true, "Preferences > Advanced > Custom shell"))
         put("projekt.substratum.lite", AppMetadata("Substratum Lite: Theming engine for Android.", listOf(ENH_WIN), true))
         put("com.oasisfeng.greenify", AppMetadata("Greenify: Maximize battery savings by hibernating apps.", listOf(ENH_SHELL), true))
         put("com.franco.doze", AppMetadata("Naptime: Aggressive Doze for better battery life.", listOf(ENH_SHELL), true))
@@ -174,7 +174,7 @@ object AppContextManager {
                 "com.keramidas.TitaniumBackup",
                 "eu.darken.sdm",
                 "org.swiftapps.swiftbackup",
-                "com.machiav3lli.neo_backup",
+                "com.machiav3lli.backup",
                 "com.github.machiav3lli.backup"
             ),
             "File Management" to listOf(
