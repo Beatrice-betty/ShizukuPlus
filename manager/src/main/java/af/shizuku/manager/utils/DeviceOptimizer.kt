@@ -39,6 +39,75 @@ object DeviceOptimizer {
     /** True when a privileged shell (Shizuku or root) is available to run fixes. */
     fun hasPrivilegedShell(): Boolean = Shizuku.pingBinder() || EnvironmentUtils.isRooted()
 
+    enum class BackgroundState {
+        /** Exempt from doze and not restricted - nothing to do. */
+        PROTECTED,
+
+        /** The OS or the OEM (Samsung "sleeping apps") is actively restricting background work. */
+        RESTRICTED,
+
+        /** Not restricted right now, but not exempt either; may be put to sleep later. */
+        UNPROTECTED,
+    }
+
+    /**
+     * Reads, from observable effects, whether the system will keep this app alive in the background.
+     * Samsung's sleeping-apps lists live in Device Care's private storage, but putting an app to
+     * sleep shows up as a restricted standby bucket / background restriction, which an app can read
+     * about itself without any permission.
+     */
+    fun backgroundState(context: Context): BackgroundState {
+        val restricted =
+            runCatching {
+                val am = context.getSystemService(android.app.ActivityManager::class.java)
+                val usm = context.getSystemService(android.app.usage.UsageStatsManager::class.java)
+                val bucketRestricted = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && usm != null && usm.appStandbyBucket >= android.app.usage.UsageStatsManager.STANDBY_BUCKET_RESTRICTED
+                val bgRestricted = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && am?.isBackgroundRestricted == true
+                bucketRestricted || bgRestricted
+            }.getOrDefault(false)
+        return when {
+            restricted -> BackgroundState.RESTRICTED
+            SettingsHelper.isIgnoringBatteryOptimizations(context) -> BackgroundState.PROTECTED
+            else -> BackgroundState.UNPROTECTED
+        }
+    }
+
+    /**
+     * Applies every exemption a privileged shell can: doze whitelist, background app-ops and an
+     * active standby bucket. True when the app then reads as [BackgroundState.PROTECTED].
+     */
+    suspend fun protectSelf(context: Context): Boolean =
+        withContext(Dispatchers.IO) {
+            if (!hasPrivilegedShell()) return@withContext false
+            val pkg = context.packageName
+            runCommand("dumpsys deviceidle whitelist +$pkg")
+            runCommand("cmd appops set $pkg RUN_ANY_IN_BACKGROUND allow")
+            runCommand("cmd appops set $pkg RUN_IN_BACKGROUND allow")
+            runCommand("am set-standby-bucket $pkg active")
+            backgroundState(context) == BackgroundState.PROTECTED
+        }
+
+    private const val KEY_NAG_SNOOZE_UNTIL = "battery_nag_snooze_until"
+
+    fun isNagSnoozed(): Boolean =
+        runCatching {
+            System.currentTimeMillis() <
+                af.shizuku.manager.ShizukuSettings
+                    .getPreferences()
+                    .getLong(KEY_NAG_SNOOZE_UNTIL, 0L)
+        }.getOrDefault(false)
+
+    /** Keeps the Home battery prompt quiet after the user dealt with it or dismissed it. */
+    fun snoozeNag(days: Int) {
+        runCatching {
+            af.shizuku.manager.ShizukuSettings
+                .getPreferences()
+                .edit()
+                .putLong(KEY_NAG_SNOOZE_UNTIL, System.currentTimeMillis() + days * 24L * 60 * 60 * 1000)
+                .apply()
+        }
+    }
+
     /** Exempts this app from battery optimization without the system prompt. True when it took effect. */
     suspend fun whitelistSelf(context: Context): Boolean =
         withContext(Dispatchers.IO) {

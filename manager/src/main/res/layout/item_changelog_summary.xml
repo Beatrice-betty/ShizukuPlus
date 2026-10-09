@@ -19,15 +19,21 @@
         android:padding="20dp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center">
 
             <TextView
                 android:id="@+id/from_pill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="none"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="9sp"
+                app:autoSizeMaxTextSize="14sp"
+                app:autoSizeStepGranularity="0.5sp"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:textAppearance="?attr/textAppearanceLabelLarge" />
@@ -46,6 +52,12 @@
                 android:id="@+id/to_pill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="none"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="9sp"
+                app:autoSizeMaxTextSize="14sp"
+                app:autoSizeStepGranularity="0.5sp"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:textAppearance="?attr/textAppearanceLabelLarge" />

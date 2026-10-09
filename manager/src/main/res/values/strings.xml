@@ -1703,4 +1703,5 @@
     <string name="settings_floating_nav_summary">Jump between Home, Apps, Hub and Settings from a bar that floats above the content</string>
     <string name="doctor_fix_applied">Fixed</string>
     <string name="doctor_fix_starting">Starting Shizuku…</string>
+    <string name="doctor_status_samsung_sleeping_restricted">Restricted - the system is limiting background activity</string>
 </resources>

@@ -28,7 +28,9 @@ class TimelineChangelogController(
     initial: List<ReleaseItem>,
 ) {
     private val ctx = root.context
-    private val installedTag = BuildConfig.VERSION_NAME.removePrefix("v")
+
+    // VERSION_NAME carries the app name ("Shizuku+ 13.7.0.r2786"); release tags are bare versions.
+    private val installedTag = versionToken(BuildConfig.VERSION_NAME)
     private val releases = initial.map { it.toTimeline() }.toMutableList()
     private val selectedKinds = mutableSetOf<ChangeKind>()
     private var sort = ChangelogSort.NEWEST
@@ -125,19 +127,20 @@ class TimelineChangelogController(
 
     private fun showSortMenu() {
         HapticUtils.tap(sortChip)
-        PopupMenu(ctx, sortChip).apply {
-            ChangelogSort.values().forEachIndexed { i, s ->
-                menu.add(0, i, i, s.label).isChecked = s == sort
-            }
-            menu.setGroupCheckable(0, true, true)
-            setOnMenuItemClickListener {
-                sort = ChangelogSort.values()[it.itemId]
-                HapticUtils.segmentTick(sortChip)
-                updateSortLabel()
-                render()
-                true
-            }
-        }.show()
+        PopupMenu(ctx, sortChip)
+            .apply {
+                ChangelogSort.values().forEachIndexed { i, s ->
+                    menu.add(0, i, i, s.label).isChecked = s == sort
+                }
+                menu.setGroupCheckable(0, true, true)
+                setOnMenuItemClickListener {
+                    sort = ChangelogSort.values()[it.itemId]
+                    HapticUtils.segmentTick(sortChip)
+                    updateSortLabel()
+                    render()
+                    true
+                }
+            }.show()
     }
 
     private fun updateSortLabel() = sortChip.setText(sort.label)
@@ -188,7 +191,9 @@ class TimelineChangelogController(
                 .ifBlank { ctx.resources.getQuantityString(R.plurals.changelog_change_count, pool.sumOf { it.changeCount }, pool.sumOf { it.changeCount }) }
         val headline =
             if (newOnes.isNotEmpty()) ctx.getString(R.string.changelog_summary_new_releases, newOnes.size) else ctx.getString(R.string.changelog_summary_up_to_date)
-        val from = if (!latest.isInstalled) "v$installedTag" else null
+        // A local/dev build can be ahead of the newest release; that is not an upgrade path.
+        val installedAhead = revision(installedTag) >= revision(latest.tag) && revision(latest.tag) > 0
+        val from = if (!latest.isInstalled && !installedAhead) "v$installedTag" else null
         return TimelineRow.Summary(from, latest.tag, headline, tally)
     }
 
@@ -219,6 +224,20 @@ class TimelineChangelogController(
     }
 
     companion object {
+        private val VERSION_TOKEN = Regex("""\d+(?:\.\d+)+(?:\.r\d+)?""")
+        private val REVISION = Regex("""r(\d+)""")
+
+        /** The bare version inside a display name, e.g. "Shizuku+ 13.7.0.r2786" -> "13.7.0.r2786". */
+        internal fun versionToken(name: String): String = VERSION_TOKEN.find(name)?.value ?: name.removePrefix("v")
+
+        /** The CI revision (the number after ".r"), or 0 when absent. */
+        internal fun revision(tag: String): Int =
+            REVISION
+                .find(tag)
+                ?.groupValues
+                ?.get(1)
+                ?.toIntOrNull() ?: 0
+
         private const val PAGE_SIZE = 15
         private const val MIN_FOR_MORE = 10
     }

@@ -380,10 +380,31 @@ open class HomeActivity :
                     duration = Snackbar.LENGTH_INDEFINITE,
                     actionText = getString(R.string.snackbar_action_fix),
                     action = {
-                        if (EnvironmentUtils.isSamsung()) {
-                            SettingsPage.Samsung.DeviceCareBattery.launch(this)
-                        } else {
-                            SettingsHelper.requestIgnoreBatteryOptimizations(this, null)
+                        lifecycleScope.launch {
+                            // Apply the exemptions ourselves when Shizuku/root is available; only
+                            // hand off to the OEM/system screen if that is not enough.
+                            if (af.shizuku.manager.utils.DeviceOptimizer
+                                    .protectSelf(this@HomeActivity)
+                            ) {
+                                homeModel.checkBatteryOptimization()
+                            } else {
+                                // Whatever the user does there can't be read back reliably (Samsung's
+                                // lists are private), so stop asking for a while.
+                                af.shizuku.manager.utils.DeviceOptimizer
+                                    .snoozeNag(7)
+                                if (EnvironmentUtils.isSamsung()) {
+                                    SettingsPage.Samsung.DeviceCareBattery.launch(this@HomeActivity)
+                                } else {
+                                    SettingsHelper.requestIgnoreBatteryOptimizations(this@HomeActivity, null)
+                                }
+                            }
+                        }
+                    },
+                    onDismiss = { event ->
+                        // Swiped away / replaced without acting: don't bring it back on every launch.
+                        if (event != Snackbar.Callback.DISMISS_EVENT_ACTION && event != Snackbar.Callback.DISMISS_EVENT_CONSECUTIVE) {
+                            af.shizuku.manager.utils.DeviceOptimizer
+                                .snoozeNag(3)
                         }
                     },
                 )

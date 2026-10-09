@@ -107,21 +107,32 @@ class ServiceDoctorActivity : AppBarActivity() {
         val checks = mutableListOf<DoctorCheck>()
         val tips = mutableListOf<String>()
 
-        // 1. Battery Optimization
-        val isIgnoring = SettingsHelper.isIgnoringBatteryOptimizations(this)
+        // 1. Background protection (battery optimization + Samsung sleeping apps)
+        val bgState = DeviceOptimizer.backgroundState(this)
+        val isIgnoring = bgState == DeviceOptimizer.BackgroundState.PROTECTED
         checks.add(
             DoctorCheck(
                 getString(R.string.doctor_check_battery),
-                if (isIgnoring) getString(R.string.doctor_status_ok) else getString(R.string.doctor_status_optimized),
+                getString(
+                    when (bgState) {
+                        DeviceOptimizer.BackgroundState.PROTECTED -> R.string.doctor_status_ok
+                        DeviceOptimizer.BackgroundState.RESTRICTED -> R.string.doctor_status_samsung_sleeping_restricted
+                        DeviceOptimizer.BackgroundState.UNPROTECTED -> R.string.doctor_status_optimized
+                    },
+                ),
                 isIgnoring,
                 onFix =
                     if (!isIgnoring) {
                         {
-                            // Silent exemption through Shizuku/root; the system prompt is the fallback.
+                            // Apply the exemptions through Shizuku/root; if that is not enough
+                            // (or unavailable) fall back to the system or Samsung screen.
                             serviceScope.launch {
-                                if (DeviceOptimizer.whitelistSelf(this@ServiceDoctorActivity)) {
+                                if (DeviceOptimizer.protectSelf(this@ServiceDoctorActivity)) {
                                     Toast.makeText(this@ServiceDoctorActivity, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
                                     runDiagnostics()
+                                } else if (EnvironmentUtils.isSamsung()) {
+                                    DeviceOptimizer.snoozeNag(7)
+                                    SettingsPage.Samsung.BackgroundUsageLimits.launch(this@ServiceDoctorActivity)
                                 } else {
                                     SettingsHelper.requestIgnoreBatteryOptimizations(this@ServiceDoctorActivity, batteryOptimizationListener)
                                 }
@@ -538,20 +549,8 @@ class ServiceDoctorActivity : AppBarActivity() {
                 )
             }
 
-            // Samsung Device Care / Always sleeping apps. ok=false (not true) is deliberate: this
-            // can't actually detect whether the app is on the Sleeping Apps list (no public API for
-            // that), so it always needs manual review - showing it as a passing green checkmark
-            // (as it did before) contradicted its own "Review" text and hid the exact setting behind
-            // #415 (Samsung freezing the process on screen-lock, watchdog can't recover a frozen
-            // process because the freeze kills it too).
-            checks.add(
-                DoctorCheck(
-                    getString(R.string.doctor_check_samsung_battery_protection),
-                    getString(R.string.doctor_status_samsung_sleeping_apps),
-                    false,
-                    onFix = { SettingsPage.Samsung.BackgroundUsageLimits.launch(this) },
-                ),
-            )
+            // Sleeping-apps protection is the single "Battery optimization" row above: it reads the
+            // system's actual restrictions, so a separate Samsung row would only repeat it.
 
             if (oneUi >= 6) {
                 tips.add("• " + getString(R.string.doctor_tip_samsung_autoblocker))
