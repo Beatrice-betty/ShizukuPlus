@@ -1701,4 +1701,6 @@
     <string name="nav_settings">Settings</string>
     <string name="settings_floating_nav">Floating navigation bar</string>
     <string name="settings_floating_nav_summary">Jump between Home, Apps, Hub and Settings from a bar that floats above the content</string>
+    <string name="doctor_fix_applied">Fixed</string>
+    <string name="doctor_fix_starting">Starting Shizuku…</string>
 </resources>

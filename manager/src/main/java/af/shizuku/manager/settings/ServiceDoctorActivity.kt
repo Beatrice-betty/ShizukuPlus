@@ -7,6 +7,7 @@ import af.shizuku.manager.adb.LocalNetworkPermission
 import af.shizuku.manager.database.RootCompatHelper
 import af.shizuku.manager.databinding.ActivityServiceDoctorBinding
 import af.shizuku.manager.databinding.ItemDoctorCheckBinding
+import af.shizuku.manager.home.tryEnableAccessibilityAutomatically
 import af.shizuku.manager.ktx.themeColor
 import af.shizuku.manager.utils.DeviceOptimizer
 import af.shizuku.manager.utils.EnvironmentUtils
@@ -91,6 +92,17 @@ class ServiceDoctorActivity : AppBarActivity() {
         serviceScope.cancel()
     }
 
+    /** Sets a secure setting to 0 (needs WRITE_SECURE_SETTINGS) and confirms it stuck. */
+    private fun trySecureSettingOff(key: String): Boolean {
+        if (!SettingsHelper.hasWriteSecureSettings(this)) return false
+        return runCatching {
+            android.provider.Settings.Secure
+                .putInt(contentResolver, key, 0)
+            android.provider.Settings.Secure
+                .getInt(contentResolver, key, 1) == 0
+        }.getOrDefault(false)
+    }
+
     private fun runDiagnostics() {
         val checks = mutableListOf<DoctorCheck>()
         val tips = mutableListOf<String>()
@@ -104,7 +116,17 @@ class ServiceDoctorActivity : AppBarActivity() {
                 isIgnoring,
                 onFix =
                     if (!isIgnoring) {
-                        { SettingsHelper.requestIgnoreBatteryOptimizations(this, batteryOptimizationListener) }
+                        {
+                            // Silent exemption through Shizuku/root; the system prompt is the fallback.
+                            serviceScope.launch {
+                                if (DeviceOptimizer.whitelistSelf(this@ServiceDoctorActivity)) {
+                                    Toast.makeText(this@ServiceDoctorActivity, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
+                                    runDiagnostics()
+                                } else {
+                                    SettingsHelper.requestIgnoreBatteryOptimizations(this@ServiceDoctorActivity, batteryOptimizationListener)
+                                }
+                            }
+                        }
                     } else {
                         null
                     },
@@ -120,6 +142,25 @@ class ServiceDoctorActivity : AppBarActivity() {
                 getString(R.string.doctor_check_adb),
                 if (adbOk) "${getString(R.string.doctor_status_ok)} ($adbPort)" else getString(R.string.doctor_status_not_enabled),
                 adbOk,
+                onFix =
+                    if (!adbOk && SettingsHelper.hasWriteSecureSettings(this)) {
+                        {
+                            // Turn on USB + Wireless debugging directly; the port appears a moment later.
+                            runCatching {
+                                android.provider.Settings.Global
+                                    .putInt(contentResolver, android.provider.Settings.Global.ADB_ENABLED, 1)
+                                android.provider.Settings.Global
+                                    .putInt(contentResolver, "adb_wifi_enabled", 1)
+                            }
+                            Toast.makeText(this, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
+                            serviceScope.launch {
+                                kotlinx.coroutines.delay(2000)
+                                runDiagnostics()
+                            }
+                        }
+                    } else {
+                        null
+                    },
             ),
         )
         if (!adbOk && !EnvironmentUtils.isRooted()) tips.add("• " + getString(R.string.doctor_tip_adb))
@@ -139,7 +180,16 @@ class ServiceDoctorActivity : AppBarActivity() {
                         if (!lnpGranted) {
                             {
                                 val perm = LocalNetworkPermission.required()
-                                if (perm != null) localNetworkPermissionLauncher.launch(perm)
+                                if (perm != null) {
+                                    serviceScope.launch {
+                                        if (DeviceOptimizer.grantSelf(this@ServiceDoctorActivity, perm)) {
+                                            Toast.makeText(this@ServiceDoctorActivity, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
+                                            runDiagnostics()
+                                        } else {
+                                            localNetworkPermissionLauncher.launch(perm)
+                                        }
+                                    }
+                                }
                             }
                         } else {
                             null
@@ -166,6 +216,20 @@ class ServiceDoctorActivity : AppBarActivity() {
                 getString(R.string.doctor_check_server),
                 if (isRunning) getString(R.string.doctor_status_running) else getString(R.string.doctor_status_stopped),
                 isRunning,
+                onFix =
+                    if (!isRunning) {
+                        {
+                            Toast.makeText(this, R.string.doctor_fix_starting, Toast.LENGTH_SHORT).show()
+                            af.shizuku.manager.receiver.ShizukuReceiverStarter
+                                .start(this, forceStart = true)
+                            serviceScope.launch {
+                                kotlinx.coroutines.delay(4000)
+                                runDiagnostics()
+                            }
+                        }
+                    } else {
+                        null
+                    },
             ),
         )
 
@@ -178,7 +242,10 @@ class ServiceDoctorActivity : AppBarActivity() {
                 hasSecureSettings,
                 onFix =
                     if (!hasSecureSettings) {
-                        { SettingsHelper.promptWriteSecureSettings(this) }
+                        {
+                            SettingsHelper.promptWriteSecureSettings(this)
+                            runDiagnostics()
+                        }
                     } else {
                         null
                     },
@@ -194,7 +261,19 @@ class ServiceDoctorActivity : AppBarActivity() {
                 isAccessibilityEnabled,
                 onFix =
                     if (!isAccessibilityEnabled) {
-                        { SettingsPage.Accessibility.launch(this) }
+                        {
+                            // Enable it ourselves (direct write, Shizuku or root); only if none of
+                            // those work do we send the user to the Accessibility screen.
+                            serviceScope.launch {
+                                val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { tryEnableAccessibilityAutomatically() }
+                                if (ok) {
+                                    Toast.makeText(this@ServiceDoctorActivity, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
+                                    runDiagnostics()
+                                } else {
+                                    SettingsPage.Accessibility.launch(this@ServiceDoctorActivity)
+                                }
+                            }
+                        }
                     } else {
                         null
                     },
@@ -420,7 +499,14 @@ class ServiceDoctorActivity : AppBarActivity() {
                     isAutoBlockerOff,
                     onFix =
                         if (!isAutoBlockerOff || oneUi >= 6) {
-                            { SettingsPage.Samsung.AutoBlocker.launch(this) }
+                            {
+                                if (!isAutoBlockerOff && trySecureSettingOff("rampart_enabled")) {
+                                    Toast.makeText(this, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
+                                    runDiagnostics()
+                                } else {
+                                    SettingsPage.Samsung.AutoBlocker.launch(this)
+                                }
+                            }
                         } else {
                             null
                         },
@@ -437,7 +523,14 @@ class ServiceDoctorActivity : AppBarActivity() {
                         isMaxRestrictionsOff,
                         onFix =
                             if (!isMaxRestrictionsOff) {
-                                { SettingsPage.Samsung.AutoBlocker.launch(this) }
+                                {
+                                    if (trySecureSettingOff("rampart_max_restrictions_enabled")) {
+                                        Toast.makeText(this, R.string.doctor_fix_applied, Toast.LENGTH_SHORT).show()
+                                        runDiagnostics()
+                                    } else {
+                                        SettingsPage.Samsung.AutoBlocker.launch(this)
+                                    }
+                                }
                             } else {
                                 null
                             },

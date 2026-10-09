@@ -36,6 +36,28 @@ object DeviceOptimizer {
         return false
     }
 
+    /** True when a privileged shell (Shizuku or root) is available to run fixes. */
+    fun hasPrivilegedShell(): Boolean = Shizuku.pingBinder() || EnvironmentUtils.isRooted()
+
+    /** Exempts this app from battery optimization without the system prompt. True when it took effect. */
+    suspend fun whitelistSelf(context: Context): Boolean =
+        withContext(Dispatchers.IO) {
+            if (!hasPrivilegedShell()) return@withContext false
+            runCommand("dumpsys deviceidle whitelist +${context.packageName}")
+            SettingsHelper.isIgnoringBatteryOptimizations(context)
+        }
+
+    /** Grants this app a runtime permission without the system prompt. True when it is now granted. */
+    suspend fun grantSelf(
+        context: Context,
+        permission: String,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            if (!hasPrivilegedShell()) return@withContext false
+            runCommand("pm grant ${context.packageName} $permission")
+            context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+        }
+
     suspend fun applyFixes(context: Context): Boolean =
         withContext(Dispatchers.IO) {
             if (!Shizuku.pingBinder() && !EnvironmentUtils.isRooted()) {

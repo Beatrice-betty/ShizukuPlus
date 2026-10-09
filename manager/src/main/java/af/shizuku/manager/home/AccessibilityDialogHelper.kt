@@ -23,11 +23,35 @@ fun Context.showAccessibilityDialog() {
         return
     }
 
+    if (tryEnableAccessibilityAutomatically()) {
+        showNavigateDialog()
+        return
+    }
+
+    val installer = packageManager.getInstallerPackageName(packageName)
+    val isInstalledByPlayOrAdb = (installer == "com.android.vending") || (installer == null)
+    val isRestricted = !isInstalledByPlayOrAdb && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+
+    if (isRestricted) {
+        showPermissionDialog()
+    } else {
+        showEnableDialog()
+    }
+}
+
+/**
+ * Enables the pairing accessibility service with no UI, trying in order: a direct write
+ * (WRITE_SECURE_SETTINGS already held), Shizuku, then root. Blocking (shell calls) - call off the
+ * main thread. Returns true when the service ends up enabled; false means the caller should fall
+ * back to the system Accessibility screen.
+ */
+fun Context.tryEnableAccessibilityAutomatically(): Boolean {
+    if (isAccessibilityEnabled()) return true
+
     val hasWriteSecureSettings = (checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED)
     if (hasWriteSecureSettings) {
         if (enableAccessibilityService()) {
-            showNavigateDialog()
-            return
+            return true
         }
     }
 
@@ -82,8 +106,7 @@ fun Context.showAccessibilityDialog() {
             p4?.destroy()
 
             if (enableAccessibilityService() || isAccessibilityEnabled()) {
-                showNavigateDialog()
-                return
+                return true
             }
         } catch (e: Exception) {
             timber.log.Timber.w(e, "Auto-elevation via Shizuku failed")
@@ -116,22 +139,12 @@ fun Context.showAccessibilityDialog() {
                 )
             process.waitFor()
             if (enableAccessibilityService() || isAccessibilityEnabled()) {
-                showNavigateDialog()
-                return
+                return true
             }
         } catch (_: Throwable) {
         }
     }
-
-    val installer = packageManager.getInstallerPackageName(packageName)
-    val isInstalledByPlayOrAdb = (installer == "com.android.vending") || (installer == null)
-    val isRestricted = !isInstalledByPlayOrAdb && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-
-    if (isRestricted) {
-        showPermissionDialog()
-    } else {
-        showEnableDialog()
-    }
+    return false
 }
 
 private fun Context.showPermissionDialog() {
