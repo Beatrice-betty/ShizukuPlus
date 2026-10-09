@@ -354,8 +354,11 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    protected fun maybeGetRestartIcon(setting: String): Drawable? {
-        if (!needsRestart(setting)) return null
+    protected fun maybeGetRestartIcon(setting: String, @androidx.annotation.DrawableRes fallback: Int = 0): Drawable? {
+        if (!needsRestart(setting)) {
+            // Never return null for a setting with a static icon: assigning null wipes it.
+            return if (fallback != 0) tint(requireContext().getDrawable(fallback)) else null
+        }
         return tint(requireContext().getDrawable(R.drawable.ic_server_restart))
     }
 

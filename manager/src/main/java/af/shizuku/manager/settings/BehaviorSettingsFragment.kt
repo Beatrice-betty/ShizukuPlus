@@ -46,9 +46,9 @@ class BehaviorSettingsFragment :
 
     private val stateListener: (ShizukuStateMachine.State) -> Unit = {
         if (ShizukuStateMachine.isRunning()) {
-            tcpModePreference.icon = maybeGetRestartIcon(KEY_TCP_MODE)
+            tcpModePreference.icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
                 ?: tint(requireContext().getDrawable(R.drawable.ic_wadb_24))
-            tcpPortPreference.icon = maybeGetRestartIcon(KEY_TCP_PORT)
+            tcpPortPreference.icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
                 ?: tint(requireContext().getDrawable(R.drawable.ic_lan_24))
         }
     }
@@ -144,7 +144,7 @@ class BehaviorSettingsFragment :
             if (EnvironmentUtils.isTlsSupported()) {
                 tcpModeAvailable = true
                 summary = context.getString(R.string.settings_tcp_mode_summary)
-                icon = maybeGetRestartIcon(KEY_TCP_MODE)
+                icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
                     ?: tint(context.getDrawable(R.drawable.ic_wadb_24))
                 setOnPreferenceChangeListener { _, newValue ->
                     if (newValue is Boolean) {
@@ -153,7 +153,7 @@ class BehaviorSettingsFragment :
                             isChecked = newValue
                             isEnabled = true
                             summary = context.getString(R.string.settings_tcp_mode_summary)
-                            icon = maybeGetRestartIcon(KEY_TCP_MODE)
+                            icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
                                 ?: tint(context.getDrawable(R.drawable.ic_wadb_24))
                             syncTcpPortVisibility()
                         }
@@ -181,7 +181,7 @@ class BehaviorSettingsFragment :
 
         tcpPortPreference.apply {
             syncTcpPortVisibility()
-            icon = maybeGetRestartIcon(KEY_TCP_PORT)
+            icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
                 ?: tint(context.getDrawable(R.drawable.ic_lan_24))
             setOnBindEditTextListener { editText ->
                 editText.hint = context.getString(R.string.settings_tcp_port_hint)
@@ -199,7 +199,7 @@ class BehaviorSettingsFragment :
                     val applyChange: () -> Unit = {
                         ShizukuSettings.setTcpPort(port)
                         text = port?.toString()
-                        icon = maybeGetRestartIcon(KEY_TCP_PORT)
+                        icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
                     }
                     maybePromptRestart(KEY_TCP_PORT, port ?: 5555) { applyChange() }
                 } else {
