@@ -35,6 +35,12 @@ import kotlin.math.min
 object FloatingNavBar : Application.ActivityLifecycleCallbacks {
     const val KEY_ENABLED = "floating_nav_enabled"
 
+    /** Which tab the user came from, so the new screen can slide the indicator to its own tab. */
+    private const val EXTRA_FROM_ITEM = "floating_nav_from_item"
+
+    /** Left-to-right order of the tabs; also decides which way screens slide. */
+    private val ORDER = listOf(R.id.nav_home, R.id.nav_apps, R.id.nav_hub, R.id.nav_settings)
+
     private const val TAG = "FloatingNavBar"
     private const val MAX_WIDTH_DP = 440
     private const val SIDE_MARGIN_DP = 24
@@ -82,20 +88,111 @@ object FloatingNavBar : Application.ActivityLifecycleCallbacks {
             existing?.let { content.removeView(it) }
             return
         }
+        val isNew = existing == null
         val root = existing ?: activity.layoutInflater.inflate(R.layout.floating_nav_bar, content, false).also { content.addView(it) }
         val nav = root.findViewById<BottomNavigationView>(R.id.floating_nav)
 
+        // Arriving from another tab: start on that tab and slide the indicator across, so the bar
+        // reads as one persistent control even though each screen owns its own copy.
+        val from = activity.intent?.getIntExtra(EXTRA_FROM_ITEM, 0) ?: 0
+        activity.intent?.removeExtra(EXTRA_FROM_ITEM)
         nav.setOnItemSelectedListener(null)
-        nav.selectedItemId = selected
-        nav.setOnItemSelectedListener { item ->
-            if (item.itemId != selected) navigate(activity, item.itemId)
-            false // the destination activity shows its own selected state
+        if (isNew && from in ORDER && from != selected) {
+            nav.selectedItemId = from
+            nav.postDelayed({
+                nav.setOnItemSelectedListener(null)
+                nav.selectedItemId = selected
+                attachSelectListener(activity, nav, selected)
+            }, 90)
+        } else {
+            nav.selectedItemId = selected
+            attachSelectListener(activity, nav, selected)
         }
+        if (isNew && from == 0) playEntrance(root)
+        if (isNew) watchScrolling(content, root)
 
         layoutBar(activity, root)
         root.bringToFront()
         ViewCompat.requestApplyInsets(root)
         root.post { reserveSpace(content, root, activity is SystemHubActivity) }
+    }
+
+    private fun attachSelectListener(
+        activity: Activity,
+        nav: BottomNavigationView,
+        selected: Int,
+    ) {
+        nav.setOnItemSelectedListener { item ->
+            if (item.itemId != selected) {
+                af.shizuku.manager.utils.HapticUtils
+                    .segmentTick(nav)
+                navigate(activity, item.itemId, selected)
+            }
+            false // the destination screen shows its own selected state
+        }
+    }
+
+    /** First appearance: rise from below with a short fade. Respects the system animation scale. */
+    private fun playEntrance(root: View) {
+        val rise = 56 * root.resources.displayMetrics.density
+        root.alpha = 0f
+        root.translationY = rise
+        root
+            .animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(320)
+            .setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f))
+            .start()
+    }
+
+    /** Hides the bar while a list scrolls down and brings it back on scroll up. */
+    private fun watchScrolling(
+        content: ViewGroup,
+        bar: View,
+    ) {
+        content.post {
+            findRecyclerView(content)?.addOnScrollListener(
+                object : RecyclerView.OnScrollListener() {
+                    private var hidden = false
+
+                    override fun onScrolled(
+                        rv: RecyclerView,
+                        dx: Int,
+                        dy: Int,
+                    ) {
+                        if (dy > 12 && !hidden) {
+                            hidden = true
+                            slideBar(bar, hide = true)
+                        } else if (dy < -12 && hidden) {
+                            hidden = false
+                            slideBar(bar, hide = false)
+                        }
+                    }
+                },
+            )
+        }
+    }
+
+    private fun slideBar(
+        bar: View,
+        hide: Boolean,
+    ) {
+        val distance = bar.height + (bar.layoutParams as FrameLayout.LayoutParams).bottomMargin
+        bar
+            .animate()
+            .translationY(if (hide) distance.toFloat() else 0f)
+            .setDuration(if (hide) 180 else 240)
+            .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
+            .start()
+    }
+
+    private fun findRecyclerView(view: View): RecyclerView? {
+        if (view is RecyclerView) return view
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) findRecyclerView(view.getChildAt(i))?.let { return it }
+        }
+        return null
     }
 
     private fun layoutBar(
@@ -129,16 +226,25 @@ object FloatingNavBar : Application.ActivityLifecycleCallbacks {
     private fun navigate(
         activity: Activity,
         itemId: Int,
+        fromItem: Int,
     ) {
         val target = targetFor(itemId) ?: return
-        val intent = Intent(activity, target)
+        val intent = Intent(activity, target).putExtra(EXTRA_FROM_ITEM, fromItem)
+        // Slide towards the tab that was tapped: screens to the right enter from the right.
+        val forward = ORDER.indexOf(itemId) > ORDER.indexOf(fromItem)
+        val options =
+            ActivityOptions.makeCustomAnimation(
+                activity,
+                if (forward) R.anim.floating_nav_enter_forward else R.anim.floating_nav_enter_back,
+                if (forward) R.anim.floating_nav_exit_forward else R.anim.floating_nav_exit_back,
+            )
         if (itemId == R.id.nav_home) {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         } else {
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         runCatching {
-            activity.startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(activity).toBundle())
+            activity.startActivity(intent, options.toBundle())
         }.onFailure {
             Timber.tag(TAG).w(it, "Floating nav navigation failed")
             activity.startActivity(intent)

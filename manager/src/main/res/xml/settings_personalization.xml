@@ -50,12 +50,15 @@
             android:defaultValue="false"
             android:icon="@drawable/ic_palette_24" />
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+        <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="floating_nav_enabled"
             android:title="@string/settings_floating_nav"
             android:summary="@string/settings_floating_nav_summary"
             android:icon="@drawable/ic_nav_apps_24"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:infoTitle="@string/settings_floating_nav"
+            app:infoDetail="@string/settings_floating_nav_info"
+            app:badgeType="experimental" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="one_handed_mode"
