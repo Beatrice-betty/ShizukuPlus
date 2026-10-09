@@ -383,6 +383,9 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
 
         languagePreference.entries = localizedLocales.toTypedArray()
 
+        // setSummary() throws if a SummaryProvider is installed (XML useSimpleSummaryProvider or
+        // BaseSettingsFragment's "%s" fixer), so drop it first (#587).
+        languagePreference.summaryProvider = null
         languagePreference.summary =
             when {
                 TextUtils.isEmpty(currentLocaleTag) || "SYSTEM" == currentLocaleTag -> {
