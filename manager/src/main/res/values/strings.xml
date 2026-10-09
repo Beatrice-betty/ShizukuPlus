@@ -1695,4 +1695,10 @@
     <string name="tcp_trusted_dialog_empty">No trusted networks yet.</string>
     <string name="tcp_trusted_remove_selected">Remove selected</string>
     <string name="tcp_protection_limited_summary">This Android version can only detect captive-portal networks; open networks cannot be identified.</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_hub">Hub</string>
+    <string name="nav_settings">Settings</string>
+    <string name="settings_floating_nav">Floating navigation bar</string>
+    <string name="settings_floating_nav_summary">Jump between Home, Apps, Hub and Settings from a bar that floats above the content</string>
 </resources>

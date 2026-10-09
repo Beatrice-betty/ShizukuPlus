@@ -655,6 +655,9 @@ class ShizukuApplication :
         // Network-aware TCP protection (#518): registers a callback only when enabled.
         af.shizuku.manager.utils.TcpNetworkGuard.sync(this)
 
+        // Optional floating navigation bar (#498); attaches itself to top-level screens when enabled.
+        af.shizuku.manager.widget.FloatingNavBar.install(this)
+
         // 1. Run security check
         if (af.shizuku.manager.security.SecurityGuard
                 .isTampered()

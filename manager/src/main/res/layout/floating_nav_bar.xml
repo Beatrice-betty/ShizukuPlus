@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Optional floating navigation bar (#498). Added to an activity's content root by
+     FloatingNavBar, never inflated from an activity layout, so it can't affect the
+     AppBarActivity/getLayoutId rules. A rounded translucent card around a stock
+     BottomNavigationView keeps the pill indicator, 48dp+ touch targets and TalkBack semantics. -->
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/floating_nav_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|center_horizontal"
+    app:cardBackgroundColor="@color/floating_nav_surface"
+    app:cardElevation="6dp"
+    app:cardCornerRadius="32dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/floating_nav"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@android:color/transparent"
+        android:paddingHorizontal="4dp"
+        app:elevation="0dp"
+        app:labelVisibilityMode="selected"
+        app:menu="@menu/floating_nav_menu" />
+
+</com.google.android.material.card.MaterialCardView>
