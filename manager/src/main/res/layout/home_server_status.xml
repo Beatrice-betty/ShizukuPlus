@@ -39,22 +39,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Status dot + title on one horizontal row, gravity=center_vertical
-             so the dot always optically aligns with the text cap-height. -->
+        <!-- Title row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:duplicateParentState="true">
-
-            <View
-                android:id="@+id/status_indicator"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/shape_status_indicator"
-                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@android:id/text1"
@@ -74,7 +65,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:layout_marginStart="20dp"
             android:textAppearance="?textAppearanceLabelLarge"
             android:textColor="?colorOnSurfaceVariant"
             android:lineSpacingExtra="1sp"
@@ -84,8 +74,7 @@
             android:id="@+id/status_chips"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="20dp">
+            android:layout_marginTop="8dp">
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/btn_activity_log"

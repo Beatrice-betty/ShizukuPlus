@@ -45,7 +45,6 @@ class ServerStatusViewHolder(
     private inline val iconView get() = binding.icon
     private inline val logChip get() = binding.btnActivityLog
     private inline val diagnosticsChip get() = binding.btnDiagnostics
-    private inline val statusIndicator get() = binding.statusIndicator
     private inline val sentryButton get() = binding.btnSentryOffline
 
     override fun onBind() {
@@ -55,65 +54,6 @@ class ServerStatusViewHolder(
         val state =
             af.shizuku.manager.utils.ShizukuStateMachine
                 .get()
-
-        // Live Status Indicator — ok/error use M3 theme tokens so the dot respects dynamic color
-        // and custom accents; starting stays amber (no standard M3 "warning" token, and amber is
-        // universally understood as "in progress" regardless of active theme).
-        statusIndicator.backgroundTintList =
-            android.content.res.ColorStateList.valueOf(
-                when {
-                    ok ->
-                        com.google.android.material.color.MaterialColors.getColor(
-                            context,
-                            androidx.appcompat.R.attr.colorPrimary,
-                            ContextCompat.getColor(context, R.color.status_ok),
-                        )
-                    state == af.shizuku.manager.utils.ShizukuStateMachine.State.STARTING ->
-                        ContextCompat.getColor(context, R.color.status_starting)
-                    else ->
-                        com.google.android.material.color.MaterialColors.getColor(
-                            context,
-                            androidx.appcompat.R.attr.colorError,
-                            ContextCompat.getColor(context, R.color.status_error),
-                        )
-                },
-            )
-
-        // Pulse animation for Starting/Running state — alpha + subtle scale for depth.
-        // Gated by expressive-animations preference to respect the user's motion settings.
-        val expressiveAnimations = af.shizuku.manager.ShizukuSettings.isExpressiveAnimationsEnabled()
-        if (expressiveAnimations && (state == af.shizuku.manager.utils.ShizukuStateMachine.State.STARTING || ok)) {
-            val dur = if (ok) 1500L else 600L
-            val alphaPulse = android.animation.ObjectAnimator.ofFloat(statusIndicator, "alpha", 0.4f, 1.0f).apply {
-                duration = dur
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                interpolator = android.view.animation.AccelerateDecelerateInterpolator()
-            }
-            val scaleX = android.animation.ObjectAnimator.ofFloat(statusIndicator, "scaleX", 0.85f, 1.0f).apply {
-                duration = dur
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                interpolator = android.view.animation.AccelerateDecelerateInterpolator()
-            }
-            val scaleY = android.animation.ObjectAnimator.ofFloat(statusIndicator, "scaleY", 0.85f, 1.0f).apply {
-                duration = dur
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                interpolator = android.view.animation.AccelerateDecelerateInterpolator()
-            }
-            val pulse = android.animation.AnimatorSet().apply { playTogether(alphaPulse, scaleX, scaleY) }
-            statusIndicator.clearAnimation()
-            statusIndicator.tag = pulse
-            pulse.start()
-        } else {
-            statusIndicator.clearAnimation()
-            (statusIndicator.tag as? android.animation.AnimatorSet)?.cancel()
-            statusIndicator.tag = null
-            statusIndicator.alpha = 1f
-            statusIndicator.scaleX = 1f
-            statusIndicator.scaleY = 1f
-        }
 
         // Show Sentry offline button only if limit is reached
         sentryButton.visibility =
@@ -237,7 +177,7 @@ class ServerStatusViewHolder(
         }
 
         // Outline: hidden when user disables it. Style toggles between Material (theme roles) and
-        // Status (semantic green/amber/red). Starting state always uses amber regardless of style.
+        // Status (semantic green/red).
         if (af.shizuku.manager.ShizukuSettings
                 .isShowStatusCardOutlineEnabled()
         ) {
@@ -258,8 +198,6 @@ class ServerStatusViewHolder(
                                 ContextCompat.getColor(context, R.color.status_ok),
                             )
                         }
-                    state == af.shizuku.manager.utils.ShizukuStateMachine.State.STARTING ->
-                        ContextCompat.getColor(context, R.color.status_starting)
                     else ->
                         if (useStatusColors) {
                             ContextCompat.getColor(context, R.color.status_error)
@@ -301,9 +239,6 @@ class ServerStatusViewHolder(
                             com.google.android.material.R.attr.colorOnPrimary,
                             android.graphics.Color.WHITE,
                         )
-                }
-                state == af.shizuku.manager.utils.ShizukuStateMachine.State.STARTING -> {
-                    ContextCompat.getColor(context, R.color.status_starting) to android.graphics.Color.WHITE
                 }
                 else -> {
                     com.google.android.material.color.MaterialColors.getColor(
