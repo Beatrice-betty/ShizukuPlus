@@ -464,9 +464,45 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         onResult(false)
     }
 
+    /**
+     * M3E segmented list: every row is its own segment separated by a small gap instead of one
+     * big card with hairline dividers. Outer corners of a category use the ExtraLarge token,
+     * inner corners are tight, and a pressed row morphs toward a rounder shape. Each row's outline
+     * is clipped to its current shape so the ripple follows the morph.
+     */
     protected class SettingsItemDecoration(
         context: Context,
     ) : af.shizuku.manager.widget.M3ECardItemDecoration(context) {
+        private val gap = 2f * density
+        private val innerRadius = 4f * density
+        private val pressedRadius = 20f * density
+        private val progress = java.util.WeakHashMap<View, Float>()
+        private val shapes = java.util.WeakHashMap<View, FloatArray>()
+        private val path = android.graphics.Path()
+        private val rect = android.graphics.RectF()
+
+        private val outlineProvider =
+            object : android.view.ViewOutlineProvider() {
+                override fun getOutline(
+                    view: View,
+                    outline: android.graphics.Outline,
+                ) {
+                    val r = shapes[view]
+                    if (r == null) {
+                        outline.setRect(0, 0, view.width, view.height)
+                        return
+                    }
+                    val p = android.graphics.Path()
+                    p.addRoundRect(
+                        android.graphics.RectF(0f, 0f, view.width.toFloat(), view.height.toFloat()),
+                        floatArrayOf(r[0], r[0], r[1], r[1], r[2], r[2], r[3], r[3]),
+                        android.graphics.Path.Direction.CW,
+                    )
+                    @Suppress("DEPRECATION")
+                    outline.setConvexPath(p)
+                }
+            }
+
         override fun getItemOffsets(
             outRect: android.graphics.Rect,
             view: View,
@@ -476,38 +512,80 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
             val pos = parent.getChildAdapterPosition(view)
             if (pos == RecyclerView.NO_POSITION) return
 
-            // 16dp spacing above subsequent category headers to cleanly separate card groups
-            if (view.tag == "category_header" && pos > 0) {
-                outRect.top = (16 * density).toInt()
+            if (isHeader(view)) {
+                // 16dp spacing above subsequent category headers to cleanly separate groups
+                if (pos > 0) outRect.top = (16 * density).toInt()
+            } else {
+                outRect.top = gap.toInt()
             }
+        }
+
+        override fun onDraw(
+            c: android.graphics.Canvas,
+            parent: RecyclerView,
+            state: RecyclerView.State,
+        ) {
+            val adapter = parent.adapter ?: return
+            var animating = false
+            for (i in 0 until parent.childCount) {
+                val child = parent.getChildAt(i) ?: continue
+                if (child.visibility != View.VISIBLE || !shouldDecorate(child)) continue
+                val pos = parent.getChildAdapterPosition(child)
+                if (pos == RecyclerView.NO_POSITION) continue
+
+                val first = isHeader(child)
+                val nextView = parent.findViewHolderForAdapterPosition(pos + 1)?.itemView
+                val last =
+                    pos + 1 >= adapter.itemCount ||
+                        (nextView != null && (isHeader(nextView) || !shouldDecorate(nextView)))
+                val top = if (first) cornerRadius else innerRadius
+                val bottom = if (last) cornerRadius else innerRadius
+
+                val target = if (child.isPressed) 1f else 0f
+                val current = progress[child] ?: 0f
+                val next =
+                    when {
+                        current < target -> minOf(target, current + MORPH_STEP)
+                        current > target -> maxOf(target, current - MORPH_STEP)
+                        else -> current
+                    }
+                if (next != target) animating = true
+                progress[child] = next
+
+                val maxRadius = child.height / 2f
+                fun morph(base: Float) = minOf(base + (pressedRadius - base) * next, maxRadius).coerceAtLeast(minOf(base, maxRadius))
+                val radii = floatArrayOf(morph(top), morph(top), morph(bottom), morph(bottom))
+
+                val previous = shapes[child]
+                if (previous == null || !previous.contentEquals(radii)) {
+                    shapes[child] = radii
+                    child.outlineProvider = outlineProvider
+                    child.clipToOutline = true
+                    child.invalidateOutline()
+                }
+
+                rect.set(
+                    child.left + child.translationX,
+                    child.top + child.translationY,
+                    child.right + child.translationX,
+                    child.bottom + child.translationY,
+                )
+                path.rewind()
+                path.addRoundRect(
+                    rect,
+                    floatArrayOf(radii[0], radii[0], radii[1], radii[1], radii[2], radii[2], radii[3], radii[3]),
+                    android.graphics.Path.Direction.CW,
+                )
+                c.drawPath(path, cardPaint)
+            }
+            if (animating) parent.postInvalidateOnAnimation()
         }
 
         override fun isHeader(view: View): Boolean = view.tag == "category_header"
 
-        override fun shouldDrawDivider(
-            parent: RecyclerView,
-            index: Int,
-            count: Int,
-        ): Boolean {
-            for (i in index + 1 until count) {
-                val next = parent.getChildAt(i) ?: continue
-                if (next.visibility != View.VISIBLE) continue
-                return !isHeader(next)
-            }
-            return false
+        private companion object {
+            /** Per-frame progress toward the pressed shape; ~8 frames (~130ms at 60 Hz). */
+            const val MORPH_STEP = 0.125f
         }
-
-        override fun getDividerInset(view: View): Float {
-            if (isHeader(view)) return 16f * density
-            val iconView = view.findViewById<View>(android.R.id.icon)
-            if (iconView == null || iconView.visibility == View.GONE) {
-                return 16f * density
-            }
-            // 16dp (listPreferredItemPaddingStart) + 52dp (AndroidX preference icon frame) = 68dp;
-            // use 72dp to align visually with the text start with a touch of breathing room.
-            return 72f * density
-        }
-
-        override fun getDividerEndInset(view: View): Float = 16f * density
     }
 }
