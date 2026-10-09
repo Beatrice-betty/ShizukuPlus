@@ -600,6 +600,17 @@ open class HomeActivity :
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
         HomeEditMode.startDragCallback = { vh -> itemTouchHelper.startDrag(vh) }
+        HomeEditMode.moveCardCallback = { view, delta ->
+            val from = recyclerView.getChildAdapterPosition(view)
+            val to = from + delta
+            if (from != RecyclerView.NO_POSITION && adapter.isDraggable(from) && adapter.isDraggable(to)) {
+                adapter.moveItem(from, to)
+                HapticUtils.segmentTick(view)
+                true
+            } else {
+                false
+            }
+        }
         HomeEditMode.exit()
 
         // Predictive back support for edit mode with expressive M3 scaling
@@ -768,6 +779,7 @@ open class HomeActivity :
         HomeEditMode.onChanged = null
         HomeEditMode.startDragCallback = null
         HomeEditMode.removeCardCallback = null
+        HomeEditMode.moveCardCallback = null
         ShizukuStateMachine.removeListener(stateListener)
         ShizukuSettings.getPreferences()?.unregisterOnSharedPreferenceChangeListener(appearanceChangeListener)
         activeUpdateManager?.cancel()

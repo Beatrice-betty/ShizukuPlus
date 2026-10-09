@@ -8,6 +8,9 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.animation.OvershootInterpolator
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +22,9 @@ object HomeEditMode {
     var onChanged: (() -> Unit)? = null
     var startDragCallback: ((RecyclerView.ViewHolder) -> Unit)? = null
     var removeCardCallback: ((Long) -> Unit)? = null
+
+    /** Moves the card hosting the given view by [delta] positions (-1 up, +1 down); false if not possible. */
+    var moveCardCallback: ((android.view.View, Int) -> Boolean)? = null
 
     fun enter() {
         if (!isActive) {
@@ -100,13 +106,46 @@ object HomeEditMode {
             binding.cardContent.alpha = 0.45f
             binding.dragHandle.alpha = 0.35f
             binding.removeBtn.setImageResource(R.drawable.ic_visibility_off_24)
-            binding.removeBtn.contentDescription = ctx.getString(R.string.accessibility_icon_toggle_visibility)
+            binding.removeBtn.contentDescription = ctx.getString(R.string.accessibility_card_show)
         } else {
             binding.cardContent.alpha = 1.0f
             binding.dragHandle.alpha = 0.85f
             binding.removeBtn.setImageResource(R.drawable.ic_visibility_24)
-            binding.removeBtn.contentDescription = ctx.getString(R.string.accessibility_icon_toggle_visibility)
+            binding.removeBtn.contentDescription = ctx.getString(R.string.accessibility_card_hide)
         }
+
+        // Dragging is not possible with TalkBack/switch access; offer move actions on the card.
+        ViewCompat.setAccessibilityDelegate(
+            binding.root,
+            object : AccessibilityDelegateCompat() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: android.view.View,
+                    info: AccessibilityNodeInfoCompat,
+                ) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    if (!isActive) return
+                    info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.action_move_card_up, host.context.getString(R.string.accessibility_move_card_up)))
+                    info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.action_move_card_down, host.context.getString(R.string.accessibility_move_card_down)))
+                }
+
+                override fun performAccessibilityAction(
+                    host: android.view.View,
+                    action: Int,
+                    args: android.os.Bundle?,
+                ): Boolean {
+                    if (isActive) {
+                        val delta =
+                            when (action) {
+                                R.id.action_move_card_up -> -1
+                                R.id.action_move_card_down -> 1
+                                else -> 0
+                            }
+                        if (delta != 0) return moveCardCallback?.invoke(host, delta) ?: false
+                    }
+                    return super.performAccessibilityAction(host, action, args)
+                }
+            },
+        )
 
         binding.removeBtn.background = chipBg
         binding.removeBtn.imageTintList = fgTintList
