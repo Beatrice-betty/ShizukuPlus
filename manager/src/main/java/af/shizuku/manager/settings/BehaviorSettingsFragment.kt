@@ -8,10 +8,10 @@ import af.shizuku.manager.service.ShizukuLiveService
 import af.shizuku.manager.utils.DeviceOptimizer
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.NetworkTrust
-import af.shizuku.manager.utils.TcpNetworkGuard
 import af.shizuku.manager.utils.ShizukuStateMachine
-import android.content.Intent
+import af.shizuku.manager.utils.TcpNetworkGuard
 import android.Manifest
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
@@ -357,7 +357,9 @@ class BehaviorSettingsFragment :
 
     private fun trustCurrentNetwork() {
         val context = requireContext()
-        if (!af.shizuku.manager.utils.NetworkStateHelper.isWifiConnected(context)) {
+        if (!af.shizuku.manager.utils.NetworkStateHelper
+                .isWifiConnected(context)
+        ) {
             Toast.makeText(context, R.string.tcp_trusted_not_on_wifi, Toast.LENGTH_SHORT).show()
             return
         }

@@ -45,11 +45,19 @@ object NetworkTrust {
     fun trustedSsids(): Set<String> = ShizukuSettings.getPreferences().getStringSet(KEY_TRUSTED_SSIDS, emptySet()) ?: emptySet()
 
     fun trustSsid(ssid: String) {
-        ShizukuSettings.getPreferences().edit().putStringSet(KEY_TRUSTED_SSIDS, trustedSsids() + ssid).apply()
+        ShizukuSettings
+            .getPreferences()
+            .edit()
+            .putStringSet(KEY_TRUSTED_SSIDS, trustedSsids() + ssid)
+            .apply()
     }
 
     fun forgetSsid(ssid: String) {
-        ShizukuSettings.getPreferences().edit().putStringSet(KEY_TRUSTED_SSIDS, trustedSsids() - ssid).apply()
+        ShizukuSettings
+            .getPreferences()
+            .edit()
+            .putStringSet(KEY_TRUSTED_SSIDS, trustedSsids() - ssid)
+            .apply()
     }
 
     /** True when Wi-Fi security type can be read (API 31+); below that only captive portals are detectable. */
@@ -58,7 +66,22 @@ object NetworkTrust {
 
     /** The SSID of the current Wi-Fi network, or null when not on Wi-Fi or the platform redacts it. */
     @JvmStatic
-    fun currentSsid(context: Context): String? = wifiInfo(context)?.let { cleanSsid(it.ssid) }
+    fun currentSsid(context: Context): String? {
+        val fromTransport = wifiInfo(context)?.let { cleanSsid(it.ssid) }
+        if (fromTransport != null) return fromTransport
+        // On API 31+ the NetworkCapabilities copy is redacted; WifiManager still returns the name
+        // to an app holding location access (deprecated, but the only no-callback route).
+        @Suppress("DEPRECATION")
+        val fromManager =
+            runCatching {
+                val wm = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+                cleanSsid(wm?.connectionInfo?.ssid)
+            }.getOrNull()
+        timber.log.Timber
+            .tag("NetworkTrust")
+            .d("SSID via transportInfo=%s, via WifiManager=%s", fromTransport != null, fromManager != null)
+        return fromManager
+    }
 
     @JvmStatic
     fun assess(context: Context): Assessment {
@@ -69,7 +92,7 @@ object NetworkTrust {
         if (!onLan) return Assessment(Verdict.TRUSTED, null, null)
 
         val info = wifiInfo(context)
-        val ssid = info?.let { cleanSsid(it.ssid) }
+        val ssid = currentSsid(context)
         val protectionMode = mode()
         if (ssid != null && ssid in trustedSsids()) return Assessment(Verdict.TRUSTED, null, ssid)
 

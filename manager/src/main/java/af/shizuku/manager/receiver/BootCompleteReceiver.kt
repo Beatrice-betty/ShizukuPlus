@@ -35,6 +35,11 @@ class BootCompleteReceiver : BroadcastReceiver() {
         // crash or spawn a server using stale defaults, and BOOT_COMPLETED fires seconds later once
         // the user unlocks and handles the actual start (#504). Skip auto-start for LOCKED_BOOT_COMPLETED.
         if (action != Intent.ACTION_LOCKED_BOOT_COMPLETED) {
+            // "Start on boot" is a standing choice that outlives an earlier manual stop.
+            if (action == Intent.ACTION_BOOT_COMPLETED) {
+                af.shizuku.manager.utils.UserStopFlag
+                    .clear()
+            }
             try {
                 ShizukuReceiverStarter.start(context)
             } catch (e: Exception) {

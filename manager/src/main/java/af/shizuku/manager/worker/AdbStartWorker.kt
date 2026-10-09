@@ -3,6 +3,7 @@ package af.shizuku.manager.worker
 import af.shizuku.manager.MainActivity
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
+import af.shizuku.manager.adb.AdbConnectionPlanner
 import af.shizuku.manager.adb.AdbMdns
 import af.shizuku.manager.adb.AdbPortProber
 import af.shizuku.manager.adb.AdbStarter
@@ -79,24 +80,33 @@ class AdbStartWorker(
 
             // Fast path: if TCP mode is on and the port is already listening, connect directly —
             // no Wireless Debugging or Wi-Fi required.
-            val tcpBlocked = af.shizuku.manager.utils.NetworkTrust.shouldBlockTcp(applicationContext)
+            val tcpBlocked =
+                af.shizuku.manager.utils.NetworkTrust
+                    .shouldBlockTcp(applicationContext)
             if (tcpBlocked) {
-                timber.log.Timber.tag("AdbStartWorker").i("Untrusted network: skipping direct TCP start, using Wireless Debugging (#518)")
+                timber.log.Timber
+                    .tag("AdbStartWorker")
+                    .i("Untrusted network: skipping direct TCP start, using Wireless Debugging (#518)")
             }
             if (ShizukuSettings.getTcpMode() && !tcpBlocked) {
-                val desiredPort = ShizukuSettings.getTcpPort()
-                if (desiredPort in 1..65535) {
-                    if (AdbPortProber.isPortOpen(desiredPort, 600)) {
-                        AdbStarter.startAdb(
-                            applicationContext,
-                            desiredPort,
-                            activityLogMessage = "Service started via direct TCP port $desiredPort (no Wi-Fi required)",
-                        )
-                        Starter.waitForBinder()
-                        val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-                        nm.cancel(ShizukuReceiverStarter.NOTIFICATION_ID)
-                        return Result.success()
-                    }
+                // Probe every plausible loopback port at once. adbd may be listening somewhere other
+                // than the configured port (changed/randomized, or only known to the system), and
+                // AdbStarter.startAdb moves it to the configured one. On a first attempt after a
+                // reboot, wait briefly for adbd to re-open the port, but only when it is set up to
+                // come back on TCP by itself - otherwise the wait is pure delay.
+                val grace = if (runAttemptCount == 0 && AdbConnectionPlanner.adbdRestoresTcpOnBoot()) 8_000L else 0L
+                val openPort = AdbConnectionPlanner.findOpenPort(timeoutMs = 400, graceMs = grace)
+                if (openPort > 0) {
+                    AdbConnectionPlanner.recordMethod(applicationContext, "direct TCP", openPort)
+                    AdbStarter.startAdb(
+                        applicationContext,
+                        openPort,
+                        activityLogMessage = "Service started via direct TCP port $openPort (no Wi-Fi required)",
+                    )
+                    Starter.waitForBinder()
+                    val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+                    nm.cancel(ShizukuReceiverStarter.NOTIFICATION_ID)
+                    return Result.success()
                 }
             }
 
@@ -160,7 +170,8 @@ class AdbStartWorker(
                                 timeoutJob?.cancel()
                                 timeoutJob =
                                     launch {
-                                        delay(15_000)
+                                        // Slow boots need longer for the mDNS service to appear; widen on retries.
+                                        delay(if (runAttemptCount == 0) 15_000 else 25_000)
                                         close(TimeoutException("Timed out during mDNS port discovery"))
                                     }
                             }
@@ -254,6 +265,7 @@ class AdbStartWorker(
                         }.first()
                 }
 
+            AdbConnectionPlanner.recordMethod(applicationContext, if (port == tcpPort || port == savedPort) "known port" else "Wireless Debugging discovery", port)
             timber.log.Timber
                 .tag("AdbStartWorker")
                 .i("doWork: resolved port %d, starting ADB client", port)
@@ -426,7 +438,10 @@ class AdbStartWorker(
     }
 
     companion object {
-        fun enqueue(context: Context) {
+        fun enqueue(
+            context: Context,
+            keepExisting: Boolean = false,
+        ) {
             // WorkManager uses credential-encrypted storage which is unavailable during direct boot.
             // Skip enqueueing until the user has unlocked their device.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -443,11 +458,21 @@ class AdbStartWorker(
             val request =
                 OneTimeWorkRequestBuilder<AdbStartWorker>()
                     .setConstraints(constraints)
+                    // Boot-time connects are usually a few seconds from working; the 30 s default
+                    // backoff made a single missed attempt cost half a minute.
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, java.util.concurrent.TimeUnit.SECONDS)
                     .build()
 
             // Use KEEP while a key offer is waiting for a dialog response — REPLACE would cancel
             // the current connection and create another "Allow USB debugging?" dialog.
-            val policy = if (af.shizuku.manager.adb.AdbStarter.keyOfferInFlight) ExistingWorkPolicy.KEEP else ExistingWorkPolicy.REPLACE
+            // Automatic triggers (network returning) must never cancel an attempt that is mid-discovery or
+            // waiting on the unlock/auth dialog, so they KEEP as well.
+            val policy =
+                if (keepExisting || af.shizuku.manager.adb.AdbStarter.keyOfferInFlight) {
+                    ExistingWorkPolicy.KEEP
+                } else {
+                    ExistingWorkPolicy.REPLACE
+                }
             WorkManager.getInstance(context).enqueueUniqueWork(
                 "adb_start_worker",
                 policy,

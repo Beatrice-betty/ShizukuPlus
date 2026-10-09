@@ -42,7 +42,12 @@ object ShizukuReceiverStarter {
     fun start(
         context: Context,
         forceStart: Boolean = false,
+        automatic: Boolean = false,
     ) {
+        if (forceStart) {
+            af.shizuku.manager.utils.UserStopFlag
+                .clear()
+        }
         if (!forceStart && (
                 UserHandleCompat.myUserId() > 0 ||
                     ShizukuStateMachine.isRunning() ||
@@ -56,7 +61,7 @@ object ShizukuReceiverStarter {
             rootStart(context)
         } else if (ShizukuSettings.getLastLaunchMode() == LaunchMethod.ADB) {
             if (context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
-                AdbStartWorker.enqueue(context)
+                AdbStartWorker.enqueue(context, keepExisting = automatic)
                 val initialState =
                     if (EnvironmentUtils.getAdbTcpPort() > 0 && !EnvironmentUtils.isWifiRequired()) {
                         WorkerState.RUNNING
@@ -76,6 +81,8 @@ object ShizukuReceiverStarter {
      *  receiver and the Tasker/Locale plugin's fire receiver. */
     fun stop() {
         if (!ShizukuStateMachine.isRunning()) return
+        af.shizuku.manager.utils.UserStopFlag
+            .mark()
         ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
         runCatching { Shizuku.exit() }
             .onFailure { Timber.tag(AppConstants.TAG).w(it, "Shizuku.exit failed") }

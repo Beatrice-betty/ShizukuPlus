@@ -147,7 +147,11 @@ class ShizukuTileService : TileService() {
         ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
         updateTile()
         WorkManager.getInstance(this).cancelUniqueWork("adb_start_worker")
-        kotlin.runCatching { rikka.shizuku.Shizuku.exit() }
+        kotlin.runCatching {
+            af.shizuku.manager.utils.UserStopFlag
+                .mark()
+            rikka.shizuku.Shizuku.exit()
+        }
         ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPED)
         updateTile()
     }

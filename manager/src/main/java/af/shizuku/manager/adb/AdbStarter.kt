@@ -86,7 +86,12 @@ object AdbStarter {
                         }
 
                 var activePort = port
-                val tcpMode = ShizukuSettings.getTcpMode()
+                // An untrusted network (#518) must not get a TCP port opened as a side effect of a
+                // Wireless Debugging start, or the protection is undone one step later.
+                val tcpMode =
+                    ShizukuSettings.getTcpMode() &&
+                        !af.shizuku.manager.utils.NetworkTrust
+                            .shouldBlockTcp(context)
                 val tcpPort = ShizukuSettings.getTcpPort()
                 if (tcpMode && activePort != tcpPort) {
                     if (tcpPort !in 1..65535) {
@@ -122,6 +127,8 @@ object AdbStarter {
                         client.runCommand("shell:pm grant ${context.packageName} android.permission.WRITE_SECURE_SETTINGS")
                     }.onFailure { Timber.tag(TAG).w(it, "Failed to auto-elevate privileges on ADB start") }
                     ShizukuSettings.setLastPort(activePort)
+                    af.shizuku.manager.utils.UserStopFlag
+                        .clear()
                     val msg = activityLogMessage ?: "Service started via ADB on port $activePort"
                     ActivityLogManager.log("Shizuku", context.packageName, msg)
                     ShizukuStateMachine.update()

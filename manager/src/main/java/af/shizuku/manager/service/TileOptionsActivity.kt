@@ -98,7 +98,11 @@ class TileOptionsActivity : AppCompatActivity() {
     private fun stopShizuku() {
         ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
         WorkManager.getInstance(this).cancelUniqueWork("adb_start_worker")
-        kotlin.runCatching { rikka.shizuku.Shizuku.exit() }
+        kotlin.runCatching {
+            af.shizuku.manager.utils.UserStopFlag
+                .mark()
+            rikka.shizuku.Shizuku.exit()
+        }
         ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPED)
     }
 

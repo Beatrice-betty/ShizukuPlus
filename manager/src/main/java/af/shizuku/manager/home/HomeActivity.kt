@@ -252,7 +252,11 @@ open class HomeActivity :
                                 .setMessage(R.string.dialog_stop_message)
                                 .setPositiveButton(android.R.string.ok) { _, _ ->
                                     ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
-                                    runCatching { Shizuku.exit() }
+                                    runCatching {
+                                        af.shizuku.manager.utils.UserStopFlag
+                                            .mark()
+                                        Shizuku.exit()
+                                    }
                                 }.setNegativeButton(android.R.string.cancel, null)
                                 .show()
                         }
