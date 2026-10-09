@@ -1672,4 +1672,27 @@
     <string name="accessibility_sim_toggle_automation">Toggle Automation card visibility</string>
     <string name="accessibility_sim_toggle_activity_log">Toggle Activity Log card visibility</string>
     <string name="accessibility_sim_toggle_learn_more">Toggle Learn More card visibility</string>
+    <string name="tcp_guard_channel">TCP network protection</string>
+    <string name="tcp_guard_title">TCP debugging is open on an untrusted network</string>
+    <string name="tcp_guard_text">ADB TCP port %1$d is listening and %2$s. Close it unless you need it right now.</string>
+    <string name="tcp_guard_reason_open">you are on an open Wi-Fi network</string>
+    <string name="tcp_guard_reason_captive">you are on a captive-portal (public) Wi-Fi network</string>
+    <string name="tcp_guard_reason_untrusted">this network is not on your trusted list</string>
+    <string name="tcp_guard_close">Close port</string>
+    <string name="settings_tcp_protection">Protect TCP on shared networks</string>
+    <string name="tcp_protection_off">Off</string>
+    <string name="tcp_protection_open">Open and public Wi-Fi</string>
+    <string name="tcp_protection_trusted">Trusted networks only</string>
+    <string name="settings_tcp_trusted_networks">Trusted networks</string>
+    <string name="settings_tcp_trusted_networks_summary">%d saved - tap to manage</string>
+    <string name="settings_tcp_trusted_networks_none">None saved - tap to add the current network</string>
+    <string name="settings_tcp_protection_auto_close">Close the port automatically</string>
+    <string name="settings_tcp_protection_auto_close_summary">Restarts the debugging daemon without asking when you join an untrusted network</string>
+    <string name="tcp_trusted_add_current">Trust current network</string>
+    <string name="tcp_trusted_not_on_wifi">Connect to a Wi-Fi network first.</string>
+    <string name="tcp_trusted_ssid_hidden">Android did not share this network\'s name. Allow location access, which Android requires to read Wi-Fi names, then try again.</string>
+    <string name="tcp_trusted_added">Trusted %s</string>
+    <string name="tcp_trusted_dialog_empty">No trusted networks yet.</string>
+    <string name="tcp_trusted_remove_selected">Remove selected</string>
+    <string name="tcp_protection_limited_summary">This Android version can only detect captive-portal networks; open networks cannot be identified.</string>
 </resources>

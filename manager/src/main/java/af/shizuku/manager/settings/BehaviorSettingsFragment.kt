@@ -7,13 +7,18 @@ import af.shizuku.manager.app.SnackbarHelper
 import af.shizuku.manager.service.ShizukuLiveService
 import af.shizuku.manager.utils.DeviceOptimizer
 import af.shizuku.manager.utils.EnvironmentUtils
+import af.shizuku.manager.utils.NetworkTrust
+import af.shizuku.manager.utils.TcpNetworkGuard
 import af.shizuku.manager.utils.ShizukuStateMachine
 import android.content.Intent
+import android.Manifest
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
@@ -37,6 +42,8 @@ class BehaviorSettingsFragment :
     private lateinit var tcpPortPreference: EditTextPreference
     private lateinit var tcpRandomizePreference: Preference
     private lateinit var tcpAutoClosePreference: TwoStatePreference
+    private lateinit var tcpProtectionPreference: Preference
+    private lateinit var tcpTrustedPreference: Preference
     private lateinit var networkCategory: CollapsiblePreferenceCategory
     private lateinit var startupCategory: CollapsiblePreferenceCategory
 
@@ -67,6 +74,14 @@ class BehaviorSettingsFragment :
         tcpPortPreference = requireNotNull(findPreference(KEY_TCP_PORT))
         tcpRandomizePreference = requireNotNull(findPreference("tcp_port_randomize"))
         tcpAutoClosePreference = requireNotNull(findPreference(KEY_TCP_AUTO_CLOSE_PORT))
+        tcpProtectionPreference = requireNotNull(findPreference("tcp_network_protection"))
+        tcpTrustedPreference =
+            requireNotNull<Preference>(findPreference("tcp_trusted_networks")).apply {
+                setOnPreferenceClickListener {
+                    showTrustedNetworksDialog()
+                    true
+                }
+            }
         networkCategory = requireNotNull(findPreference("category_network_activity"))
         startupCategory = requireNotNull(findPreference("category_startup"))
 
@@ -300,6 +315,87 @@ class BehaviorSettingsFragment :
             networkCategory.setChildAvailable("tcp_port_randomize", tcpOn)
             networkCategory.setChildAvailable(KEY_TCP_AUTO_CLOSE_PORT, tcpOn)
         }
+        syncProtectionVisibility()
+    }
+
+    /**
+     * TCP network-protection rows (#518) follow the TCP rows' availability, and adapt further:
+     * the trusted-networks manager only matters in "trusted only" mode, and auto-close only when
+     * protection is on at all.
+     */
+    private fun syncProtectionVisibility() {
+        val isRootMode =
+            EnvironmentUtils.isRooted() ||
+                ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT
+        val base = tcpModeAvailable && !isRootMode && tcpModePreference.isChecked
+        val mode = NetworkTrust.mode()
+        networkCategory.setChildAvailable("tcp_network_protection", base)
+        networkCategory.setChildAvailable("tcp_trusted_networks", base && mode == NetworkTrust.MODE_TRUSTED)
+        networkCategory.setChildAvailable(NetworkTrust.KEY_AUTO_CLOSE, base && mode != NetworkTrust.MODE_OFF)
+        tcpTrustedPreference.summary = trustedSummary()
+        tcpProtectionPreference.summary =
+            if (NetworkTrust.canDetectOpenNetworks() || mode == NetworkTrust.MODE_OFF) {
+                null
+            } else {
+                getString(R.string.tcp_protection_limited_summary)
+            }
+    }
+
+    private fun trustedSummary(): String {
+        val count = NetworkTrust.trustedSsids().size
+        return if (count == 0) {
+            getString(R.string.settings_tcp_trusted_networks_none)
+        } else {
+            getString(R.string.settings_tcp_trusted_networks_summary, count)
+        }
+    }
+
+    private val locationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) trustCurrentNetwork()
+        }
+
+    private fun trustCurrentNetwork() {
+        val context = requireContext()
+        if (!af.shizuku.manager.utils.NetworkStateHelper.isWifiConnected(context)) {
+            Toast.makeText(context, R.string.tcp_trusted_not_on_wifi, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val ssid = NetworkTrust.currentSsid(context)
+        if (ssid != null) {
+            NetworkTrust.trustSsid(ssid)
+            Toast.makeText(context, getString(R.string.tcp_trusted_added, ssid), Toast.LENGTH_SHORT).show()
+            syncProtectionVisibility()
+            TcpNetworkGuard.enforce(context)
+        } else if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            Toast.makeText(context, R.string.tcp_trusted_ssid_hidden, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showTrustedNetworksDialog() {
+        val context = requireContext()
+        val saved = NetworkTrust.trustedSsids().sorted()
+        val removed = mutableSetOf<String>()
+        val builder =
+            MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.settings_tcp_trusted_networks)
+                .setPositiveButton(R.string.tcp_trusted_add_current) { _, _ -> trustCurrentNetwork() }
+                .setNegativeButton(android.R.string.cancel, null)
+        if (saved.isEmpty()) {
+            builder.setMessage(R.string.tcp_trusted_dialog_empty)
+        } else {
+            builder
+                .setMultiChoiceItems(saved.toTypedArray(), null) { _, which, checked ->
+                    if (checked) removed += saved[which] else removed -= saved[which]
+                }.setNeutralButton(R.string.tcp_trusted_remove_selected) { _, _ ->
+                    removed.forEach { NetworkTrust.forgetSsid(it) }
+                    syncProtectionVisibility()
+                    TcpNetworkGuard.enforce(context)
+                }
+        }
+        showDialog(builder)
     }
 
     override fun onResume() {
@@ -320,5 +416,12 @@ class BehaviorSettingsFragment :
         key: String?,
     ) {
         if (key == KEY_WATCHDOG) watchdogPreference.isChecked = ShizukuSettings.isWatchdogRunning()
+        if (key == NetworkTrust.KEY_MODE || key == NetworkTrust.KEY_AUTO_CLOSE) {
+            context?.let {
+                TcpNetworkGuard.sync(it)
+                TcpNetworkGuard.enforce(it)
+            }
+            syncProtectionVisibility()
+        }
     }
 }

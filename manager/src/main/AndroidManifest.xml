@@ -29,6 +29,8 @@
         android:name="android.permission.NEARBY_WIFI_DEVICES"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="33" />
+    <!-- Runtime-requested only when the user taps "Trust this network" (#518); needed to read the SSID. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
@@ -439,6 +441,10 @@
                 <action android:name="${applicationId}.START" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".receiver.TcpGuardReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".receiver.ManualStopReceiver"

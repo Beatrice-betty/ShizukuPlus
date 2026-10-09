@@ -67,6 +67,26 @@
             android:summary="@string/settings_tcp_auto_close_port_summary"
             android:icon="@drawable/ic_shield_24" />
 
+        <rikka.preference.SimpleMenuPreference
+            android:key="tcp_network_protection"
+            android:title="@string/settings_tcp_protection"
+            android:icon="@drawable/ic_shield_24"
+            android:entries="@array/tcp_network_protection_entries"
+            android:entryValues="@array/tcp_network_protection_values"
+            android:defaultValue="off"
+            app:useSimpleSummaryProvider="true" />
+
+        <Preference
+            android:key="tcp_trusted_networks"
+            android:title="@string/settings_tcp_trusted_networks"
+            android:icon="@drawable/ic_lan_24" />
+
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="tcp_protection_auto_close"
+            android:title="@string/settings_tcp_protection_auto_close"
+            android:summary="@string/settings_tcp_protection_auto_close_summary"
+            android:icon="@drawable/ic_warning_24" />
+
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="auto_disable_usb_debugging"
             android:title="@string/settings_auto_disable_usb_debugging"

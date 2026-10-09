@@ -79,7 +79,11 @@ class AdbStartWorker(
 
             // Fast path: if TCP mode is on and the port is already listening, connect directly —
             // no Wireless Debugging or Wi-Fi required.
-            if (ShizukuSettings.getTcpMode()) {
+            val tcpBlocked = af.shizuku.manager.utils.NetworkTrust.shouldBlockTcp(applicationContext)
+            if (tcpBlocked) {
+                timber.log.Timber.tag("AdbStartWorker").i("Untrusted network: skipping direct TCP start, using Wireless Debugging (#518)")
+            }
+            if (ShizukuSettings.getTcpMode() && !tcpBlocked) {
                 val desiredPort = ShizukuSettings.getTcpPort()
                 if (desiredPort in 1..65535) {
                     if (AdbPortProber.isPortOpen(desiredPort, 600)) {

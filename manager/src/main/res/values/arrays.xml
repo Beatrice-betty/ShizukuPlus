@@ -146,4 +146,17 @@
         <item>classic</item>
         <item>timeline</item>
     </string-array>
+
+    <string-array name="tcp_network_protection_entries">
+        <item>@string/tcp_protection_off</item>
+        <item>@string/tcp_protection_open</item>
+        <item>@string/tcp_protection_trusted</item>
+    </string-array>
+
+    <string-array name="tcp_network_protection_values">
+        <item>off</item>
+        <item>open</item>
+        <item>trusted</item>
+    </string-array>
+
 </resources>

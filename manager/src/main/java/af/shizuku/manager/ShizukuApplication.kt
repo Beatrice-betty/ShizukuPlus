@@ -652,6 +652,9 @@ class ShizukuApplication :
         af.shizuku.manager.utils.EnvironmentUtils
             .prewarmAsync()
 
+        // Network-aware TCP protection (#518): registers a callback only when enabled.
+        af.shizuku.manager.utils.TcpNetworkGuard.sync(this)
+
         // 1. Run security check
         if (af.shizuku.manager.security.SecurityGuard
                 .isTampered()
