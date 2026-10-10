@@ -35,6 +35,11 @@ object SnackbarHelper {
             )
         }
         ThemeHelper.applySnackbarTheme(context, newSnackbar)
+        // Sit above the optional floating nav bar instead of underneath/over it (#498).
+        view.rootView
+            ?.findViewById<View>(R.id.floating_nav_root)
+            ?.takeIf { it.isShown }
+            ?.let { newSnackbar.anchorView = it }
         newSnackbar.show()
         snackbar = newSnackbar
     }

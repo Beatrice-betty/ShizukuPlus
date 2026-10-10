@@ -79,7 +79,8 @@ class ActivityLogFragment : Fragment() {
                 isChipIconVisible = true
                 setOnClickListener { anchor ->
                     HapticUtils.tap(anchor)
-                    android.widget
+                    // AppCompat's PopupMenu resolves the theme's M3 popupMenuStyle; the framework one doesn't.
+                    androidx.appcompat.widget
                         .PopupMenu(ctx, anchor)
                         .apply {
                             Sort.values().forEachIndexed { i, s -> menu.add(0, i, i, s.label) }

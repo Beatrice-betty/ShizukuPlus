@@ -108,7 +108,7 @@ object FloatingNavBar : Application.ActivityLifecycleCallbacks {
             nav.selectedItemId = selected
             attachSelectListener(activity, nav, selected)
         }
-        if (isNew && from == 0) playEntrance(root)
+        if (isNew && from == 0 && ShizukuSettings.isExpressiveAnimationsEnabled()) playEntrance(root)
         if (isNew) watchScrolling(content, root)
 
         layoutBar(activity, root)
@@ -141,7 +141,7 @@ object FloatingNavBar : Application.ActivityLifecycleCallbacks {
             .animate()
             .alpha(1f)
             .translationY(0f)
-            .setDuration(320)
+            .setDuration(ShizukuSettings.scaledAnimationDuration(320))
             .setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f))
             .start()
     }
@@ -182,7 +182,7 @@ object FloatingNavBar : Application.ActivityLifecycleCallbacks {
         bar
             .animate()
             .translationY(if (hide) distance.toFloat() else 0f)
-            .setDuration(if (hide) 180 else 240)
+            .setDuration(ShizukuSettings.scaledAnimationDuration(if (hide) 180 else 240))
             .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
             .start()
     }

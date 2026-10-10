@@ -125,7 +125,9 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         )
 
     // "Classic" stays the default; the timeline style is opt-in via Settings > Personalization.
-    private fun useTimeline() = af.shizuku.manager.ShizukuSettings.getChangelogStyle() == "timeline"
+    private fun useTimeline() =
+        af.shizuku.manager.ShizukuSettings
+            .getChangelogStyle() == "timeline"
 
     override fun onViewCreated(
         view: View,
@@ -234,8 +236,10 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
             notesView
                 .animate()
                 .alpha(1f)
-                .setDuration(200L)
-                .setInterpolator(FastOutSlowInInterpolator())
+                .setDuration(
+                    af.shizuku.manager.ShizukuSettings
+                        .scaledAnimationDuration(200L),
+                ).setInterpolator(FastOutSlowInInterpolator())
                 .start()
             notesScroll?.scrollTo(0, 0)
         }
@@ -409,7 +413,9 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
                 "timeline" to picker.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_timeline),
                 "classic" to picker.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_classic),
             )
-        val current = af.shizuku.manager.ShizukuSettings.getChangelogStyle()
+        val current =
+            af.shizuku.manager.ShizukuSettings
+                .getChangelogStyle()
         cards.forEach { (key, card) ->
             val on = key == current
             card.isChecked = on
@@ -419,9 +425,15 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
                     if (on) androidx.appcompat.R.attr.colorPrimary else com.google.android.material.R.attr.colorOutlineVariant,
                 )
             card.setOnClickListener {
-                if (key == af.shizuku.manager.ShizukuSettings.getChangelogStyle()) return@setOnClickListener
+                if (key ==
+                    af.shizuku.manager.ShizukuSettings
+                        .getChangelogStyle()
+                ) {
+                    return@setOnClickListener
+                }
                 HapticUtils.toggleOn(it)
-                af.shizuku.manager.ShizukuSettings.setChangelogStyle(key)
+                af.shizuku.manager.ShizukuSettings
+                    .setChangelogStyle(key)
                 // Re-inflate the dialog content in the newly chosen style.
                 parentFragmentManager
                     .beginTransaction()
@@ -435,8 +447,16 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
         }
         view.findViewById<MaterialButton>(R.id.btn_confirm).setOnClickListener {
             HapticUtils.success(it)
-            af.shizuku.manager.ShizukuSettings.setChangelogStylePrompted()
-            picker.animate().alpha(0f).setDuration(180L).withEndAction { picker.visibility = View.GONE }.start()
+            af.shizuku.manager.ShizukuSettings
+                .setChangelogStylePrompted()
+            picker
+                .animate()
+                .alpha(0f)
+                .setDuration(
+                    af.shizuku.manager.ShizukuSettings
+                        .scaledAnimationDuration(180L),
+                ).withEndAction { picker.visibility = View.GONE }
+                .start()
         }
     }
 
@@ -465,7 +485,8 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
     override fun onDestroyView() {
         // Closing What's New also retires the one-time style prompt (not on rotation).
         if (activity?.isChangingConfigurations != true && arguments?.getBoolean(ARG_STYLE_PICKER, false) == true) {
-            af.shizuku.manager.ShizukuSettings.setChangelogStylePrompted()
+            af.shizuku.manager.ShizukuSettings
+                .setChangelogStylePrompted()
         }
         super.onDestroyView()
     }
