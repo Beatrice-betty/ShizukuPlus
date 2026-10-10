@@ -548,11 +548,17 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
 
                 val target = if (child.isPressed) 1f else 0f
                 val current = progress[child] ?: 0f
+                // Eased toward target (not a fixed linear step) so the morph decelerates into
+                // place - reads as a soft, springy squish rather than a mechanical sweep, matching
+                // the M3 Expressive motion language used elsewhere (overshoot on card entrance,
+                // decelerate on the live drag reflow).
                 val next =
                     when {
-                        current < target -> minOf(target, current + MORPH_STEP)
-                        current > target -> maxOf(target, current - MORPH_STEP)
-                        else -> current
+                        current == target -> target
+                        else -> {
+                            val stepped = current + (target - current) * EASE_FACTOR
+                            if (kotlin.math.abs(target - stepped) < SNAP_EPSILON) target else stepped
+                        }
                     }
                 if (next != target) animating = true
                 progress[child] = next
@@ -590,8 +596,11 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         override fun isHeader(view: View): Boolean = view.tag == "category_header"
 
         private companion object {
-            /** Per-frame progress toward the pressed shape; ~8 frames (~130ms at 60 Hz). */
-            const val MORPH_STEP = 0.125f
+            /** Fraction of the remaining distance to target closed per frame - exponential ease. */
+            const val EASE_FACTOR = 0.3f
+
+            /** Below this remaining distance, snap to target instead of asymptotically crawling. */
+            const val SNAP_EPSILON = 0.01f
         }
     }
 }
