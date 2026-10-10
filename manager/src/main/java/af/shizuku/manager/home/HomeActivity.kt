@@ -530,6 +530,26 @@ open class HomeActivity :
                     if (!adapter.isDraggable(target.bindingAdapterPosition)) return false
                     adapter.moveItem(src.bindingAdapterPosition, target.bindingAdapterPosition)
                     HapticUtils.segmentTick(src.itemView)
+                    // Live reflow: the adapter only updates cardOrder here and defers the real
+                    // rebuild to clearView() (so a mid-drag notifyItemMoved/rebuildItems can't
+                    // reintroduce the rebind flash from #475) - which otherwise leaves siblings
+                    // static until drop and reads as sluggish. Purely a View.translationY
+                    // illusion on top of that: slide the card being passed over into the gap the
+                    // dragged card just left, using each view's real layout position (getTop() is
+                    // unaffected by ItemTouchHelper's own translation on the dragged view).
+                    if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
+                        val dy = (src.itemView.top - target.itemView.top).toFloat()
+                        if (dy != 0f) {
+                            target.itemView.animate().cancel()
+                            target.itemView.translationY = dy
+                            target.itemView
+                                .animate()
+                                .translationY(0f)
+                                .setDuration(ShizukuSettings.scaledAnimationDuration(200))
+                                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                                .start()
+                        }
+                    }
                     return true
                 }
 
@@ -572,6 +592,14 @@ open class HomeActivity :
                     super.clearView(rv, vh)
                     adapter.isDragging = false
                     HapticUtils.gestureEnd(vh.itemView)
+                    // Defensively cancel any in-flight live-reflow shift on every child so the
+                    // upcoming updateData() rebuild never lands on top of a stale translationY.
+                    for (i in 0 until rv.childCount) {
+                        rv.getChildAt(i)?.let {
+                            it.animate().cancel()
+                            it.translationY = 0f
+                        }
+                    }
                     if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
                         val animator = vh.itemView.animate()
                         if (animator != null) {
