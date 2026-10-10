@@ -252,14 +252,17 @@ object ShizukuStateMachine {
             when {
                 old == State.RUNNING && new == State.CRASHED -> {
                     lastDropAtMs.set(System.currentTimeMillis())
+                    DeactivationAdvisor.recordUnexpectedDrop()
                     "Connection: Shizuku service dropped unexpectedly (process or binder died)"
                 }
                 old == State.RUNNING && new == State.STOPPING -> {
                     lastDropAtMs.set(System.currentTimeMillis())
+                    if (!UserStopFlag.isSet()) DeactivationAdvisor.recordUnexpectedDrop()
                     if (UserStopFlag.isSet()) "Connection: Shizuku service stopped by you" else "Connection: Shizuku service stopping"
                 }
                 old == State.RUNNING && new == State.STOPPED -> {
                     lastDropAtMs.set(System.currentTimeMillis())
+                    if (!UserStopFlag.isSet()) DeactivationAdvisor.recordUnexpectedDrop()
                     "Connection: Shizuku service stopped"
                 }
                 old == State.STARTING && (new == State.STOPPED || new == State.CRASHED) ->

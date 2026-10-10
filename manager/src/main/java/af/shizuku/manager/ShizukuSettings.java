@@ -598,6 +598,19 @@ public class ShizukuSettings {
         getPreferences().edit().putBoolean(Keys.KEY_TCP_MODE, enable).apply();
     }
 
+    public static boolean isDiagnosticsEnabled() {
+        return getPreferences().getBoolean("diagnostics_enabled", true);
+    }
+
+    public static void setDiagnosticsEnabled(boolean enable) {
+        getPreferences().edit().putBoolean("diagnostics_enabled", enable).apply();
+    }
+
+    public static void setAutoReconnectMdnsEnabled(boolean enable) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_AUTO_RECONNECT_MDNS, enable).apply();
+    }
+
     public static int getTcpPort() {
         try {
             return Integer.parseInt(getPreferences().getString(Keys.KEY_TCP_PORT, "5555"));

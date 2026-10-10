@@ -93,6 +93,36 @@ class DiagnosticsDashboardPreference
                 )
             }
 
+            // Diagnostic 5: Watchdog disabled
+            if (!ShizukuSettings.getWatchdog()) {
+                activeWarnings.add(
+                    WarningItem(
+                        id = "watchdog_disabled",
+                        message = context.getString(R.string.diagnostics_warning_watchdog_disabled),
+                    ),
+                )
+            }
+
+            // Diagnostic 6: Auto-reconnect disabled
+            if (!ShizukuSettings.isAutoReconnectMdnsEnabled()) {
+                activeWarnings.add(
+                    WarningItem(
+                        id = "auto_reconnect_disabled",
+                        message = context.getString(R.string.diagnostics_warning_auto_reconnect_disabled),
+                    ),
+                )
+            }
+
+            // Diagnostic 7: Start on Boot disabled
+            if (!ShizukuSettings.getStartOnBoot(context)) {
+                activeWarnings.add(
+                    WarningItem(
+                        id = "start_on_boot_disabled",
+                        message = context.getString(R.string.diagnostics_warning_start_on_boot_disabled),
+                    ),
+                )
+            }
+
             val visibleWarnings = activeWarnings.filter { it.id !in dismissed }
 
             if (visibleWarnings.isEmpty()) {
@@ -175,6 +205,21 @@ class DiagnosticsDashboardPreference
                             } catch (_: Exception) {
                                 Toast.makeText(context, R.string.diagnostics_automation_start_failed, Toast.LENGTH_SHORT).show()
                             }
+                        }
+                        "watchdog_disabled" -> {
+                            ShizukuSettings.setWatchdog(context, true)
+                            Toast.makeText(context, R.string.diagnostics_watchdog_enabled_toast, Toast.LENGTH_SHORT).show()
+                            notifyChanged()
+                        }
+                        "auto_reconnect_disabled" -> {
+                            ShizukuSettings.setAutoReconnectMdnsEnabled(true)
+                            Toast.makeText(context, R.string.diagnostics_auto_reconnect_enabled_toast, Toast.LENGTH_SHORT).show()
+                            notifyChanged()
+                        }
+                        "start_on_boot_disabled" -> {
+                            ShizukuSettings.setStartOnBoot(context, true)
+                            Toast.makeText(context, R.string.diagnostics_start_on_boot_enabled_toast, Toast.LENGTH_SHORT).show()
+                            notifyChanged()
                         }
                     }
                 }

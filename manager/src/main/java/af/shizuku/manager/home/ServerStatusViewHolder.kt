@@ -129,10 +129,27 @@ class ServerStatusViewHolder(
             )
         }
 
-        diagnosticsChip.visibility = if (ok) View.VISIBLE else View.GONE
-        diagnosticsChip.setOnClickListener {
-            val activity = context.asActivity<android.app.Activity>() ?: return@setOnClickListener
-            activity.startActivity(android.content.Intent(activity, SystemHubActivity::class.java))
+        if (ok) {
+            diagnosticsChip.visibility = View.VISIBLE
+            diagnosticsChip.text = context.getString(R.string.settings_diagnostics_category)
+            diagnosticsChip.setChipIconResource(R.drawable.ic_server_ok_24)
+            diagnosticsChip.setOnClickListener {
+                val activity = context.asActivity<android.app.Activity>() ?: return@setOnClickListener
+                activity.startActivity(android.content.Intent(activity, SystemHubActivity::class.java))
+            }
+        } else if (af.shizuku.manager.ShizukuSettings
+                .isDiagnosticsEnabled()
+        ) {
+            diagnosticsChip.visibility = View.VISIBLE
+            diagnosticsChip.text = context.getString(R.string.home_status_diagnostics_tips)
+            diagnosticsChip.setChipIconResource(R.drawable.ic_settings_suggest_24)
+            diagnosticsChip.setOnClickListener {
+                af.shizuku.manager.utils.DeactivationAdvisor.showStabilityTipsDialog(context) {
+                    onBind()
+                }
+            }
+        } else {
+            diagnosticsChip.visibility = View.GONE
         }
 
         val okColorAttr = if (ok) com.google.android.material.R.attr.colorPrimaryContainer else com.google.android.material.R.attr.colorErrorContainer

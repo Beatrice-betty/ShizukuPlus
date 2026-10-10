@@ -582,6 +582,7 @@
     <string name="help_activity_manager_plus_detail">Deep Process Control allows the server to bypass standard app-hibernation and standby restrictions. It can force apps into the RESTRICTED standby bucket or perform a true deepForceStop (killing all services and background jobs), which is essential for aggressive battery-saving tools.</string>
 
     <!-- Plus settings category titles -->
+    <string name="settings_plus_category_core">Core</string>
     <string name="settings_plus_category_framework">Framework</string>
     <string name="settings_plus_category_performance">Performance &amp; Process Control</string>
     <string name="settings_plus_category_files">Files &amp; Virtual Machines</string>
@@ -1713,4 +1714,21 @@
     <string name="background_nudge_title">Shizuku keeps getting stopped</string>
     <string name="background_nudge_text">Your phone\'s battery manager may be restricting Shizuku in the background. Open Service Doctor to fix it.</string>
     <string name="activity_log_type_connection">Connection</string>
+
+    <!-- Keep-alive and stability tips for unexpected deactivations -->
+    <string name="tip_watchdog_desc">Monitor and automatically restart the Shizuku server if killed or terminated</string>
+    <string name="tip_auto_reconnect_desc">Automatically rediscover wireless debugging and reconnect on Wi-Fi</string>
+    <string name="tip_start_on_boot_desc">Start Shizuku service automatically when device boots</string>
+    <string name="tip_battery_doctor_desc">Protect Shizuku from OS battery saver and OEM sleeping restrictions</string>
+    <string name="stability_tips_dialog_title">Keep Shizuku Active</string>
+    <string name="stability_tips_dialog_message">Shizuku is not running. Select recommended settings to enable for background stability and auto-recovery:</string>
+    <string name="stability_tips_apply_selected">Enable Selected</string>
+    <string name="stability_tips_all_enabled_message">All recommended background keep-alive settings are already enabled. If Shizuku still deactivates, check Service Doctor for OEM-specific battery restrictions or phantom process killer limits.</string>
+    <string name="home_status_diagnostics_tips">Keep-Alive Tips</string>
+    <string name="diagnostics_warning_watchdog_disabled">Watchdog is disabled. Tap to enable auto-restart when Shizuku service stops.</string>
+    <string name="diagnostics_warning_auto_reconnect_disabled">Wireless auto-reconnect is disabled. Tap to reconnect automatically on Wi-Fi.</string>
+    <string name="diagnostics_warning_start_on_boot_disabled">Start on Boot is disabled. Tap to start Shizuku automatically on system boot.</string>
+    <string name="diagnostics_watchdog_enabled_toast">Watchdog enabled</string>
+    <string name="diagnostics_auto_reconnect_enabled_toast">Intelligent Auto-Reconnect enabled</string>
+    <string name="diagnostics_start_on_boot_enabled_toast">Start on Boot enabled</string>
 </resources>
