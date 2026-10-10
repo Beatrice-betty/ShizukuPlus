@@ -333,12 +333,19 @@ class BehaviorSettingsFragment :
         networkCategory.setChildAvailable("tcp_trusted_networks", base && mode == NetworkTrust.MODE_TRUSTED)
         networkCategory.setChildAvailable(NetworkTrust.KEY_AUTO_CLOSE, base && mode != NetworkTrust.MODE_OFF)
         tcpTrustedPreference.summary = trustedSummary()
-        tcpProtectionPreference.summary =
-            if (NetworkTrust.canDetectOpenNetworks() || mode == NetworkTrust.MODE_OFF) {
-                null
-            } else {
-                getString(R.string.tcp_protection_limited_summary)
+        // tcp_network_protection is a SimpleMenuPreference (ListPreference) with
+        // useSimpleSummaryProvider="true", so it already has a SummaryProvider installed;
+        // setSummary() throws "Preference already has a SummaryProvider set." if called while one
+        // is active (same root cause as #587). Toggle the provider itself instead of the text.
+        val limited = !NetworkTrust.canDetectOpenNetworks() && mode != NetworkTrust.MODE_OFF
+        (tcpProtectionPreference as? androidx.preference.ListPreference)?.apply {
+            if (limited) {
+                summaryProvider = null
+                summary = getString(R.string.tcp_protection_limited_summary)
+            } else if (summaryProvider == null) {
+                summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance()
             }
+        }
     }
 
     private fun trustedSummary(): String {
