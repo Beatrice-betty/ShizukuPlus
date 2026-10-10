@@ -74,6 +74,6 @@ object AdbConnectionPlanner {
         port: Int,
     ) {
         Timber.tag(TAG).i("Connecting via %s on port %d", method, port)
-        runCatching { ActivityLogManager.log("Shizuku", context.packageName, "Connecting via $method on port $port") }
+        runCatching { ActivityLogManager.log("Shizuku", context.packageName, "Connection: connecting via $method on port $port") }
     }
 }

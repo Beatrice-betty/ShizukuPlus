@@ -1712,4 +1712,5 @@
     <string name="background_nudge_channel">Background protection</string>
     <string name="background_nudge_title">Shizuku keeps getting stopped</string>
     <string name="background_nudge_text">Your phone\'s battery manager may be restricting Shizuku in the background. Open Service Doctor to fix it.</string>
+    <string name="activity_log_type_connection">Connection</string>
 </resources>

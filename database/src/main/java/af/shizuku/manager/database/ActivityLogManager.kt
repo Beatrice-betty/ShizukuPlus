@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 enum class ActivityEventType {
     SERVICE_START,
     SERVICE_STOP,
+
+    /** Connection lifecycle: drops, failed starts, reconnects, network loss. Kept longer than other entries. */
+    CONNECTION,
     PERMISSION,
     APP_MANAGEMENT,
     WATCHDOG,
@@ -29,7 +32,11 @@ enum class ActivityEventType {
     OTHER;
 
     companion object {
+        /** Prefix that marks a connection event; checked first so wording like "stopped" can't misfile it. */
+        const val CONNECTION_PREFIX = "Connection:"
+
         fun fromAction(action: String): ActivityEventType = when {
+            action.startsWith(CONNECTION_PREFIX) -> CONNECTION
             action.contains("Service started", ignoreCase = true) -> SERVICE_START
             action.contains("started via", ignoreCase = true) -> SERVICE_START
             action.contains("Service stopped", ignoreCase = true) ||
@@ -95,6 +102,7 @@ object ActivityLogManager {
     val logs: StateFlow<List<ActivityLogRecord>> = _logs.asStateFlow()
     
     private var retentionCount = 100
+    private const val CONNECTION_RETENTION = 300
     private var appContext: Context? = null
     private var settings: ActivityLogSettings? = null
     
@@ -194,10 +202,8 @@ object ActivityLogManager {
         )
         
         synchronized(records) {
-            if (records.size >= retentionCount) {
-                records.removeAt(records.size - 1)
-            }
             records.add(0, record)
+            trimLocked()
             _logs.value = records.toList()
         }
         
@@ -208,6 +214,25 @@ object ActivityLogManager {
         }
     }
     
+    /**
+     * Caps general entries at [retentionCount] and connection entries at [CONNECTION_RETENTION]
+     * independently (records are newest-first), so a burst of per-app IPC logging can never push the
+     * rare, diagnostic connection drops out of history. Caller holds the records lock.
+     */
+    private fun trimLocked() {
+        var general = 0
+        var connection = 0
+        val it = records.iterator()
+        while (it.hasNext()) {
+            val r = it.next()
+            if (r.eventType == ActivityEventType.CONNECTION) {
+                if (++connection > CONNECTION_RETENTION) it.remove()
+            } else if (++general > retentionCount) {
+                it.remove()
+            }
+        }
+    }
+
     private fun saveToDatabase(record: ActivityLogRecord) {
         val d = dao ?: return
         scope.launch {
@@ -236,7 +261,8 @@ object ActivityLogManager {
         
         scope.launch {
             try {
-                dao?.deleteExcess(retentionCount)
+                dao?.deleteExcessGeneral(retentionCount)
+                dao?.deleteExcessConnection(CONNECTION_RETENTION)
             } catch (e: Exception) {
                 handleDatabaseError(e)
             } finally {

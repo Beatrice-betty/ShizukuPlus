@@ -83,6 +83,7 @@ object ShizukuStateMachine {
         if (oldState != newState) {
             listeners.forEach { it(newState) }
             Timber.tag("ShizukuStateMachine").d(newState.toString())
+            logConnectionTransition(oldState, newState)
 
             // Record which app build is starting this server instance. All deliberate start paths
             // (AdbStarter, ShizukuReceiverStarter, tile, StarterActivity) funnel through STARTING,
@@ -231,6 +232,48 @@ object ShizukuStateMachine {
             }
         set(state)
         return state
+    }
+
+    /** When a drop was last observed, so the next RUNNING can report how long the gap was. */
+    private val lastDropAtMs =
+        java.util.concurrent.atomic
+            .AtomicLong(0L)
+
+    /**
+     * Records connection-level transitions in the activity log (kept longer than ordinary entries):
+     * a running server dying or being stopped, a start that never completed, and recovery. Fired
+     * once per real state change, so repeated update() polling can't spam it.
+     */
+    private fun logConnectionTransition(
+        old: State,
+        new: State,
+    ) {
+        val message =
+            when {
+                old == State.RUNNING && new == State.CRASHED -> {
+                    lastDropAtMs.set(System.currentTimeMillis())
+                    "Connection: Shizuku service dropped unexpectedly (process or binder died)"
+                }
+                old == State.RUNNING && new == State.STOPPING -> {
+                    lastDropAtMs.set(System.currentTimeMillis())
+                    if (UserStopFlag.isSet()) "Connection: Shizuku service stopped by you" else "Connection: Shizuku service stopping"
+                }
+                old == State.RUNNING && new == State.STOPPED -> {
+                    lastDropAtMs.set(System.currentTimeMillis())
+                    "Connection: Shizuku service stopped"
+                }
+                old == State.STARTING && (new == State.STOPPED || new == State.CRASHED) ->
+                    "Connection: start did not complete (${new.name.lowercase()})"
+                new == State.RUNNING && lastDropAtMs.get() > 0L -> {
+                    val seconds = (System.currentTimeMillis() - lastDropAtMs.getAndSet(0L)) / 1000
+                    "Connection: restored after ${seconds}s"
+                }
+                else -> null
+            } ?: return
+        runCatching {
+            af.shizuku.manager.database.ActivityLogManager
+                .log("Shizuku", ShizukuApplication.appContext.packageName, message)
+        }
     }
 
     fun isRunning(): Boolean = get() == State.RUNNING

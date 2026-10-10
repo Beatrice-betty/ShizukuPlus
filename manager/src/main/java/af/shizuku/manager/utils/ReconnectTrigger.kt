@@ -25,6 +25,9 @@ object ReconnectTrigger {
 
     @Volatile private var registered = false
 
+    /** The Wi-Fi/Ethernet network last seen, so onLost can tell whether it was the LAN that dropped. */
+    @Volatile private var lanNetwork: Network? = null
+
     @Synchronized
     fun install(context: Context) {
         if (registered) return
@@ -40,7 +43,20 @@ object ReconnectTrigger {
                         val lan =
                             caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                                 caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                        if (lan) lanNetwork = network
                         if (lan && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) maybeReconnect(app)
+                    }
+
+                    override fun onLost(network: Network) {
+                        if (network != lanNetwork) return
+                        lanNetwork = null
+                        runCatching {
+                            af.shizuku.manager.database.ActivityLogManager.log(
+                                "Shizuku",
+                                app.packageName,
+                                "Connection: Wi-Fi lost" + if (ShizukuStateMachine.isRunning()) " while Shizuku was running" else "",
+                            )
+                        }
                     }
                 },
             )
@@ -63,6 +79,10 @@ object ReconnectTrigger {
         if (!eligible) return
         lastAttemptAt = now
         Timber.tag(TAG).i("Wi-Fi available while Shizuku is not running - retrying start")
+        runCatching {
+            af.shizuku.manager.database.ActivityLogManager
+                .log("Shizuku", context.packageName, "Connection: Wi-Fi available, retrying start")
+        }
         runCatching { ShizukuReceiverStarter.start(context, automatic = true) }
             .onFailure { Timber.tag(TAG).w(it, "Reconnect start failed") }
     }

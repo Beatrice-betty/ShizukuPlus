@@ -7,7 +7,6 @@ import af.shizuku.manager.database.ActivityLogRecord
 import af.shizuku.manager.databinding.ItemActivityLogBinding
 import af.shizuku.manager.utils.AppIconCache
 import af.shizuku.manager.utils.HapticUtils
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -74,20 +73,24 @@ class ActivityLogFragment : Fragment() {
         val sortChip =
             com.google.android.material.chip.Chip(ctx).apply {
                 setText(sort.label)
-                chipIcon = androidx.core.content.ContextCompat.getDrawable(ctx, R.drawable.ic_outline_expand_more_24)
+                chipIcon =
+                    androidx.core.content.ContextCompat
+                        .getDrawable(ctx, R.drawable.ic_outline_expand_more_24)
                 isChipIconVisible = true
                 setOnClickListener { anchor ->
                     HapticUtils.tap(anchor)
-                    android.widget.PopupMenu(ctx, anchor).apply {
-                        Sort.values().forEachIndexed { i, s -> menu.add(0, i, i, s.label) }
-                        setOnMenuItemClickListener { item ->
-                            sort = Sort.values()[item.itemId]
-                            (anchor as? com.google.android.material.chip.Chip)?.setText(sort.label)
-                            HapticUtils.segmentTick(anchor)
-                            applyFilterSort()
-                            true
-                        }
-                    }.show()
+                    android.widget
+                        .PopupMenu(ctx, anchor)
+                        .apply {
+                            Sort.values().forEachIndexed { i, s -> menu.add(0, i, i, s.label) }
+                            setOnMenuItemClickListener { item ->
+                                sort = Sort.values()[item.itemId]
+                                (anchor as? com.google.android.material.chip.Chip)?.setText(sort.label)
+                                HapticUtils.segmentTick(anchor)
+                                applyFilterSort()
+                                true
+                            }
+                        }.show()
                 }
             }
         group.addView(sortChip)
@@ -118,6 +121,7 @@ class ActivityLogFragment : Fragment() {
         when (type) {
             ActivityEventType.SERVICE_START -> R.string.activity_log_type_start
             ActivityEventType.SERVICE_STOP -> R.string.activity_log_type_stop
+            ActivityEventType.CONNECTION -> R.string.activity_log_type_connection
             ActivityEventType.PERMISSION -> R.string.activity_log_type_permission
             ActivityEventType.APP_MANAGEMENT -> R.string.activity_log_type_app_mgmt
             ActivityEventType.WATCHDOG -> R.string.activity_log_type_watchdog
@@ -212,7 +216,10 @@ class ActivityLogFragment : Fragment() {
 
             fun create(parent: ViewGroup) = LogViewHolder(ItemActivityLogBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-            private fun resolveAttrColor(view: View, attr: Int): Int {
+            private fun resolveAttrColor(
+                view: View,
+                attr: Int,
+            ): Int {
                 val tv = android.util.TypedValue()
                 view.context.theme.resolveAttribute(attr, tv, true)
                 return tv.data
@@ -264,22 +271,27 @@ class ActivityLogFragment : Fragment() {
 
         private fun applyEventType(eventType: ActivityEventType) {
             val ctx = binding.root.context
-            val (labelRes, colorAttr) = when (eventType) {
-                ActivityEventType.SERVICE_START -> R.string.activity_log_type_start to androidx.appcompat.R.attr.colorPrimary
-                ActivityEventType.SERVICE_STOP -> R.string.activity_log_type_stop to androidx.appcompat.R.attr.colorError
-                ActivityEventType.PERMISSION -> R.string.activity_log_type_permission to com.google.android.material.R.attr.colorTertiary
-                ActivityEventType.APP_MANAGEMENT -> R.string.activity_log_type_app_mgmt to com.google.android.material.R.attr.colorSecondary
-                ActivityEventType.WATCHDOG -> R.string.activity_log_type_watchdog to com.google.android.material.R.attr.colorTertiary
-                ActivityEventType.SYSTEM -> R.string.activity_log_type_system to com.google.android.material.R.attr.colorOutline
-                ActivityEventType.OTHER -> R.string.activity_log_type_other to com.google.android.material.R.attr.colorOutline
-            }
+            val (labelRes, colorAttr) =
+                when (eventType) {
+                    ActivityEventType.SERVICE_START -> R.string.activity_log_type_start to androidx.appcompat.R.attr.colorPrimary
+                    ActivityEventType.SERVICE_STOP -> R.string.activity_log_type_stop to androidx.appcompat.R.attr.colorError
+                    ActivityEventType.CONNECTION -> R.string.activity_log_type_connection to com.google.android.material.R.attr.colorSecondary
+                    ActivityEventType.PERMISSION -> R.string.activity_log_type_permission to com.google.android.material.R.attr.colorTertiary
+                    ActivityEventType.APP_MANAGEMENT -> R.string.activity_log_type_app_mgmt to com.google.android.material.R.attr.colorSecondary
+                    ActivityEventType.WATCHDOG -> R.string.activity_log_type_watchdog to com.google.android.material.R.attr.colorTertiary
+                    ActivityEventType.SYSTEM -> R.string.activity_log_type_system to com.google.android.material.R.attr.colorOutline
+                    ActivityEventType.OTHER -> R.string.activity_log_type_other to com.google.android.material.R.attr.colorOutline
+                }
             val accentColor = resolveAttrColor(binding.root, colorAttr)
             binding.eventChip.setText(labelRes)
-            binding.eventChip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(
-                ColorUtils.setAlphaComponent(accentColor, 0x28)
-            )
+            binding.eventChip.chipBackgroundColor =
+                android.content.res.ColorStateList.valueOf(
+                    ColorUtils.setAlphaComponent(accentColor, 0x28),
+                )
             binding.eventChip.setTextColor(accentColor)
-            binding.eventIndicator.backgroundTintList = android.content.res.ColorStateList.valueOf(accentColor)
+            binding.eventIndicator.backgroundTintList =
+                android.content.res.ColorStateList
+                    .valueOf(accentColor)
         }
     }
 }

@@ -137,6 +137,11 @@ object AdbStarter {
             }
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "startAdb failed on port %d: %s", port, e.message)
+            if (e !is CancellationException) {
+                runCatching {
+                    ActivityLogManager.log("Shizuku", context.packageName, "Connection: ADB start failed on port $port (${e.javaClass.simpleName}: ${e.message?.take(80)})")
+                }
+            }
             if (e is SSLException && (e.message?.contains("protocol version") == true || e is javax.net.ssl.SSLProtocolException)) {
                 withContext(Dispatchers.Main) {
                     val activity = context.getActivity()
