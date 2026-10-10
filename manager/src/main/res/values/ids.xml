@@ -5,4 +5,6 @@
     <item name="accessibility_action_swipe_left" type="id" />
     <item name="action_move_card_up" type="id" />
     <item name="action_move_card_down" type="id" />
+    <item name="tag_reflow_animator" type="id" />
+    <item name="tag_card_rest_radius" type="id" />
 </resources>

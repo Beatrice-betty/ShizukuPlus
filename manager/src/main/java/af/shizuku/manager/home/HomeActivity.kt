@@ -505,12 +505,60 @@ open class HomeActivity :
         recyclerView.addEdgeSpacing(top = edgeSpacingV, bottom = edgeSpacingV, left = edgeSpacingH, right = edgeSpacingH)
 
         // Drag-to-reorder support
+
+        /** Slides [v] from [dy] to its real position with its own animator, so cancelling it never
+         *  disturbs other property animations (e.g. a card's entrance scale/alpha). */
+        fun shiftForReflow(
+            v: View,
+            dy: Float,
+        ) {
+            (v.getTag(R.id.tag_reflow_animator) as? android.animation.ObjectAnimator)?.cancel()
+            v.translationY = dy
+            val animator =
+                android.animation.ObjectAnimator.ofFloat(v, View.TRANSLATION_Y, dy, 0f).apply {
+                    duration = ShizukuSettings.scaledAnimationDuration(200)
+                    interpolator = android.view.animation.DecelerateInterpolator()
+                }
+            v.setTag(R.id.tag_reflow_animator, animator)
+            animator.start()
+        }
+
+        fun clearReflow(v: View) {
+            (v.getTag(R.id.tag_reflow_animator) as? android.animation.ObjectAnimator)?.cancel()
+            v.setTag(R.id.tag_reflow_animator, null)
+            v.translationY = 0f
+        }
+
+        /** M3E shape morph: the held card's corners grow while lifted and settle back on drop. */
+        fun morphCardRadius(
+            itemView: View,
+            lifted: Boolean,
+        ) {
+            val card = itemView as? com.google.android.material.card.MaterialCardView ?: return
+            val rest = (card.getTag(R.id.tag_card_rest_radius) as? Float) ?: card.radius.also { card.setTag(R.id.tag_card_rest_radius, it) }
+            val density = resources.displayMetrics.density
+            val target = if (lifted) maxOf(rest * 1.5f, rest + 12f * density).coerceAtMost(40f * density) else rest
+            if (!ShizukuSettings.isExpressiveAnimationsEnabled()) {
+                card.radius = target
+                return
+            }
+            android.animation.ValueAnimator.ofFloat(card.radius, target).apply {
+                duration = ShizukuSettings.scaledAnimationDuration(if (lifted) 180 else 260)
+                interpolator = if (lifted) android.view.animation.DecelerateInterpolator() else android.view.animation.OvershootInterpolator(1.6f)
+                addUpdateListener { card.radius = it.animatedValue as Float }
+                start()
+            }
+        }
+
         val dragCallback =
             object : ItemTouchHelper.SimpleCallback(
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN,
                 0,
             ) {
-                override fun isLongPressDragEnabled() = false
+                // Holding any draggable card picks it up straight away; the holder's own long-click
+                // still enters edit mode, so hold -> edit mode -> drag is a single gesture. The
+                // drag handle path (startDragCallback) keeps working for edit mode's explicit grip.
+                override fun isLongPressDragEnabled() = true
 
                 override fun getMovementFlags(
                     rv: RecyclerView,
@@ -539,16 +587,7 @@ open class HomeActivity :
                     // unaffected by ItemTouchHelper's own translation on the dragged view).
                     if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
                         val dy = (src.itemView.top - target.itemView.top).toFloat()
-                        if (dy != 0f) {
-                            target.itemView.animate().cancel()
-                            target.itemView.translationY = dy
-                            target.itemView
-                                .animate()
-                                .translationY(0f)
-                                .setDuration(ShizukuSettings.scaledAnimationDuration(200))
-                                .setInterpolator(android.view.animation.DecelerateInterpolator())
-                                .start()
-                        }
+                        if (dy != 0f) shiftForReflow(target.itemView, dy)
                     }
                     return true
                 }
@@ -562,6 +601,7 @@ open class HomeActivity :
                         adapter.isDragging = true
                         viewHolder?.itemView?.let { HapticUtils.gestureStart(it) }
                         if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
+                            viewHolder?.itemView?.let { morphCardRadius(it, lifted = true) }
                             viewHolder
                                 ?.itemView
                                 ?.animate()
@@ -592,14 +632,11 @@ open class HomeActivity :
                     super.clearView(rv, vh)
                     adapter.isDragging = false
                     HapticUtils.gestureEnd(vh.itemView)
-                    // Defensively cancel any in-flight live-reflow shift on every child so the
+                    // Reset only the live-reflow shift on every child (scoped animator, so other
+                    // animations such as a card's entrance scale are left to finish), so the
                     // upcoming updateData() rebuild never lands on top of a stale translationY.
-                    for (i in 0 until rv.childCount) {
-                        rv.getChildAt(i)?.let {
-                            it.animate().cancel()
-                            it.translationY = 0f
-                        }
-                    }
+                    for (i in 0 until rv.childCount) rv.getChildAt(i)?.let { clearReflow(it) }
+                    morphCardRadius(vh.itemView, lifted = false)
                     if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
                         val animator = vh.itemView.animate()
                         if (animator != null) {
