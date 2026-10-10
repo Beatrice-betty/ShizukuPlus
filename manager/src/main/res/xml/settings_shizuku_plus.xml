@@ -5,21 +5,31 @@
     <af.shizuku.manager.settings.DiagnosticsDashboardPreference
         android:key="diagnostics_dashboard" />
 
-    <af.shizuku.manager.settings.GrayableIconSwitchPreference
-        android:key="hide_disabled_plus_features"
-        android:title="@string/settings_hide_disabled_plus_features"
-        android:summary="@string/settings_hide_disabled_plus_features_summary"
-        android:icon="@drawable/ic_visibility_off_24"
-        android:defaultValue="false" />
+    <!-- Titled, always-expanded group for the two top-level switches, so the first card has a
+         header like every other group (it previously sat headerless under the toolbar). -->
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_core"
+        android:title="@string/settings_plus_category_core"
+        android:icon="@drawable/ic_bolt_24"
+        app:collapsible="false">
 
-    <!-- Core toggle: must be enabled for most Plus features to function -->
-    <af.shizuku.manager.settings.PlusFeaturePreference
-        android:key="custom_api_enabled"
-        android:title="@string/settings_enhanced_api"
-        android:summary="@string/settings_enhanced_api_summary"
-        android:icon="@drawable/ic_code_24"
-        android:defaultValue="true"
-        app:badgeType="plus" />
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="hide_disabled_plus_features"
+            android:title="@string/settings_hide_disabled_plus_features"
+            android:summary="@string/settings_hide_disabled_plus_features_summary"
+            android:icon="@drawable/ic_visibility_off_24"
+            android:defaultValue="false" />
+
+        <!-- Core toggle: must be enabled for most Plus features to function -->
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="custom_api_enabled"
+            android:title="@string/settings_enhanced_api"
+            android:summary="@string/settings_enhanced_api_summary"
+            android:icon="@drawable/ic_code_24"
+            android:defaultValue="true"
+            app:badgeType="plus" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_connectivity"

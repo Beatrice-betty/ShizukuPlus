@@ -538,11 +538,11 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
                 val pos = parent.getChildAdapterPosition(child)
                 if (pos == RecyclerView.NO_POSITION) continue
 
-                val first = isHeader(child)
-                val nextView = parent.findViewHolderForAdapterPosition(pos + 1)?.itemView
-                val last =
-                    pos + 1 >= adapter.itemCount ||
-                        (nextView != null && (isHeader(nextView) || !shouldDecorate(nextView)))
+                // A group starts at its header - or, for headerless groups (e.g. the first rows of
+                // Feature Hub), at the first visible row after nothing/a non-card view. Hidden (GONE)
+                // rows such as the diagnostics dashboard don't count as neighbours either way.
+                val first = isHeader(child) || startsGroup(parent, pos)
+                val last = endsGroup(parent, adapter.itemCount, pos)
                 val top = if (first) cornerRadius else innerRadius
                 val bottom = if (last) cornerRadius else innerRadius
 
@@ -594,6 +594,41 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         }
 
         override fun isHeader(view: View): Boolean = view.tag == "category_header"
+
+        /** True when no visible card row sits directly above [pos] (unknown/off-screen => mid-group). */
+        private fun startsGroup(
+            parent: RecyclerView,
+            pos: Int,
+        ): Boolean {
+            var p = pos - 1
+            while (p >= 0) {
+                val prev = parent.findViewHolderForAdapterPosition(p)?.itemView ?: return false
+                if (prev.visibility == View.GONE) {
+                    p--
+                    continue
+                }
+                return !shouldDecorate(prev)
+            }
+            return true
+        }
+
+        /** True when the next visible row is a header/non-card view, or there is none. */
+        private fun endsGroup(
+            parent: RecyclerView,
+            itemCount: Int,
+            pos: Int,
+        ): Boolean {
+            var q = pos + 1
+            while (q < itemCount) {
+                val next = parent.findViewHolderForAdapterPosition(q)?.itemView ?: return false
+                if (next.visibility == View.GONE) {
+                    q++
+                    continue
+                }
+                return isHeader(next) || !shouldDecorate(next)
+            }
+            return true
+        }
 
         private companion object {
             /** Fraction of the remaining distance to target closed per frame - exponential ease. */

@@ -35,14 +35,20 @@
                 android:id="@+id/buttonStart"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:text="@string/start" />
+                android:text="@string/start"
+                android:textColor="@color/toggle_button_text"
+                app:backgroundTint="@color/toggle_button_background"
+                app:strokeColor="@color/toggle_button_stroke" />
 
             <com.google.android.material.button.MaterialButton
                 style="?attr/materialButtonOutlinedStyle"
                 android:id="@+id/buttonStop"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
-                android:text="@string/stop" />
+                android:text="@string/stop"
+                android:textColor="@color/toggle_button_text"
+                app:backgroundTint="@color/toggle_button_background"
+                app:strokeColor="@color/toggle_button_stroke" />
 
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
