@@ -126,7 +126,7 @@ class BehaviorSettingsFragment :
         }
 
         watchdogPreference.apply {
-            isChecked = ShizukuSettings.isWatchdogRunning()
+            isChecked = watchdogShownOn()
             setOnPreferenceChangeListener { _, newValue ->
                 if (newValue is Boolean) {
                     maybeToggleBatterySensitiveSetting(newValue) { result ->
@@ -485,7 +485,7 @@ class BehaviorSettingsFragment :
         sharedPreferences: SharedPreferences,
         key: String?,
     ) {
-        if (key == KEY_WATCHDOG) watchdogPreference.isChecked = ShizukuSettings.isWatchdogRunning()
+        if (key == KEY_WATCHDOG) watchdogPreference.isChecked = watchdogShownOn()
         if (key == KEY_USB_PHONE_SWITCH_NOTIFY) {
             context?.let { ctx ->
                 syncUsbPhoneSwitchConfig(ctx, ShizukuSettings.isUsbPhoneSwitchNotifyEnabled())
@@ -529,4 +529,8 @@ class BehaviorSettingsFragment :
                 .apply()
         }
     }
+
+    // A new install's Watchdog is on by default from its first server start; until then the
+    // switch shows that default, and turning it off stores the choice.
+    private fun watchdogShownOn(): Boolean = ShizukuSettings.isWatchdogRunning() || ShizukuSettings.isWatchdogDefaultPending()
 }
