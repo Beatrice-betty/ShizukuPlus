@@ -7,9 +7,11 @@ import af.shizuku.manager.app.SnackbarHelper
 import af.shizuku.manager.automation.AutomationService
 import af.shizuku.manager.service.AdbProxyService
 import af.shizuku.manager.service.ShizukuLiveService
+import af.shizuku.manager.service.WatchdogService
 import af.shizuku.manager.utils.DeviceOptimizer
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.NetworkTrust
+import af.shizuku.manager.utils.LiveActivityNotificationManager
 import af.shizuku.manager.utils.ShizukuStateMachine
 import af.shizuku.manager.utils.TcpNetworkGuard
 import android.Manifest
@@ -61,6 +63,10 @@ class BehaviorSettingsFragment :
             tcpPortPreference.icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
                 ?: tint(requireContext().getDrawable(R.drawable.ic_lan_24))
         }
+    }
+
+    private val watchdogRunningListener: (Boolean) -> Unit = {
+        syncWatchdogPreference()
     }
 
     override fun onCreateSettingsPreferences(
@@ -126,13 +132,13 @@ class BehaviorSettingsFragment :
         }
 
         watchdogPreference.apply {
-            isChecked = watchdogShownOn()
+            syncWatchdogPreference()
             setOnPreferenceChangeListener { _, newValue ->
                 if (newValue is Boolean) {
                     maybeToggleBatterySensitiveSetting(newValue) { result ->
                         if (result) {
                             ShizukuSettings.setWatchdog(context, newValue)
-                            isChecked = newValue
+                            syncWatchdogPreference()
                         }
                     }
                 }
@@ -261,13 +267,16 @@ class BehaviorSettingsFragment :
             val ctx = requireContext()
             val svcIntent = Intent(ctx, ShizukuLiveService::class.java)
             if (enable) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    ctx.startForegroundService(svcIntent)
-                } else {
-                    ctx.startService(svcIntent)
+                if (!ShizukuSettings.getWatchdog() && !WatchdogService.isRunning()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        ctx.startForegroundService(svcIntent)
+                    } else {
+                        ctx.startService(svcIntent)
+                    }
                 }
             } else {
                 ctx.stopService(svcIntent)
+                LiveActivityNotificationManager.dismiss(ctx)
             }
             true
         }
@@ -472,10 +481,13 @@ class BehaviorSettingsFragment :
         super.onResume()
         preferenceScreen.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
         ShizukuStateMachine.addListener(stateListener)
+        WatchdogService.addRunningListener(watchdogRunningListener)
         syncModeVisibility()
+        syncWatchdogPreference()
     }
 
     override fun onPause() {
+        WatchdogService.removeRunningListener(watchdogRunningListener)
         ShizukuStateMachine.removeListener(stateListener)
         preferenceScreen.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         super.onPause()
@@ -485,7 +497,7 @@ class BehaviorSettingsFragment :
         sharedPreferences: SharedPreferences,
         key: String?,
     ) {
-        if (key == KEY_WATCHDOG) watchdogPreference.isChecked = watchdogShownOn()
+        if (key == KEY_WATCHDOG) syncWatchdogPreference()
         if (key == KEY_USB_PHONE_SWITCH_NOTIFY) {
             context?.let { ctx ->
                 syncUsbPhoneSwitchConfig(ctx, ShizukuSettings.isUsbPhoneSwitchNotifyEnabled())
@@ -497,6 +509,16 @@ class BehaviorSettingsFragment :
                 TcpNetworkGuard.enforce(it)
             }
             syncProtectionVisibility()
+        }
+    }
+
+    private fun syncWatchdogPreference() {
+        val isOn = watchdogShownOn()
+        watchdogPreference.isChecked = isOn
+        if (isOn && !WatchdogService.isRunning()) {
+            watchdogPreference.setSummary(R.string.settings_watchdog_not_running)
+        } else {
+            watchdogPreference.setSummary(R.string.settings_watchdog_summary)
         }
     }
 
@@ -532,5 +554,6 @@ class BehaviorSettingsFragment :
 
     // A new install's Watchdog is on by default from its first server start; until then the
     // switch shows that default, and turning it off stores the choice.
-    private fun watchdogShownOn(): Boolean = ShizukuSettings.isWatchdogRunning() || ShizukuSettings.isWatchdogDefaultPending()
+    private fun watchdogShownOn(): Boolean =
+        ShizukuSettings.getWatchdog() || ShizukuSettings.isWatchdogDefaultPending()
 }
