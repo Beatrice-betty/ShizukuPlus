@@ -68,7 +68,7 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 - **Hardened TopAppBar Dimensions and Insets** — Added safe bounds guards (`.coerceAtLeast()`) on expanded TopAppBar height calculations and applied horizontal `safeDrawing` insets to prevent action button clipping by display cutouts or system navigation in landscape. Added vertical scrolling to `HomeEmptyState`.
 
 #### Manager App (Watchdog / Notifications)
-- **The Watchdog and live activity now share a single notification** — live activity is now shown in the Watchdog's notification instead of posting a second persistent notification. Turning the Watchdog off dismisses its notification and clears both.
+- **The Watchdog and live activity now share a single notification** — Live activity is now shown only in the Watchdog's notification, so it needs the Watchdog on. Turning the Watchdog off removes that notification.
 - **The Watchdog switch in Settings now shows the stored setting** — even when the service is stopped, the switch shows whether the Watchdog is enabled, and its summary updates live to say "On, not running right now" (e.g. after background start restrictions).
 - **A quick Watchdog recovery no longer posts a crash notification** — if the Watchdog restarts the server and it comes back within 60 seconds, the recovery is logged to the activity history without popping a heads-up crash notice. Repeated crashes within the stability window still post the notification.
 
