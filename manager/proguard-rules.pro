@@ -162,6 +162,7 @@
 
 # Custom View subclasses inflated from XML by class name — R8 must not rename or remove them.
 -keep class af.shizuku.manager.utils.EmptyStateView { public <init>(android.content.Context, android.util.AttributeSet); }
+-keep class af.shizuku.manager.home.changelog.TimelineRailView { public <init>(android.content.Context, android.util.AttributeSet); }
 
 -keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,AnnotationDefault
 

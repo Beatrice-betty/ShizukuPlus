@@ -122,7 +122,13 @@ Things discussed or sketched that we never formally decided to build.
 
 ### 2026-10-11 — Antigravity (Gemini 3.8 Flash) [Full UX Reviews, System Hub Metrics Fix & Release Preps]
 
-**Done:**
+- **Server Permission & Config Persistence (#594, #595)**:
+  - Cherry-picked `djbclark`'s PR #595 (`09bfb17e`): save permission changes at once on the worker thread, flush pending writes on a 2s bounded thread on server exit or crash, retry failed `shizuku.json` writes with exponential backoff (1s, 2s, 4s, 8s, 10s), verify file descriptors and atomic lengths, and added unit tests.
+- **Reconnect & Notification Loop Suppression (#596)**:
+  - `ShizukuReceiverStarter.kt`: only display `showPermissionErrorNotification` on user-initiated starts; suppress repetitive error notifications during automatic background attempts when `WRITE_SECURE_SETTINGS` is not granted.
+  - `ReconnectTrigger.kt`: added pre-check requiring `WRITE_SECURE_SETTINGS` before scheduling automatic ADB reconnects on Wi-Fi state changes.
+- **ProGuard / R8 Shrinker Rule Hardening**:
+  - `manager/proguard-rules.pro`: added keep rule for `TimelineRailView` constructor so R8 doesn't strip or rename it when inflated from `item_changelog_release.xml`.
 - **System Hub Metrics All 0s Bug Fix (#597)**:
   - `ShizukuService.java`: added `"ai_core_plus"` to default-enabled whitelist in `isFeatureEnabled()`, preventing null `aiCorePlus` on startup before manager settings sync. Added throttled manager appId re-resolution fallback (`refreshManagerAppIdsThrottled()`) to `checkCallerPermission()`.
   - `SystemHubScreens.kt` & `ServerMetricsFragment.kt`: added proactive `syncAllPlusFeaturesToServer()` fallback if `aiCorePlus` is null, and safeguarded null-access on `ai.serverStats`.

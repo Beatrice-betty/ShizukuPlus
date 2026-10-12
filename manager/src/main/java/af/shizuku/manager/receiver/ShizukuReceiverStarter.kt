@@ -70,7 +70,11 @@ object ShizukuReceiverStarter {
                     }
                 updateNotification(context, initialState)
             } else {
-                showPermissionErrorNotification(context)
+                if (!automatic) {
+                    showPermissionErrorNotification(context)
+                } else {
+                    Timber.tag(AppConstants.TAG).w("Automatic background ADB start skipped: WRITE_SECURE_SETTINGS not granted")
+                }
             }
         } else {
             Timber.tag(AppConstants.TAG).w("Background start not supported")

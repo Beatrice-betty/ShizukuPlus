@@ -74,7 +74,11 @@ object ReconnectTrigger {
                     !UserStopFlag.isSet() &&
                     !ShizukuStateMachine.isRunning() &&
                     ShizukuStateMachine.get() != ShizukuStateMachine.State.STARTING &&
-                    (um == null || um.isUserUnlocked)
+                    (um == null || um.isUserUnlocked) &&
+                    (
+                        ShizukuSettings.getLastLaunchMode() != af.shizuku.manager.LaunchMethod.ADB ||
+                            context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    )
             }.getOrDefault(false)
         if (!eligible) return
         lastAttemptAt = now
