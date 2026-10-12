@@ -578,7 +578,19 @@ class ShizukuApplication :
         }
 
         Shizuku.addLogListener { appName, packageName, action ->
-            ActivityLogManager.log(appName, packageName, action)
+            val resolvedName =
+                if (appName.isBlank() && packageName.isNotBlank()) {
+                    try {
+                        val pm = packageManager
+                        val ai = pm.getApplicationInfo(packageName, 0)
+                        pm.getApplicationLabel(ai).toString()
+                    } catch (_: Exception) {
+                        packageName
+                    }
+                } else {
+                    appName
+                }
+            ActivityLogManager.log(resolvedName, packageName, action)
         }
 
         Shizuku.addSentryEventListener { eventJson ->

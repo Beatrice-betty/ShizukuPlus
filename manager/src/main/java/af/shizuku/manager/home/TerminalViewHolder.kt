@@ -60,16 +60,15 @@ class TerminalViewHolder(
         HomeEditMode.applyOverlay(containerBinding)
         IconStyleHelper.applyToCardIcon(binding.icon, originalIcon, "home_terminal")
         if (!data.isRunning) {
-            containerBinding.root.isEnabled = false
             summary.text =
                 context.getString(R.string.home_status_service_not_running, context.getString(R.string.app_name))
         } else {
-            containerBinding.root.isEnabled = true
             summary.text = context.getString(R.string.home_terminal_description)
         }
     }
 
     override fun onClick(v: View) {
+        if (!data.isRunning) return
         val activity = v.context.asActivity<android.app.Activity>() ?: return
         activity.startWithSceneTransition(
             Intent(activity, ShellTutorialActivity::class.java),

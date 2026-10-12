@@ -154,6 +154,9 @@ class RequestPermissionActivity : AppActivity() {
                 button1.setOnClickListener {
                     // Dispatch result on IO then dismiss — keeps UI responsive while
                     // the Binder call completes without blocking the main thread
+                    val pkg = ai?.packageName ?: callingPackage ?: "unknown"
+                    af.shizuku.manager.database.ActivityLogManager
+                        .log(label.toString(), pkg, "Permission: Granted by user")
                     lifecycleScope.launch {
                         withContext(Dispatchers.IO) {
                             dispatchResult(uid, pid, requestCode, allowed = true, onetime = false)
@@ -162,6 +165,9 @@ class RequestPermissionActivity : AppActivity() {
                     }
                 }
                 button3.setOnClickListener {
+                    val pkg = ai?.packageName ?: callingPackage ?: "unknown"
+                    af.shizuku.manager.database.ActivityLogManager
+                        .log(label.toString(), pkg, "Permission: Denied by user")
                     lifecycleScope.launch {
                         withContext(Dispatchers.IO) {
                             dispatchResult(uid, pid, requestCode, allowed = false, onetime = true)

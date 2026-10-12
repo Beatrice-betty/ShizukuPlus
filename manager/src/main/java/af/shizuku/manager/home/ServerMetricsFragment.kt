@@ -51,6 +51,10 @@ class ServerMetricsFragment : Fragment() {
                     moe.shizuku.server.IShizukuService.Stub
                         .asInterface(binder)
                 aiCore = shizukuService.aiCorePlus
+                if (aiCore == null) {
+                    ShizukuSettings.syncAllPlusFeaturesToServer()
+                    aiCore = shizukuService.aiCorePlus
+                }
             }
         } catch (e: Exception) {
             Timber.w(e)
@@ -73,7 +77,7 @@ class ServerMetricsFragment : Fragment() {
         }
         val ai = aiCore ?: return
         try {
-            val stats = ai.serverStats
+            val stats = ai.serverStats ?: return
             val uptimeMs = stats.getLong("uptime_ms")
             binding.textUptime.text = formatUptime(uptimeMs)
             val clientCount = stats.getInt("client_count")

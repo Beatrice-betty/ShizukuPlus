@@ -234,6 +234,9 @@ public class IntegerSimpleMenuPreference extends Preference {
      */
     @Override
     public void setSummary(CharSequence summary) {
+        if (getSummaryProvider() != null) {
+            setSummaryProvider(null);
+        }
         super.setSummary(summary);
         if (summary == null && mSummary != null) {
             mSummary = null;

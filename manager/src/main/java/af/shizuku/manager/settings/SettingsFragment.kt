@@ -13,6 +13,6 @@ class SettingsFragment : BaseSettingsFragment() {
         rootKey: String?,
     ) {
         setPreferencesFromResource(R.xml.settings_main, rootKey)
-        findPreference<Preference>("nav_about")?.summary = BuildConfig.VERSION_NAME
+        findPreference<Preference>("nav_about")?.setCustomSummary(BuildConfig.VERSION_NAME)
     }
 }

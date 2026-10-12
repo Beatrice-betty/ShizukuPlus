@@ -44,7 +44,7 @@ object ReconnectTrigger {
                             caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                                 caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
                         if (lan) lanNetwork = network
-                        if (lan && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) maybeReconnect(app)
+                        if (lan && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED)) maybeReconnect(app)
                     }
 
                     override fun onLost(network: Network) {

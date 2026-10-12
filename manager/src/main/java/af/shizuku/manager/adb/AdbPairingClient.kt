@@ -250,17 +250,39 @@ class AdbPairingClient(
     }
 
     private fun setupTlsConnection() {
-        val s = Socket()
+        val candidates = AdbPortProber.getCandidateHosts(host)
+        var connectedSocket: Socket? = null
+        var lastException: Exception? = null
+        var successfulHost = host
+
+        for (candidate in candidates) {
+            val s = Socket()
+            try {
+                s.connect(java.net.InetSocketAddress(candidate, port), 3000)
+                s.tcpNoDelay = true
+                s.soTimeout = 15000 // 15 seconds read timeout to prevent infinite hangs during pairing
+                s.keepAlive = true
+                connectedSocket = s
+                successfulHost = candidate
+                break
+            } catch (e: Exception) {
+                s.close()
+                lastException = e
+                if (e is java.net.ConnectException || e is java.net.NoRouteToHostException || e is java.net.SocketTimeoutException) {
+                    continue
+                } else {
+                    throw e
+                }
+            }
+        }
+
+        val s = connectedSocket ?: throw (lastException ?: java.net.ConnectException("Could not connect to pairing service on port $port across $candidates"))
         socket = s
-        s.connect(java.net.InetSocketAddress(host, port), 5000)
-        s.tcpNoDelay = true
-        s.soTimeout = 15000 // 15 seconds read timeout to prevent infinite hangs during pairing
-        s.keepAlive = true
 
         val sslContext = key.sslContext
-        val sslSocket = sslContext.socketFactory.createSocket(s, host, port, true) as SSLSocket
+        val sslSocket = sslContext.socketFactory.createSocket(s, successfulHost, port, true) as SSLSocket
         sslSocket.startHandshake()
-        Timber.tag(TAG).d("Handshake succeeded.")
+        Timber.tag(TAG).d("Handshake succeeded on $successfulHost:$port.")
 
         inputStream = DataInputStream(sslSocket.inputStream)
         outputStream = DataOutputStream(sslSocket.outputStream)

@@ -48,7 +48,10 @@ class AdbClient(
         (if (useTls) tlsOutputStream else plainOutputStream)
             ?: throw IllegalStateException("outputStream is null - AdbClient not connected or closed")
 
-    fun connect(onKeyOffered: (() -> Unit)? = null, onKeyOfferDone: (() -> Unit)? = null) {
+    fun connect(
+        onKeyOffered: (() -> Unit)? = null,
+        onKeyOfferDone: (() -> Unit)? = null,
+    ) {
         require(port in 1..65535) { "port out of range: $port" }
         useTls = false // Reset TLS state for each connection attempt
         val s = Socket()
@@ -86,7 +89,8 @@ class AdbClient(
                 useTls = true
 
                 message = read()
-            } else if (message.command == A_AUTH) {
+            }
+            if (message.command == A_AUTH) {
                 if (message.arg0 != ADB_AUTH_TOKEN) error("not A_AUTH ADB_AUTH_TOKEN")
                 write(A_AUTH, ADB_AUTH_SIGNATURE, 0, key.sign(message.data))
 

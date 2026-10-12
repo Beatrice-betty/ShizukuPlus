@@ -61,7 +61,6 @@ class PermissionManagerViewHolder(
         HomeEditMode.applyOverlay(containerBinding)
         IconStyleHelper.applyToCardIcon(iconView, originalIcon, "home_permission_manager")
         if (!data.isRunning) {
-            itemView.isEnabled = false
             title.setText(R.string.home_permission_manager_title)
             summary.text =
                 context.getString(
@@ -69,13 +68,13 @@ class PermissionManagerViewHolder(
                     context.getString(R.string.app_name),
                 )
         } else {
-            itemView.isEnabled = true
             title.setText(R.string.home_permission_manager_title)
             summary.setText(R.string.home_permission_manager_summary)
         }
     }
 
     override fun onClick(v: View) {
+        if (!data.isRunning) return
         val activity = v.context.asActivity<android.app.Activity>() ?: return
         activity.startWithSceneTransition(
             Intent(activity, PermissionManagerActivity::class.java),

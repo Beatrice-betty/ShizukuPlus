@@ -4,6 +4,8 @@ import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.ShizukuSettings.Keys.*
 import af.shizuku.manager.app.SnackbarHelper
+import af.shizuku.manager.automation.AutomationService
+import af.shizuku.manager.service.AdbProxyService
 import af.shizuku.manager.service.ShizukuLiveService
 import af.shizuku.manager.utils.DeviceOptimizer
 import af.shizuku.manager.utils.EnvironmentUtils
@@ -24,6 +26,7 @@ import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.TwoStatePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class BehaviorSettingsFragment :
@@ -64,6 +67,7 @@ class BehaviorSettingsFragment :
         savedInstanceState: Bundle?,
         rootKey: String?,
     ) {
+        migrateAutomationTrustedNetworks()
         setPreferencesFromResource(R.xml.settings_behavior, rootKey)
         val context = requireContext()
 
@@ -158,7 +162,7 @@ class BehaviorSettingsFragment :
         tcpModePreference.apply {
             if (EnvironmentUtils.isTlsSupported()) {
                 tcpModeAvailable = true
-                summary = context.getString(R.string.settings_tcp_mode_summary)
+                setCustomSummary(context.getString(R.string.settings_tcp_mode_summary))
                 icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
                     ?: tint(context.getDrawable(R.drawable.ic_wadb_24))
                 setOnPreferenceChangeListener { _, newValue ->
@@ -167,7 +171,7 @@ class BehaviorSettingsFragment :
                             ShizukuSettings.setTcpMode(newValue)
                             isChecked = newValue
                             isEnabled = true
-                            summary = context.getString(R.string.settings_tcp_mode_summary)
+                            setCustomSummary(context.getString(R.string.settings_tcp_mode_summary))
                             icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
                                 ?: tint(context.getDrawable(R.drawable.ic_wadb_24))
                             syncTcpPortVisibility()
@@ -268,6 +272,54 @@ class BehaviorSettingsFragment :
             true
         }
 
+        findPreference<TwoStatePreference>("adb_proxy_enabled")?.setOnPreferenceChangeListener { _, newValue ->
+            if (newValue is Boolean) {
+                val intent = Intent(context, AdbProxyService::class.java)
+                if (newValue) context.startService(intent) else context.stopService(intent)
+            }
+            true
+        }
+
+        findPreference<TwoStatePreference>("on_device_adb_tcp")?.setOnPreferenceChangeListener { _, newValue ->
+            if (newValue is Boolean) {
+                preferenceManager.sharedPreferences
+                    ?.edit()
+                    ?.putBoolean("on_device_adb_tcp", newValue)
+                    ?.apply()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    if (newValue) {
+                        AdbProxyService.enableAdbTcp()
+                    } else {
+                        AdbProxyService.disableAdbTcp()
+                    }
+                }
+            }
+            true
+        }
+
+        findPreference<TwoStatePreference>("force_start_wadb")?.setOnPreferenceChangeListener { _, newValue ->
+            if (newValue is Boolean) {
+                preferenceManager.sharedPreferences
+                    ?.edit()
+                    ?.putBoolean("force_start_wadb", newValue)
+                    ?.apply()
+                ShizukuSettings.syncAllPlusFeaturesToServer()
+            }
+            true
+        }
+
+        listOf("network_governor_plus_enabled", "binder_firewall_enabled", "continuity_bridge_enabled").forEach { key ->
+            findPreference<TwoStatePreference>(key)?.setOnPreferenceChangeListener { _, _ ->
+                ShizukuSettings.syncAllPlusFeaturesToServer()
+                true
+            }
+        }
+
+        findPreference<Preference>("automation_trusted_networks")?.setOnPreferenceChangeListener { _, _ ->
+            AutomationService.startOrStop(context)
+            true
+        }
+
         syncModeVisibility()
     }
 
@@ -301,8 +353,8 @@ class BehaviorSettingsFragment :
         startupCategory.setChildAvailable(KEY_AUTO_RECONNECT_MDNS, isAdbMode)
 
         // Category summaries as mode indicators
-        networkCategory.summary = if (isRootMode) getString(R.string.settings_mode_indicator_root) else null
-        startupCategory.summary = if (isRootMode) getString(R.string.settings_mode_indicator_root) else null
+        networkCategory.setCustomSummary(if (isRootMode) getString(R.string.settings_mode_indicator_root) else null)
+        startupCategory.setCustomSummary(if (isRootMode) getString(R.string.settings_mode_indicator_root) else null)
     }
 
     private fun syncTcpPortVisibility() {
@@ -332,7 +384,7 @@ class BehaviorSettingsFragment :
         networkCategory.setChildAvailable("tcp_network_protection", base)
         networkCategory.setChildAvailable("tcp_trusted_networks", base && mode == NetworkTrust.MODE_TRUSTED)
         networkCategory.setChildAvailable(NetworkTrust.KEY_AUTO_CLOSE, base && mode != NetworkTrust.MODE_OFF)
-        tcpTrustedPreference.summary = trustedSummary()
+        tcpTrustedPreference.setCustomSummary(trustedSummary())
         // tcp_network_protection is a SimpleMenuPreference (ListPreference) with
         // useSimpleSummaryProvider="true", so it already has a SummaryProvider installed;
         // setSummary() throws "Preference already has a SummaryProvider set." if called while one
@@ -340,10 +392,11 @@ class BehaviorSettingsFragment :
         val limited = !NetworkTrust.canDetectOpenNetworks() && mode != NetworkTrust.MODE_OFF
         (tcpProtectionPreference as? androidx.preference.ListPreference)?.apply {
             if (limited) {
-                summaryProvider = null
-                summary = getString(R.string.tcp_protection_limited_summary)
+                setCustomSummary(getString(R.string.tcp_protection_limited_summary))
             } else if (summaryProvider == null) {
-                summaryProvider = androidx.preference.ListPreference.SimpleSummaryProvider.getInstance()
+                summaryProvider =
+                    androidx.preference.ListPreference.SimpleSummaryProvider
+                        .getInstance()
             }
         }
     }
@@ -431,6 +484,25 @@ class BehaviorSettingsFragment :
                 TcpNetworkGuard.enforce(it)
             }
             syncProtectionVisibility()
+        }
+    }
+
+    private fun migrateAutomationTrustedNetworks() {
+        val prefs = preferenceManager.sharedPreferences ?: return
+        try {
+            prefs.getString(KEY_AUTOMATION_TRUSTED_NETWORKS, null)
+        } catch (_: ClassCastException) {
+            val oldSet =
+                try {
+                    @Suppress("UNCHECKED_CAST")
+                    prefs.getStringSet(KEY_AUTOMATION_TRUSTED_NETWORKS, null)
+                } catch (_: Exception) {
+                    null
+                }
+            prefs
+                .edit()
+                .putString(KEY_AUTOMATION_TRUSTED_NETWORKS, oldSet?.joinToString(",") ?: "")
+                .apply()
         }
     }
 }

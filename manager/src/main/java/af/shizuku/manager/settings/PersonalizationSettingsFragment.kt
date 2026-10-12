@@ -119,13 +119,13 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
         customAccentPreference.apply {
             val isUsingSysColor = ThemeHelper.isUsingSystemColor()
             isEnabled = !isUsingSysColor
-            summary = getCustomAccentSummary()
+            setCustomSummary(getCustomAccentSummary())
             setOnPreferenceChangeListener { _, newValue ->
                 if (newValue is String) {
                     val prefs = ShizukuSettings.getPreferences()
                     if (prefs.getString("custom_accent", "DEFAULT") != newValue) {
                         prefs.edit().putString("custom_accent", newValue).apply()
-                        summary = getCustomAccentSummary(newValue)
+                        setCustomSummary(getCustomAccentSummary(newValue))
                         applyTheme(requiresRecreate = false)
                     }
                 }
@@ -177,6 +177,16 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
         }
 
         findPreference<Preference>("settings_card_corner_style")?.setOnPreferenceChangeListener { _, _ ->
+            applyTheme(requiresRecreate = false)
+            true
+        }
+
+        findPreference<Preference>("corner_rounding_override")?.setOnPreferenceChangeListener { _, _ ->
+            applyTheme(requiresRecreate = false)
+            true
+        }
+
+        findPreference<Preference>("expanded_headers_enabled")?.setOnPreferenceChangeListener { _, _ ->
             applyTheme(requiresRecreate = false)
             true
         }
@@ -306,7 +316,7 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
         setupLocalePreference(languagePreference)
 
         translationPreference.apply {
-            summary = context.getString(R.string.settings_translation_summary, context.getString(R.string.app_name))
+            setCustomSummary(context.getString(R.string.settings_translation_summary, context.getString(R.string.app_name)))
             widgetLayoutResource = R.layout.preference_widget_open_in_new
             setOnPreferenceClickListener {
                 CustomTabsHelper.launchUrlOrCopy(context, context.getString(R.string.translation_url))
@@ -358,23 +368,25 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
             }
 
             val locale = Locale.forLanguageTag(displayLocale.toString())
-            val localeName =
+            val rawLocaleName =
                 if (!TextUtils.isEmpty(locale.script)) {
                     locale.getDisplayScript(locale)
                 } else {
                     locale.getDisplayName(locale)
                 }
+            val localeName = rawLocaleName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 
-            val localizedLocaleName =
+            val rawLocalizedLocaleName =
                 if (!TextUtils.isEmpty(locale.script)) {
                     locale.getDisplayScript(currentLocale)
                 } else {
                     locale.getDisplayName(currentLocale)
                 }
+            val localizedLocaleName = rawLocalizedLocaleName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale) else it.toString() }
 
             localizedLocales.add(
                 if (index != currentLocaleIndex) {
-                    "$localeName<br><small>$localizedLocaleName<small>".toHtml()
+                    "$localeName<br><small>$localizedLocaleName</small>".toHtml()
                 } else {
                     localizedLocaleName
                 },
@@ -383,10 +395,7 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
 
         languagePreference.entries = localizedLocales.toTypedArray()
 
-        // setSummary() throws if a SummaryProvider is installed (XML useSimpleSummaryProvider or
-        // BaseSettingsFragment's "%s" fixer), so drop it first (#587).
-        languagePreference.summaryProvider = null
-        languagePreference.summary =
+        languagePreference.setCustomSummary(
             when {
                 TextUtils.isEmpty(currentLocaleTag) || "SYSTEM" == currentLocaleTag -> {
                     getString(R.string.follow_system)
@@ -403,7 +412,8 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
                 else -> {
                     ""
                 }
-            }
+            },
+        )
     }
 
     private fun getCustomAccentSummary(value: String? = null): String {

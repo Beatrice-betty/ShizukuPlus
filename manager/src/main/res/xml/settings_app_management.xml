@@ -105,6 +105,16 @@
             android:icon="@drawable/ic_code_24"
             android:dependency="verify_apk_pithus" />
 
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="package_governor_plus_enabled"
+            android:title="@string/settings_package_governor_plus_title"
+            android:summary="@string/settings_package_governor_plus_summary"
+            android:icon="@drawable/ic_install_24"
+            android:defaultValue="true"
+            app:infoTitle="@string/help_package_governor_plus_title"
+            app:infoDetail="@string/help_package_governor_plus_detail"
+            app:badgeType="plus" />
+
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
 </PreferenceScreen>

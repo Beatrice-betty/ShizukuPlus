@@ -166,10 +166,10 @@ class DiagnosticsDashboardPreference
                                     ?.supportFragmentManager
                                     ?.findFragmentById(R.id.fragment_container)
                             val opened =
-                                if (frag is ShizukuPlusSettingsFragment) {
+                                if (frag is androidx.preference.PreferenceFragmentCompat) {
                                     frag.findPreference<Preference>("shadow_binder_hidden_packages")?.let {
                                         frag.onPreferenceTreeClick(it)
-                                    } != null
+                                    } == true
                                 } else {
                                     false
                                 }

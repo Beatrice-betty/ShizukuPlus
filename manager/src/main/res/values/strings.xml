@@ -43,7 +43,7 @@
     <string name="settings_bold_typography">Bold Typography</string>
     <string name="settings_bold_typography_summary">Use heavier font weights for headings and titles</string>
     <string name="settings_expanded_headers">Expanded Section Headers</string>
-    <string name="settings_expanded_headers_summary">Use tall collapsing headers in settings screens</string>
+    <string name="settings_expanded_headers_summary">Display large collapsing title headers at the top of settings screens that smoothly shrink as you scroll</string>
 
     <!-- UI Settings - Corner Rounding -->
     <string name="settings_corner_rounding_override">Corner Rounding</string>
@@ -447,6 +447,8 @@
     <string name="home_edit_mode_title">Arrange Cards</string>
     <string name="home_edit_mode_hint">Drag to reorder · × to hide · + to restore</string>
     <string name="home_edit_mode_done">Done</string>
+    <string name="brand_shizuku_plus" translatable="false">Shizuku+</string>
+    <string name="brand_drop_in" translatable="false">Drop-In</string>
     <string name="settings_advanced">Advanced</string>
     <string name="settings_legacy_pairing">Legacy pairing</string>
     <string name="settings_legacy_pairing_summary">Enter the pairing code in a dialog instead of a notification</string>
@@ -962,15 +964,15 @@
     <string name="settings_main_nav_feature_hub_title">Feature Hub</string>
     <string name="settings_main_nav_feature_hub_summary">Manage exclusive Plus capabilities</string>
     <string name="settings_main_nav_root_compat_title">Root &amp; Compatibility</string>
-    <string name="settings_main_nav_root_compat_summary">ADB connection, SU bridge, rootless integration, and stock Shizuku compatibility</string>
+    <string name="settings_main_nav_root_compat_summary">SU bridge, Device Owner tools, security access, and stock compatibility</string>
     <string name="settings_main_nav_appearance_summary">Theme, shapes, icons, motion, home layout, and language</string>
     <string name="settings_main_nav_app_interactions_title">App Interactions</string>
-    <string name="settings_main_nav_app_interactions_summary">Gestures, long-press actions, and install verification</string>
+    <string name="settings_main_nav_app_interactions_summary">Gestures, long-press actions, Package Governor, and install verification</string>
     <string name="settings_main_nav_startup_behavior_title">Startup &amp; Behavior</string>
-    <string name="settings_main_nav_startup_behavior_summary">Boot options, watchdog, network, activity, and updates</string>
+    <string name="settings_main_nav_startup_behavior_summary">Boot options, watchdog, TCP/ADB ports, firewall, and keep-alive</string>
     <string name="settings_main_nav_advanced_diagnostics_title">Advanced &amp; Diagnostics</string>
-    <string name="settings_main_nav_advanced_diagnostics_summary">Logs, ADB tools, and troubleshooting</string>
-    <string name="settings_main_nav_about_summary">Version, backup &amp; restore, licenses, and developer options</string>
+    <string name="settings_main_nav_advanced_diagnostics_summary">Enhanced API, system governors, diagnostics dashboard, and backup</string>
+    <string name="settings_main_nav_about_summary">Version, release changelog, licenses, and developer options</string>
     <string name="settings_accent_violet_applied">Midnight Violet applied</string>
     <string name="settings_accent_green_applied">Forest Green applied</string>
     <string name="settings_accent_crimson_applied">Crimson Rose applied</string>
@@ -1055,6 +1057,10 @@
     <string name="empty_state_title_no_home_cards">All cards hidden</string>
     <string name="empty_state_description_no_home_cards">You\'ve hidden all home screen cards. Go to Settings to restore them.</string>
     <string name="empty_state_action_restore_home_cards">Restore cards</string>
+    <string name="home_restore_default">Restore to default</string>
+    <string name="home_restore_default_dialog_title">Restore to Default</string>
+    <string name="home_restore_default_dialog_message">Reset home cards to default order and unhide all cards?</string>
+    <string name="home_restore_default_success">Home cards restored to default</string>
     <string name="empty_state_title_no_plus_features">All features disabled</string>
     <string name="empty_state_description_no_plus_features">You\'ve disabled all Shizuku+ features. Enable features to see them here.</string>
     <string name="empty_state_title_activity_log_empty">No activity recorded</string>
@@ -1731,4 +1737,8 @@
     <string name="diagnostics_watchdog_enabled_toast">Watchdog enabled</string>
     <string name="diagnostics_auto_reconnect_enabled_toast">Intelligent Auto-Reconnect enabled</string>
     <string name="diagnostics_start_on_boot_enabled_toast">Start on Boot enabled</string>
+    <string name="activity_log_filter_all">All</string>
+    <string name="activity_log_copied">Copied %1$s to clipboard</string>
+    <string name="activity_log_clear_confirm_title">Clear activity logs?</string>
+    <string name="activity_log_clear_confirm_message">All recorded activity log events will be permanently deleted.</string>
 </resources>

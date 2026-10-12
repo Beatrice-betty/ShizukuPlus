@@ -38,7 +38,7 @@ class AppManagementSettingsFragment : BaseSettingsFragment() {
             }
 
         // Long-press action toggles — auto-persist via SharedPrefs; notify server
-        listOf("lp_open_app", "lp_app_info", "lp_toggle_permission", "lp_hide_from_list").forEach { key ->
+        listOf("lp_open_app", "lp_app_info", "lp_toggle_permission", "lp_hide_from_list", "package_governor_plus_enabled").forEach { key ->
             findPreference<TwoStatePreference>(key)
                 ?.setOnPreferenceChangeListener { _, _ ->
                     ShizukuSettings.syncAllPlusFeaturesToServer()
@@ -123,7 +123,7 @@ class AppManagementSettingsFragment : BaseSettingsFragment() {
             } else {
                 getString(R.string.verify_api_key_hint)
             }
-        findPreference<Preference>(key)?.summary = summary
+        findPreference<Preference>(key)?.setCustomSummary(summary)
     }
 
     private fun showApiKeyDialog(

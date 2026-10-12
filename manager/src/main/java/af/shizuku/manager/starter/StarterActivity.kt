@@ -112,11 +112,13 @@ class StarterActivity : AppBarActivity() {
         if (hasFocus && !hasStarted) {
             hasStarted = true
             val port = intent.getIntExtra(EXTRA_PORT, 0)
+            val host = intent.getStringExtra(EXTRA_HOST) ?: "127.0.0.1"
 
             viewModel.start(
                 intent.getBooleanExtra(EXTRA_IS_ROOT, false),
                 intent.getBooleanExtra(EXTRA_IS_SYSTEM, false),
                 port,
+                host,
             )
         }
     }
@@ -125,6 +127,7 @@ class StarterActivity : AppBarActivity() {
         const val EXTRA_IS_SYSTEM = "$EXTRA.IS_SYSTEM"
         const val EXTRA_IS_ROOT = "$EXTRA.IS_ROOT"
         const val EXTRA_PORT = "$EXTRA.PORT"
+        const val EXTRA_HOST = "$EXTRA.HOST"
     }
 }
 
@@ -156,15 +159,18 @@ class ViewModel(
     private var lastRoot = false
     private var lastSystem = false
     private var lastPort = 0
+    private var lastHost = "127.0.0.1"
 
     fun start(
         root: Boolean,
         isSystem: Boolean,
         port: Int,
+        host: String = "127.0.0.1",
     ) {
         lastRoot = root
         lastSystem = isSystem
         lastPort = port
+        lastHost = host
         if (!root && !isSystem && port !in 1..65535) {
             log(error = IllegalArgumentException("Invalid port value: $port. Port must be between 1 and 65535."))
             return
@@ -178,7 +184,7 @@ class ViewModel(
             } else if (isSystem) {
                 startSys()
             } else {
-                AdbStarter.startAdb(appContext, port, { log(it) })
+                AdbStarter.startAdb(appContext, port, host = host, log = { log(it) })
             }
             Starter.waitForBinder({ log(it) })
         }
@@ -188,7 +194,7 @@ class ViewModel(
         started = false
         sb.clear()
         _output.postValue(Resource.success(sb))
-        start(lastRoot, lastSystem, lastPort)
+        start(lastRoot, lastSystem, lastPort, lastHost)
     }
 
     private suspend fun startSys() {

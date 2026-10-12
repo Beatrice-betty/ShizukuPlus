@@ -113,10 +113,11 @@ class ChangelogTimelineAdapter(
         radiusDp: Float = 100f,
     ): GradientDrawable {
         val d = view.resources.displayMetrics.density
-        return GradientDrawable().apply {
-            cornerRadius = radiusDp * d
-            setColor(bg)
-        }.also { if (view is TextView) view.setTextColor(fg) }
+        return GradientDrawable()
+            .apply {
+                cornerRadius = radiusDp * d
+                setColor(bg)
+            }.also { if (view is TextView) view.setTextColor(fg) }
     }
 
     // ---- Summary -----------------------------------------------------------------------------
@@ -196,9 +197,11 @@ class ChangelogTimelineAdapter(
                             AutoTransition().setDuration(ShizukuSettings.scaledAnimationDuration(220)),
                         )
                     }
-                    ObjectAnimator.ofFloat(chevron, View.ROTATION, if (open) 180f else 0f).setDuration(
-                        ShizukuSettings.scaledAnimationDuration(220),
-                    ).start()
+                    ObjectAnimator
+                        .ofFloat(chevron, View.ROTATION, if (open) 180f else 0f)
+                        .setDuration(
+                            ShizukuSettings.scaledAnimationDuration(220),
+                        ).start()
                 } else {
                     chevron.rotation = if (open) 180f else 0f
                 }
@@ -219,6 +222,7 @@ class ChangelogTimelineAdapter(
         private fun bindBadges(r: TimelineRelease) {
             badges.removeAllViews()
             val d = itemView.resources.displayMetrics.density
+
             fun add(
                 label: Int,
                 bgAttr: Int,
@@ -231,10 +235,11 @@ class ChangelogTimelineAdapter(
                         setPadding((8 * d).toInt(), (2 * d).toInt(), (8 * d).toInt(), (2 * d).toInt())
                         background = pill(this, color(this, bgAttr), color(this, fgAttr))
                         layoutParams =
-                            LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ).apply { marginEnd = (6 * d).toInt() }
+                            LinearLayout
+                                .LayoutParams(
+                                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ).apply { marginEnd = (6 * d).toInt() }
                     }
                 badges.addView(tv)
             }

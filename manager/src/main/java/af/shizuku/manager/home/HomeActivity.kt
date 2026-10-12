@@ -115,6 +115,8 @@ open class HomeActivity :
                 ShizukuSettings.Keys.KEY_SHAPE_STYLE,
                 ShizukuSettings.Keys.KEY_ROUNDED_EDGES,
                 ShizukuSettings.Keys.KEY_EXPRESSIVE_SHAPES,
+                ShizukuSettings.Keys.KEY_CORNER_ROUNDING_OVERRIDE,
+                "home_card_corner_style",
                 -> {
                     isRoundedEdges = ShizukuSettings.isRoundedEdgesEnabled()
                     adapter.notifyDataSetChanged()
@@ -272,7 +274,16 @@ open class HomeActivity :
                             .show()
                     },
                     onDoneClick = { HomeEditMode.exit() },
-                    onRestoreHomeCards = { adapter.restoreAllCards() },
+                    onRestoreHomeCards = {
+                        MaterialAlertDialogBuilder(this)
+                            .setTitle(R.string.home_restore_default_dialog_title)
+                            .setMessage(R.string.home_restore_default_dialog_message)
+                            .setPositiveButton(R.string.empty_state_action_restore_home_cards) { _, _ ->
+                                adapter.restoreAllCards()
+                                Toast.makeText(this, R.string.home_restore_default_success, Toast.LENGTH_SHORT).show()
+                            }.setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                    },
                     recyclerViewProvider = { ctx, paddingValues ->
                         val density = ctx.resources.displayMetrics.density
                         recyclerView.apply {
@@ -448,9 +459,7 @@ open class HomeActivity :
         // the original Shizuku look, 2 columns kicks in on tablets/landscape/DeX where a single
         // column of cards leaves most of the width empty.
         val spanCount =
-            if (resources.configuration.screenWidthDp >= 600 ||
-                resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-            ) {
+            if (resources.configuration.screenWidthDp >= 600) {
                 2
             } else {
                 1
@@ -458,8 +467,20 @@ open class HomeActivity :
         val layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, spanCount)
         layoutManager.spanSizeLookup =
             object : androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup() {
-                // The status card (position 0) always takes the full width for visibility.
-                override fun getSpanSize(position: Int): Int = if (position == 0) spanCount else 1
+                // The status card and alert/start banners always take the full width for visibility.
+                override fun getSpanSize(position: Int): Int {
+                    if (spanCount == 1) return 1
+                    val id = adapter.getItemId(position)
+                    return if (id == HomeAdapter.ID_STATUS ||
+                        id == HomeAdapter.ID_START_VIA_STOCK ||
+                        id == HomeAdapter.ID_ADB_PERMISSION_LIMITED ||
+                        id == HomeAdapter.ID_APPS
+                    ) {
+                        spanCount
+                    } else {
+                        1
+                    }
+                }
             }
         recyclerView.layoutManager = layoutManager
 
@@ -538,7 +559,9 @@ open class HomeActivity :
             val rest = (card.getTag(R.id.tag_card_rest_radius) as? Float) ?: card.radius.also { card.setTag(R.id.tag_card_rest_radius, it) }
             val density = resources.displayMetrics.density
             val target = if (lifted) maxOf(rest * 1.5f, rest + 12f * density).coerceAtMost(40f * density) else rest
-            if (!ShizukuSettings.isExpressiveAnimationsEnabled()) {
+            if (!ShizukuSettings.isExpressiveAnimationsEnabled() ||
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !android.animation.ValueAnimator.areAnimatorsEnabled())
+            ) {
                 card.radius = target
                 return
             }
@@ -670,7 +693,16 @@ open class HomeActivity :
             val to = from + delta
             if (from != RecyclerView.NO_POSITION && adapter.isDraggable(from) && adapter.isDraggable(to)) {
                 adapter.moveItem(from, to)
+                adapter.persistCardOrder()
+                adapter.updateData()
                 HapticUtils.segmentTick(view)
+                view.announceForAccessibility(
+                    if (delta < 0) {
+                        view.context.getString(R.string.accessibility_move_card_up)
+                    } else {
+                        view.context.getString(R.string.accessibility_move_card_down)
+                    },
+                )
                 true
             } else {
                 false

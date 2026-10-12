@@ -22,9 +22,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat.Type
 import androidx.lifecycle.lifecycleScope
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -387,7 +389,7 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
                     lifecycleScope.launch {
                         tcpModePref.apply {
                             isEnabled = false
-                            summary = context.getString(R.string.settings_tcp_mode_closing_port)
+                            setCustomSummary(context.getString(R.string.settings_tcp_mode_closing_port))
                         }
                         AdbStarter.stopTcp(context, EnvironmentUtils.getAdbTcpPort())
                         if (EnvironmentUtils.getAdbTcpPort() <= 0) applyChange()
@@ -638,4 +640,26 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
             const val SNAP_EPSILON = 0.01f
         }
     }
+}
+
+/**
+ * Safe setter for Preference summary that prevents AndroidX's
+ * `IllegalStateException: Preference already has a SummaryProvider set.` (#587).
+ * When dynamic code overrides a preference's summary, any pre-existing SummaryProvider
+ * (from XML `app:useSimpleSummaryProvider="true"` or programmatic setup) is cleared first.
+ */
+fun Preference.setCustomSummary(text: CharSequence?) {
+    if (this.summaryProvider != null) {
+        this.summaryProvider = null
+    }
+    this.summary = text
+}
+
+fun Preference.setCustomSummary(
+    @StringRes resId: Int,
+) {
+    if (this.summaryProvider != null) {
+        this.summaryProvider = null
+    }
+    this.setSummary(resId)
 }

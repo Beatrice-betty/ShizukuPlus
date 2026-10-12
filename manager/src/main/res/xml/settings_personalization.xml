@@ -60,12 +60,13 @@
             app:infoDetail="@string/settings_floating_nav_info"
             app:badgeType="experimental" />
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+        <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="one_handed_mode"
             android:title="@string/settings_one_handed_mode"
             android:summary="@string/settings_one_handed_mode_summary"
             android:defaultValue="false"
-            android:icon="@drawable/ic_smartphone_24" />
+            android:icon="@drawable/ic_smartphone_24"
+            app:badgeType="experimental" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="bold_typography"

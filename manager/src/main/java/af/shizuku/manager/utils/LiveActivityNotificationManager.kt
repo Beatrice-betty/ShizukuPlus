@@ -47,7 +47,7 @@ object LiveActivityNotificationManager {
             .Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_server_ok_24)
             .setContentTitle("Shizuku+ Active")
-            .setContentText(status)
+            .setContentText(status.removePrefix(":").trim())
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

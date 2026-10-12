@@ -114,7 +114,8 @@ class StartRootViewHolder(
         val isSamsungMode =
             af.shizuku.manager.ShizukuSettings
                 .isSamsungSystemUidEscalationEnabled() &&
-                !af.shizuku.manager.utils.EnvironmentUtils.isRooted()
+                !af.shizuku.manager.utils.EnvironmentUtils
+                    .isRooted()
         binding.text1.text =
             if (isSamsungMode) {
                 context.getString(R.string.home_root_description_samsung)

@@ -41,6 +41,8 @@ class AdbMdns(
     private var restartJob: Job? = null
     private var restartScheduled = false
     private var attempts = 0
+    private val resolveQueue = java.util.ArrayDeque<NsdServiceInfo>()
+    private var isResolving = false
 
     fun start() {
         if (running) return
@@ -55,6 +57,10 @@ class AdbMdns(
         running = false
         restartJob?.cancel()
         mdnsScope.cancel()
+        synchronized(resolveQueue) {
+            resolveQueue.clear()
+            isResolving = false
+        }
         if (registered) {
             try {
                 nsdManager.stopServiceDiscovery(listener)
@@ -73,8 +79,45 @@ class AdbMdns(
         registered = false
     }
 
+    private fun resolveNext() {
+        synchronized(resolveQueue) {
+            if (!running || isResolving || resolveQueue.isEmpty()) return
+            val next = resolveQueue.poll() ?: return
+            isResolving = true
+            try {
+                nsdManager.resolveService(next, ResolveListener(this))
+            } catch (e: Exception) {
+                Timber.tag(TAG).w(e, "resolveService failed to launch for ${next.serviceName}")
+                isResolving = false
+                resolveNext()
+            }
+        }
+    }
+
+    internal fun onResolveFinished() {
+        synchronized(resolveQueue) {
+            isResolving = false
+            resolveNext()
+        }
+    }
+
+    internal fun requeueResolve(info: NsdServiceInfo) {
+        mdnsScope.launch {
+            delay(150L)
+            if (running) {
+                synchronized(resolveQueue) {
+                    resolveQueue.add(info)
+                    resolveNext()
+                }
+            }
+        }
+    }
+
     private fun onServiceFound(info: NsdServiceInfo) {
-        nsdManager.resolveService(info, ResolveListener(this))
+        synchronized(resolveQueue) {
+            resolveQueue.add(info)
+            resolveNext()
+        }
     }
 
     private fun onServiceLost(info: NsdServiceInfo) {
@@ -82,25 +125,32 @@ class AdbMdns(
     }
 
     private fun onServiceResolved(resolvedService: NsdServiceInfo) {
-        val hostAddress = resolvedService.host.hostAddress
-        val isLocal = hostAddress == "127.0.0.1" || hostAddress == "::1" || resolvedService.host.isLoopbackAddress
+        val rawHost = resolvedService.host
+        val hostAddress = rawHost?.hostAddress
+        val cleanHostAddress = hostAddress?.substringBefore('%')
+        val isLocal = cleanHostAddress == "127.0.0.1" || cleanHostAddress == "::1" || rawHost?.isLoopbackAddress == true
 
-        if (running &&
-            (
-                isLocal ||
+        val isKnownInterface =
+            isLocal ||
+                runCatching {
                     NetworkInterface
                         .getNetworkInterfaces()
-                        .asSequence()
-                        .any { networkInterface ->
+                        ?.asSequence()
+                        ?.any { networkInterface ->
                             networkInterface.inetAddresses
                                 .asSequence()
-                                .any { hostAddress == it.hostAddress }
-                        }
-            ) &&
-            isPortAvailable(resolvedService.host, resolvedService.port)
+                                .any { addr ->
+                                    addr == rawHost || cleanHostAddress == addr.hostAddress?.substringBefore('%')
+                                }
+                        } == true
+                }.getOrDefault(false)
+
+        if (running &&
+            isKnownInterface &&
+            isPortAvailable(rawHost, resolvedService.port)
         ) {
             serviceName = resolvedService.serviceName
-            resolvedHost = if (isLocal || hostAddress == null) "127.0.0.1" else hostAddress
+            resolvedHost = if (isLocal || cleanHostAddress == null) "127.0.0.1" else cleanHostAddress
             observer.onChanged(resolvedService.port)
         } else if (running && ShizukuSettings.isAutoReconnectMdnsEnabled() && attempts < 5 && !restartScheduled) {
             attempts++
@@ -135,10 +185,18 @@ class AdbMdns(
         host: InetAddress?,
         port: Int,
     ): Boolean {
-        // Step 1: If binding to 127.0.0.1 throws IOException (EADDRINUSE), adbd is bound on loopback or 0.0.0.0
+        // Step 1: If binding to 127.0.0.1 or ::1 throws IOException (EADDRINUSE), adbd is bound on loopback or 0.0.0.0 / ::
         try {
             ServerSocket().use {
                 it.bind(InetSocketAddress("127.0.0.1", port), 1)
+            }
+        } catch (_: IOException) {
+            return true
+        }
+
+        try {
+            ServerSocket().use {
+                it.bind(InetSocketAddress("::1", port), 1)
             }
         } catch (_: IOException) {
             return true
@@ -156,8 +214,36 @@ class AdbMdns(
             }
         }
 
-        // Deliberately no active connect() probe: opening a raw TCP connection to adbd's TLS
-        // pairing port without completing the handshake can be treated as a failed pairing attempt.
+        // Step 3: Check all active network interfaces
+        val boundOnAnyInterface =
+            runCatching {
+                val ifaces = NetworkInterface.getNetworkInterfaces() ?: return@runCatching false
+                for (iface in ifaces) {
+                    if (!iface.isUp || iface.isLoopback) continue
+                    for (addr in iface.inetAddresses) {
+                        if (addr == host) continue
+                        try {
+                            ServerSocket().use {
+                                it.bind(InetSocketAddress(addr, port), 1)
+                            }
+                        } catch (_: IOException) {
+                            return@runCatching true
+                        }
+                    }
+                }
+                false
+            }.getOrDefault(false)
+
+        if (boundOnAnyInterface) return true
+
+        // For adb connect (not pairing), a non-blocking TCP socket probe is also safe
+        if (serviceType == TLS_CONNECT) {
+            val targetHost = host?.hostAddress?.substringBefore('%') ?: "127.0.0.1"
+            if (AdbPortProber.isPortOpen(port, 150, targetHost)) {
+                return true
+            }
+        }
+
         return false
     }
 
@@ -209,9 +295,16 @@ class AdbMdns(
         override fun onResolveFailed(
             nsdServiceInfo: NsdServiceInfo,
             i: Int,
-        ) {}
+        ) {
+            Timber.tag(TAG).w("onResolveFailed: ${nsdServiceInfo.serviceName}, code $i")
+            adbMdns.onResolveFinished()
+            if (i == NsdManager.FAILURE_ALREADY_ACTIVE) {
+                adbMdns.requeueResolve(nsdServiceInfo)
+            }
+        }
 
         override fun onServiceResolved(nsdServiceInfo: NsdServiceInfo) {
+            adbMdns.onResolveFinished()
             adbMdns.onServiceResolved(nsdServiceInfo)
         }
     }

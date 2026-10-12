@@ -1,22 +1,40 @@
 package af.shizuku.manager.home.compose
 
 import af.shizuku.manager.R
+import af.shizuku.manager.database.ActivityEventType
 import af.shizuku.manager.database.ActivityLogManager
 import af.shizuku.manager.database.ActivityLogRecord
 import af.shizuku.manager.utils.AppIconCache
+import af.shizuku.manager.utils.HapticUtils
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -44,14 +62,24 @@ fun ServerMetricsScreen() {
                     val shizukuService =
                         moe.shizuku.server.IShizukuService.Stub
                             .asInterface(binder)
-                    val ai = shizukuService.aiCorePlus
+                    var ai = shizukuService.aiCorePlus
+                    if (ai == null) {
+                        withContext(Dispatchers.IO) {
+                            ShizukuSettings.syncAllPlusFeaturesToServer()
+                        }
+                        ai = shizukuService.aiCorePlus
+                    }
                     if (ai == null) {
                         // Null when connected to a stock/mismatched server that doesn't implement
                         // the Plus AICore extension (SHIZUKUPLUS-6J) - not an error, just unavailable.
                         delay(1000)
                         continue
                     }
-                    val stats = ai.serverStats
+                    val stats =
+                        ai.serverStats ?: run {
+                            delay(1000)
+                            continue
+                        }
 
                     val uptimeMs = stats.getLong("uptime_ms")
                     val seconds = (uptimeMs / 1000) % 60
@@ -150,67 +178,259 @@ fun MetricCard(
     }
 }
 
+private enum class ActivityLogSort(
+    val labelRes: Int,
+) {
+    NEWEST(R.string.changelog_sort_newest),
+    OLDEST(R.string.changelog_sort_oldest),
+    BY_APP(R.string.activity_log_sort_by_app),
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActivityLogScreen() {
-    val logs by ActivityLogManager.logs.collectAsState(initial = emptyList())
-    // Include the date, not just the time - logs persist across days (matches the RecyclerView
-    // implementation of this same screen in ActivityLogActivity.kt).
+fun ActivityLogScreen(
+    showTopBar: Boolean = false,
+    onBackClick: (() -> Unit)? = null,
+) {
+    val context = LocalContext.current
+    val rawLogs by ActivityLogManager.logs.collectAsState(initial = emptyList())
+    var selectedType by remember { mutableStateOf<ActivityEventType?>(null) }
+    var currentSort by remember { mutableStateOf(ActivityLogSort.NEWEST) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var showClearDialog by remember { mutableStateOf(false) }
+
+    val filteredLogs =
+        remember(rawLogs, selectedType, currentSort) {
+            val list = if (selectedType == null) rawLogs else rawLogs.filter { it.eventType == selectedType }
+            when (currentSort) {
+                ActivityLogSort.NEWEST -> list.sortedByDescending { it.timestamp }
+                ActivityLogSort.OLDEST -> list.sortedBy { it.timestamp }
+                ActivityLogSort.BY_APP -> list.sortedWith(compareBy({ it.appName.lowercase() }, { -it.timestamp }))
+            }
+        }
+
     val dateFormat =
         remember {
-            java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.MEDIUM, Locale.getDefault())
+            java.text.DateFormat.getDateTimeInstance(
+                java.text.DateFormat.MEDIUM,
+                java.text.DateFormat.SHORT,
+                Locale.getDefault(),
+            )
         }
+
     val isOneHanded =
         af.shizuku.manager.ShizukuSettings
             .isOneHandedModeEnabled()
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val oneHandedTop = if (isOneHanded) (screenHeightDp * 0.16f).dp else 0.dp
 
-    if (logs.isEmpty()) {
-        Box(
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = { Text(stringResource(R.string.activity_log_clear_confirm_title)) },
+            text = { Text(stringResource(R.string.activity_log_clear_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        ActivityLogManager.clear()
+                        showClearDialog = false
+                    },
+                ) {
+                    Text(stringResource(R.string.settings_activity_log_clear), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
+    }
+
+    val content = @Composable {
+        Column(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(top = oneHandedTop),
-            contentAlignment = Alignment.Center,
+                    .padding(top = if (showTopBar) 0.dp else oneHandedTop),
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(painterResource(R.drawable.ic_empty_log_24), contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(stringResource(R.string.empty_state_title_activity_log_empty), style = MaterialTheme.typography.titleMedium)
+            // Filter and Sort Chips Row (Morphe style)
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Sort Dropdown Chip
+                Box {
+                    FilterChip(
+                        selected = false,
+                        onClick = { showSortMenu = true },
+                        label = { Text(stringResource(currentSort.labelRes)) },
+                        trailingIcon = {
+                            Icon(
+                                painterResource(R.drawable.ic_outline_expand_more_24),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        },
+                    )
+                    DropdownMenu(
+                        expanded = showSortMenu,
+                        onDismissRequest = { showSortMenu = false },
+                    ) {
+                        ActivityLogSort.values().forEach { sort ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(sort.labelRes)) },
+                                onClick = {
+                                    currentSort = sort
+                                    showSortMenu = false
+                                },
+                            )
+                        }
+                    }
+                }
+
+                // "All" Chip
+                FilterChip(
+                    selected = selectedType == null,
+                    onClick = { selectedType = null },
+                    label = { Text(stringResource(R.string.activity_log_filter_all)) },
+                )
+
+                // Event Type Chips
+                ActivityEventType.values().forEach { type ->
+                    val labelRes =
+                        when (type) {
+                            ActivityEventType.SERVICE_START -> R.string.activity_log_type_start
+                            ActivityEventType.SERVICE_STOP -> R.string.activity_log_type_stop
+                            ActivityEventType.CONNECTION -> R.string.activity_log_type_connection
+                            ActivityEventType.PERMISSION -> R.string.activity_log_type_permission
+                            ActivityEventType.APP_MANAGEMENT -> R.string.activity_log_type_app_mgmt
+                            ActivityEventType.WATCHDOG -> R.string.activity_log_type_watchdog
+                            ActivityEventType.SYSTEM -> R.string.activity_log_type_system
+                            ActivityEventType.OTHER -> R.string.activity_log_type_other
+                        }
+                    FilterChip(
+                        selected = selectedType == type,
+                        onClick = {
+                            selectedType = if (selectedType == type) null else type
+                        },
+                        label = { Text(stringResource(labelRes)) },
+                    )
+                }
+            }
+
+            if (filteredLogs.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            painterResource(R.drawable.ic_history_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            stringResource(R.string.empty_state_title_activity_log_empty),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            stringResource(R.string.empty_state_description_activity_log_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 32.dp),
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+                ) {
+                    items(
+                        count = filteredLogs.size,
+                        key = { i -> "${filteredLogs[i].timestamp}_${filteredLogs[i].packageName}_$i" },
+                    ) { index ->
+                        val record = filteredLogs[index]
+                        ActivityLogTimelineRow(
+                            record = record,
+                            dateFormat = dateFormat,
+                            isFirst = index == 0,
+                            isLast = index == filteredLogs.lastIndex,
+                            isLatest = index == 0 && currentSort == ActivityLogSort.NEWEST,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.settings_show_activity_log_home)) },
+                    navigationIcon = {
+                        if (onBackClick != null) {
+                            IconButton(onClick = onBackClick) {
+                                Icon(painterResource(R.drawable.ic_back_24), contentDescription = "Back")
+                            }
+                        }
+                    },
+                    actions = {
+                        if (rawLogs.isNotEmpty()) {
+                            IconButton(onClick = { showClearDialog = true }) {
+                                Icon(
+                                    painterResource(R.drawable.ic_delete_24),
+                                    contentDescription = stringResource(R.string.settings_activity_log_clear),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    },
+                )
+            },
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content()
             }
         }
     } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp + oneHandedTop, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(logs, key = { it.timestamp.toString() + it.packageName }) { record ->
-                ActivityLogRow(record, dateFormat)
-            }
-        }
+        content()
     }
 }
 
 @Composable
-private fun ActivityLogRow(
+private fun ActivityLogTimelineRow(
     record: ActivityLogRecord,
     dateFormat: java.text.DateFormat,
+    isFirst: Boolean,
+    isLast: Boolean,
+    isLatest: Boolean,
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val density = LocalDensity.current
-    var appName by remember(record.packageName) { mutableStateOf(record.appName.ifEmpty { record.packageName }) }
+    var isExpanded by remember { mutableStateOf(false) }
+
+    var appName by remember(record.packageName) {
+        mutableStateOf(record.appName.ifEmpty { record.packageName })
+    }
     var iconBitmap by remember(record.packageName) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
 
-    // pm.getApplicationInfo() is a real IPC and loadIcon() a synchronous decode - doing both inline
-    // during composition (as this screen used to) blocks the UI thread on every scroll/recompose,
-    // and handing an already-decoded Drawable to AsyncImage defeated its own caching pipeline.
-    // AppIconCache (used by the RecyclerView version of this same screen) is already cached+async.
     LaunchedEffect(record.packageName) {
         val pm = context.packageManager
-        val sizePx = with(density) { 40.dp.roundToPx() }
+        val sizePx = with(density) { 36.dp.roundToPx() }
         val ai =
             withContext(Dispatchers.IO) {
                 try {
@@ -227,28 +447,222 @@ private fun ActivityLogRow(
         if (bitmap != null) iconBitmap = bitmap.asImageBitmap()
     }
 
-    // mergeDescendants: without this, TalkBack stops on each child (icon/name/package/timestamp)
-    // separately when swiping through a long log list - one stop per row instead of four.
+    val typeColor =
+        when (record.eventType) {
+            ActivityEventType.SERVICE_START -> MaterialTheme.colorScheme.primary
+            ActivityEventType.SERVICE_STOP -> MaterialTheme.colorScheme.error
+            ActivityEventType.CONNECTION -> MaterialTheme.colorScheme.secondary
+            ActivityEventType.PERMISSION -> MaterialTheme.colorScheme.tertiary
+            ActivityEventType.APP_MANAGEMENT -> MaterialTheme.colorScheme.secondary
+            ActivityEventType.WATCHDOG -> MaterialTheme.colorScheme.error
+            ActivityEventType.SYSTEM -> MaterialTheme.colorScheme.outline
+            ActivityEventType.OTHER -> MaterialTheme.colorScheme.outline
+        }
+
+    val typeLabel =
+        when (record.eventType) {
+            ActivityEventType.SERVICE_START -> stringResource(R.string.activity_log_type_start)
+            ActivityEventType.SERVICE_STOP -> stringResource(R.string.activity_log_type_stop)
+            ActivityEventType.CONNECTION -> stringResource(R.string.activity_log_type_connection)
+            ActivityEventType.PERMISSION -> stringResource(R.string.activity_log_type_permission)
+            ActivityEventType.APP_MANAGEMENT -> stringResource(R.string.activity_log_type_app_mgmt)
+            ActivityEventType.WATCHDOG -> stringResource(R.string.activity_log_type_watchdog)
+            ActivityEventType.SYSTEM -> stringResource(R.string.activity_log_type_system)
+            ActivityEventType.OTHER -> stringResource(R.string.activity_log_type_other)
+        }
+
+    val railColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    val haloTransition = rememberInfiniteTransition(label = "haloTransition")
+    val pulseScale by
+        if (isLatest) {
+            haloTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.6f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(1200),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                label = "haloScale",
+            )
+        } else {
+            remember { mutableFloatStateOf(1f) }
+        }
+
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
                 .semantics(mergeDescendants = true) {},
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        val bitmap = iconBitmap
-        if (bitmap != null) {
-            Image(bitmap = bitmap, contentDescription = null, modifier = Modifier.size(40.dp))
-        } else {
-            Icon(painterResource(R.drawable.ic_system_icon), contentDescription = null, modifier = Modifier.size(40.dp))
+        // Vertical connecting timeline rail (Changelog / Morphe TimelineRailView pattern)
+        Canvas(
+            modifier =
+                Modifier
+                    .width(32.dp)
+                    .defaultMinSize(minHeight = 72.dp),
+        ) {
+            val cx = size.width / 2f
+            val nodeY = 24.dp.toPx()
+            val railStroke = 2.dp.toPx()
+
+            // Connecting track lines
+            if (!isFirst) {
+                drawLine(
+                    color = railColor,
+                    start = Offset(cx, 0f),
+                    end = Offset(cx, nodeY),
+                    strokeWidth = railStroke,
+                )
+            }
+            if (!isLast) {
+                drawLine(
+                    color = railColor,
+                    start = Offset(cx, nodeY),
+                    end = Offset(cx, size.height),
+                    strokeWidth = railStroke,
+                )
+            }
+
+            // Outer halo glow
+            val haloRadius = 10.dp.toPx() * if (isLatest) pulseScale else 1f
+            drawCircle(
+                color = typeColor.copy(alpha = if (isLatest) 0.35f else 0.15f),
+                radius = haloRadius,
+                center = Offset(cx, nodeY),
+            )
+
+            // Inner node
+            drawCircle(
+                color = typeColor,
+                radius = 5.dp.toPx(),
+                center = Offset(cx, nodeY),
+            )
         }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(appName, style = MaterialTheme.typography.titleMedium)
-            Text(record.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(record.action, style = MaterialTheme.typography.bodyMedium)
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        // Morphe-inspired tonal card with expandable details
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                ),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(bottom = 8.dp)
+                    .animateContentSize()
+                    .clickable {
+                        HapticUtils.tap(view)
+                        isExpanded = !isExpanded
+                    },
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    val bitmap = iconBitmap
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                        )
+                    } else {
+                        Icon(
+                            painterResource(R.drawable.ic_system_icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = typeColor,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = appName,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                        )
+                        Text(
+                            text = dateFormat.format(Date(record.timestamp)),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    // Event type status badge
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = typeColor.copy(alpha = 0.16f),
+                    ) {
+                        Text(
+                            text = typeLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = typeColor,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = record.action,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                // Expandable details (package name, copy button)
+                AnimatedVisibility(visible = isExpanded) {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                    ) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            thickness = 0.5.dp,
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = record.packageName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
+                            )
+                            IconButton(
+                                onClick = {
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    cm.setPrimaryClip(ClipData.newPlainText("Package Name", record.packageName))
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            context.getString(R.string.activity_log_copied, record.packageName),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                },
+                                modifier = Modifier.size(28.dp),
+                            ) {
+                                Icon(
+                                    painterResource(R.drawable.ic_copy),
+                                    contentDescription = "Copy",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
-        Text(dateFormat.format(Date(record.timestamp)), style = MaterialTheme.typography.labelSmall)
     }
 }

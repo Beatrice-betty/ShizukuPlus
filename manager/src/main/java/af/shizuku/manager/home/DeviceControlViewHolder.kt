@@ -61,7 +61,6 @@ class DeviceControlViewHolder(
         HomeEditMode.applyOverlay(containerBinding)
         IconStyleHelper.applyToCardIcon(iconView, originalIcon, "home_device_control")
         if (!data.isRunning) {
-            itemView.isEnabled = false
             title.setText(R.string.home_device_control_title)
             summary.text =
                 context.getString(
@@ -69,13 +68,13 @@ class DeviceControlViewHolder(
                     context.getString(R.string.app_name),
                 )
         } else {
-            itemView.isEnabled = true
             title.setText(R.string.home_device_control_title)
             summary.setText(R.string.home_device_control_summary)
         }
     }
 
     override fun onClick(v: View) {
+        if (!data.isRunning) return
         val activity = v.context.asActivity<android.app.Activity>() ?: return
         activity.startWithSceneTransition(
             Intent(activity, DeviceControlActivity::class.java),

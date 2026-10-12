@@ -120,6 +120,38 @@ Things discussed or sketched that we never formally decided to build.
 
 ## Session History (newest first)
 
+### 2026-10-11 — Antigravity (Gemini 3.8 Flash) [Full UX Reviews, System Hub Metrics Fix & Release Preps]
+
+**Done:**
+- **System Hub Metrics All 0s Bug Fix (#597)**:
+  - `ShizukuService.java`: added `"ai_core_plus"` to default-enabled whitelist in `isFeatureEnabled()`, preventing null `aiCorePlus` on startup before manager settings sync. Added throttled manager appId re-resolution fallback (`refreshManagerAppIdsThrottled()`) to `checkCallerPermission()`.
+  - `SystemHubScreens.kt` & `ServerMetricsFragment.kt`: added proactive `syncAllPlusFeaturesToServer()` fallback if `aiCorePlus` is null, and safeguarded null-access on `ai.serverStats`.
+- **UI Animations & Haptics Review**:
+  - `MotionUtils.kt`: removed premature `HapticUtils.tap(it)` from raw `ACTION_DOWN` in `applySpringTouch()`, eliminating buzzing on every finger contact when scrolling lists.
+  - `ShizukuSettings.java`: updated `getAnimationDurationScale()` to check `!isExpressiveAnimationsEnabled()`, returning 0f duration cleanly across all animated components when disabled.
+- **Accessibility (TalkBack) & Flow Review**:
+  - `HomeEditMode.kt`: attached accessibility delegate to `binding.dragHandle` as well as `binding.root`, marked `binding.dragHandle.isFocusable = isActive`, and guaranteed that `binding.root` is passed to `moveCardCallback` so `getChildAdapterPosition` accurately maps to the card index.
+- **Responsive Layout & Display Scaling Review**:
+  - `HomeActivity.kt`: configured `HomeAdapter.ID_APPS` (Authorized Applications banner) to span both columns in 2-column grid mode on tablets and wide landscape screens, matching the Server Status card.
+- **Defensive `SummaryProvider` Protection (#587)**:
+  - `BaseSettingsFragment.kt`: added `Preference.setCustomSummary()` extension methods which explicitly reset `summaryProvider = null` before assigning summary text, eliminating `IllegalStateException: Preference already has a SummaryProvider set.` across all settings fragments.
+  - `IntegerSimpleMenuPreference.java`: guarded `setSummary(CharSequence)` against pre-existing `SummaryProvider`.
+- **Adaptive Multi-Interface & IPv6 ADB Connection**:
+  - `AdbPortProber.kt`: added `getCandidateHosts(preferredHost)` to enumerate preferred host, loopback (`127.0.0.1`, `::1`), and active non-loopback network interface IPs (`wlan0`, etc.). Enhanced `isPortOpen` to support dual-stack IPv4/IPv6 and zone-stripped IPs. Parallelized candidate port probing down to 150ms.
+  - `AdbStarter.kt`: implemented `connectAdaptive` with exponential backoff failover across all candidate addresses on `ConnectException` / `NoRouteToHostException`.
+  - `AdbPairingClient.kt`: updated `setupTlsConnection()` to adaptively probe candidate hosts, preventing pairing hangs on devices where pairing binds to interface IPs or IPv6.
+  - `AdbClient.kt`: replaced `else if (message.command == A_AUTH)` with `if (message.command == A_AUTH)` so `A_AUTH` is correctly handled if received over TLS after `A_STLS`.
+  - `AdbMdns.kt`: hardened `onServiceResolved` with null-safety and zone-stripping for IPv6 link-local addresses. Fixed `isPortAvailable` to check all active network interfaces and allow non-blocking TCP socket verification for `TLS_CONNECT`.
+  - `AdbStartWorker.kt`: eliminated stale port reboot backoff penalty by verifying `isPortOpen(savedPort, 200)` and triggering mDNS discovery on attempt 0 if dead. Preserved `resolvedHost` across workers.
+  - `ReconnectTrigger.kt`: relaxed LAN check from requiring public `NET_CAPABILITY_INTERNET` to `NET_CAPABILITY_NOT_SUSPENDED`, allowing wireless debugging to reconnect on offline/local LAN networks.
+- **GitHub Audit**:
+  - Open PRs audited: PR #592 (One prompt de-duplication during connection), PR #594/#595 (proactive config save on permission changes, exit flush, and AtomicFile retry backoff).
+  - Issues audited: #590 (RegiStar-style home cards settings category hiding), #596 (continuous error loop diagnostics), #597 (fixed), #598 (theme attribute warning diagnostics).
+- **Verification**:
+  - `sh ./gradlew spotlessApply` and `sh ./gradlew spotlessCheck` verified clean (BUILD SUCCESSFUL).
+
+---
+
 ### 2026-10-03 — Claude Code (Opus 4.7) [Release v13.7.0.r2737 cut]
 
 **Done:**

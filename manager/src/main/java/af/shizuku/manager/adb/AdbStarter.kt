@@ -57,6 +57,7 @@ object AdbStarter {
     suspend fun startAdb(
         context: Context,
         port: Int,
+        host: String = "127.0.0.1",
         log: ((String) -> Unit)? = null,
         activityLogMessage: String? = null,
     ) {
@@ -71,7 +72,7 @@ object AdbStarter {
 
         try {
             ShizukuStateMachine.set(ShizukuStateMachine.State.STARTING)
-            Timber.tag(TAG).i("startAdb: initiating connection on port %d", port)
+            Timber.tag(TAG).i("startAdb: initiating connection on %s:%d", host, port)
             log?.invoke("Starting with wireless adb...\n")
 
             withContext(Dispatchers.IO) {
@@ -86,6 +87,7 @@ object AdbStarter {
                         }
 
                 var activePort = port
+                var activeHost = host
                 // An untrusted network (#518) must not get a TCP port opened as a side effect of a
                 // Wireless Debugging start, or the protection is undone one step later.
                 val tcpMode =
@@ -100,13 +102,12 @@ object AdbStarter {
                         Timber.tag(TAG).d("Switching ADB from port %d to TCP port %d", activePort, tcpPort)
                         log?.invoke("Connecting on port $activePort...")
 
-                        AdbClient("127.0.0.1", activePort, key).use { client ->
-                            client.connect()
-
-                            log?.invoke("Successfully connected on port $activePort...")
+                        connectAdaptive(activeHost, activePort, key) { client, connectedHost ->
+                            log?.invoke("Successfully connected on port $activePort ($connectedHost)...")
                             log?.invoke("\nRestarting in TCP mode port: $tcpPort")
 
                             activePort = tcpPort
+                            activeHost = "127.0.0.1"
                             runCatching {
                                 client.command("tcpip:$activePort")
                             }.onFailure { if (it !is EOFException && it !is SocketException) throw it } // Expected when ADB restarts in TCP mode
@@ -114,12 +115,11 @@ object AdbStarter {
                     }
                 }
 
-                Timber.tag(TAG).i("Connecting to ADB daemon at 127.0.0.1:%d", activePort)
+                Timber.tag(TAG).i("Connecting to ADB daemon at %s:%d", activeHost, activePort)
                 log?.invoke("Connecting on port $activePort...")
 
-                AdbClient("127.0.0.1", activePort, key).use { client ->
-                    connectWithRetry(client, activePort)
-                    Timber.tag(TAG).i("Connected to ADB at 127.0.0.1:%d; deploying starter command", activePort)
+                connectAdaptive(activeHost, activePort, key) { client, connectedHost ->
+                    Timber.tag(TAG).i("Connected to ADB at %s:%d; deploying starter command", connectedHost, activePort)
                     log?.invoke("Successfully connected on port $activePort...\n")
                     client.runCommand("shell:${Starter.internalCommand}")
                     runCatching {
@@ -132,7 +132,7 @@ object AdbStarter {
                     val msg = activityLogMessage ?: "Service started via ADB on port $activePort"
                     ActivityLogManager.log("Shizuku", context.packageName, msg)
                     ShizukuStateMachine.update()
-                    Timber.tag(TAG).i("Shizuku service started successfully via ADB on port %d", activePort)
+                    Timber.tag(TAG).i("Shizuku service started successfully via ADB on %s:%d", connectedHost, activePort)
                 }
             }
         } catch (e: Exception) {
@@ -188,8 +188,7 @@ object AdbStarter {
             ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
             val key = AdbKey(PreferenceAdbKeyStore(ShizukuSettings.getPreferences()), "shizuku+")
             withContext(Dispatchers.IO) {
-                AdbClient("127.0.0.1", port, key).use { client ->
-                    connectWithRetry(client, port)
+                connectAdaptive("127.0.0.1", port, key) { client, _ ->
                     client.command("usb:")
                 }
             }
@@ -213,34 +212,52 @@ object AdbStarter {
         }
     }
 
-    private suspend fun connectWithRetry(
-        client: AdbClient,
+    private fun getCandidateHosts(preferredHost: String): List<String> =
+        AdbPortProber.getCandidateHosts(preferredHost)
+
+    private suspend fun connectAdaptive(
+        preferredHost: String,
         port: Int,
+        key: AdbKey,
+        action: suspend (client: AdbClient, connectedHost: String) -> Unit,
     ) {
-        var delayTime = 500L
+        val candidateHosts = getCandidateHosts(preferredHost)
+        var delayTime = 400L
         val maxAttempts = 8
+        var lastException: Exception? = null
+
         for (attempt in 1..maxAttempts) {
-            try {
-                if (attempt > 1) {
-                    delay(delayTime)
-                    delayTime = (delayTime * 1.5).toLong().coerceAtMost(3000L) // Exponential backoff up to 3s
-                }
-                Timber.tag(TAG).d("Connecting to ADB attempt %d/%d (port=%d)", attempt, maxAttempts, port)
-                client.connect(
-                    onKeyOffered = { keyOfferInFlight = true },
-                    onKeyOfferDone = { keyOfferInFlight = false },
-                )
-                Timber.tag(TAG).d("Connected successfully on attempt %d", attempt)
-                break
-            } catch (e: Exception) {
-                Timber.tag(TAG).w(e, "Connection attempt %d/%d failed: %s", attempt, maxAttempts, e.message)
-                if (
-                    attempt == maxAttempts ||
-                    e is CancellationException
-                ) {
-                    throw e
+            if (attempt > 1) {
+                delay(delayTime)
+                delayTime = (delayTime * 1.4).toLong().coerceAtMost(2500L)
+            }
+
+            for (targetHost in candidateHosts) {
+                val client = AdbClient(targetHost, port, key)
+                try {
+                    Timber.tag(TAG).d("Connecting to ADB attempt %d/%d (host=%s, port=%d)", attempt, maxAttempts, targetHost, port)
+                    client.connect(
+                        onKeyOffered = { keyOfferInFlight = true },
+                        onKeyOfferDone = { keyOfferInFlight = false },
+                    )
+                    Timber.tag(TAG).i("Connected to ADB at %s:%d on attempt %d", targetHost, port, attempt)
+                    client.use {
+                        action(it, targetHost)
+                    }
+                    return
+                } catch (e: Exception) {
+                    client.close()
+                    lastException = e
+                    if (e is CancellationException) throw e
+                    if (e is ConnectException || e is java.net.NoRouteToHostException) {
+                        Timber.tag(TAG).d("Host %s refused port %d, checking alternate interface...", targetHost, port)
+                        continue
+                    } else {
+                        break
+                    }
                 }
             }
         }
+        throw lastException ?: ConnectException("Could not connect to ADB daemon on port $port across candidate hosts $candidateHosts")
     }
 }

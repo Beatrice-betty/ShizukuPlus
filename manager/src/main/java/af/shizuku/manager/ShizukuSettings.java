@@ -378,6 +378,14 @@ public class ShizukuSettings {
      * instead, so the app respects the user's system-wide animation speed preference.
      */
     public static float getAnimationDurationScale() {
+        if (!isExpressiveAnimationsEnabled()) {
+            return 0f;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!android.animation.ValueAnimator.areAnimatorsEnabled()) {
+                return 0f;
+            }
+        }
         if (isFollowSystemAnimations() && sContext != null) {
             try {
                 String raw = Settings.Global.getString(
@@ -396,7 +404,9 @@ public class ShizukuSettings {
 
     /** Scales an animation duration (ms) by the current animation-intensity multiplier. */
     public static long scaledAnimationDuration(long baseMs) {
-        return Math.max(1L, (long) (baseMs * getAnimationDurationScale()));
+        float scale = getAnimationDurationScale();
+        if (scale <= 0f) return 0L;
+        return Math.max(1L, (long) (baseMs * scale));
     }
 
     public static SharedPreferences getPreferences() {

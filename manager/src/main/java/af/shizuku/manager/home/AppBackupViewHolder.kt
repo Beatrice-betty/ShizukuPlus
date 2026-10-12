@@ -63,7 +63,6 @@ class AppBackupViewHolder(
         HomeEditMode.applyOverlay(containerBinding)
         IconStyleHelper.applyToCardIcon(iconView, originalIcon, "home_app_backup")
         if (!data.isRunning) {
-            itemView.isEnabled = false
             title.setText(R.string.home_backup_title)
             summary.text =
                 context.getString(
@@ -71,7 +70,6 @@ class AppBackupViewHolder(
                     context.getString(R.string.app_name),
                 )
         } else {
-            itemView.isEnabled = true
             title.setText(R.string.home_backup_title)
             // Show where backups go: the configured export dir if set, or the default summary.
             val exportPath =
@@ -89,6 +87,7 @@ class AppBackupViewHolder(
     }
 
     override fun onClick(v: View) {
+        if (!data.isRunning) return
         val activity = v.context.asActivity<android.app.Activity>() ?: return
         activity.startWithSceneTransition(
             Intent(activity, AppBackupActivity::class.java),

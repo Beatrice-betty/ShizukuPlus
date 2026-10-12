@@ -4,11 +4,15 @@ import af.shizuku.core.ui.compose.Button
 import af.shizuku.core.ui.compose.ButtonSize
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
+import af.shizuku.manager.utils.EnvironmentUtils
 import android.content.Context
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +23,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +53,8 @@ fun HomeScreen(
 ) {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp
+    val context = LocalContext.current
+    val isDropIn = remember(context) { EnvironmentUtils.isDropIn(context) }
 
     // Status bar height — must be included in the Surface height so content sits below it,
     // not behind it. The inner Box gets windowInsetsPadding(statusBars) to push all content
@@ -116,7 +124,10 @@ fun HomeScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(expandedHeight + statusBarPadding + with(density) { scrollBehavior.state.heightOffset.toDp() }),
+                        .height(
+                            (expandedHeight + statusBarPadding + with(density) { scrollBehavior.state.heightOffset.toDp() })
+                                .coerceAtLeast(collapsedHeight + statusBarPadding),
+                        ),
                 color =
                     run {
                         val barAlpha = ((fraction - 0.6f) / 0.35f).coerceIn(0f, 1f)
@@ -132,7 +143,20 @@ fun HomeScreen(
                 // in Material3 1.4+ consumes contentWindowInsets before composing its slots, so
                 // WindowInsets.statusBars inside the topBar returns 0, hiding the action buttons
                 // behind the status bar on Android 17+ (#528).
-                Box(modifier = Modifier.fillMaxSize().padding(top = statusBarPadding)) {
+                val layoutDirection = LocalLayoutDirection.current
+                val safeHorizontalInsets = WindowInsets.safeDrawing.asPaddingValues()
+                val startPaddingInset = safeHorizontalInsets.calculateStartPadding(layoutDirection)
+                val endPaddingInset = safeHorizontalInsets.calculateEndPadding(layoutDirection)
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = statusBarPadding,
+                                start = startPaddingInset,
+                                end = endPaddingInset,
+                            ),
+                ) {
                     // Action icons pinned at top-end inside the 64dp collapsed row
                     Row(
                         modifier =
@@ -143,6 +167,12 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (isEditMode) {
+                            IconButton(onClick = onRestoreHomeCards) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_restore_24),
+                                    contentDescription = stringResource(id = R.string.home_restore_default),
+                                )
+                            }
                             TextButton(onClick = onDoneClick) {
                                 Text(
                                     text = stringResource(R.string.home_edit_mode_done),
@@ -151,6 +181,12 @@ fun HomeScreen(
                                 )
                             }
                         } else {
+                            IconButton(onClick = onRestoreHomeCards) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_restore_24),
+                                    contentDescription = stringResource(id = R.string.home_restore_default),
+                                )
+                            }
                             IconButton(onClick = onStopClick) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_close_24),
@@ -176,7 +212,7 @@ fun HomeScreen(
                     // horizontalBias: 0 = center, -1 = start.
                     val horizontalBias = -curvedFraction
                     val startPadding = lerp(start = 24.dp, stop = 20.dp, fraction = curvedFraction)
-                    val endPadding = lerp(start = 24.dp, stop = 160.dp, fraction = curvedFraction)
+                    val endPadding = lerp(start = 24.dp, stop = if (isEditMode) 120.dp else 196.dp, fraction = curvedFraction)
                     val titleFontSize =
                         lerp(
                             start = if (isOneUi) 32.sp else 28.sp,
@@ -207,23 +243,75 @@ fun HomeScreen(
                                 ),
                         contentAlignment = BiasAlignment(horizontalBias, 0f),
                     ) {
-                        Text(
-                            text =
-                                if (isEditMode) {
-                                    stringResource(R.string.home_edit_mode_title)
-                                } else {
-                                    stringResource(R.string.app_name)
-                                },
-                            style =
-                                MaterialTheme.typography.headlineLarge.copy(
-                                    fontWeight = titleFontWeight,
-                                    fontSize = titleFontSize,
-                                    letterSpacing = titleLetterSpacing,
-                                ),
-                            textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        if (isEditMode) {
+                            Text(
+                                text = stringResource(R.string.home_edit_mode_title),
+                                style =
+                                    MaterialTheme.typography.headlineLarge.copy(
+                                        fontWeight = titleFontWeight,
+                                        fontSize = titleFontSize,
+                                        letterSpacing = titleLetterSpacing,
+                                    ),
+                                textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        } else if (isDropIn) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = if (curvedFraction > 0.5f) Arrangement.Start else Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.brand_shizuku_plus),
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    style =
+                                        MaterialTheme.typography.headlineLarge.copy(
+                                            fontWeight = titleFontWeight,
+                                            fontSize = titleFontSize,
+                                            letterSpacing = titleLetterSpacing,
+                                        ),
+                                    textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(modifier = Modifier.width(lerp(8.dp, 6.dp, curvedFraction)))
+                                Surface(
+                                    shape = RoundedCornerShape(100),
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    tonalElevation = 1.dp,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.brand_drop_in),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 0.4.sp,
+                                                fontSize = lerp(11.sp, 9.5.sp, curvedFraction),
+                                            ),
+                                        modifier =
+                                            Modifier.padding(
+                                                horizontal = lerp(8.dp, 6.dp, curvedFraction),
+                                                vertical = lerp(3.dp, 2.dp, curvedFraction),
+                                            ),
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style =
+                                    MaterialTheme.typography.headlineLarge.copy(
+                                        fontWeight = titleFontWeight,
+                                        fontSize = titleFontSize,
+                                        letterSpacing = titleLetterSpacing,
+                                    ),
+                                textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
 
                     // Hairline divider fades in as the bar collapses
@@ -362,6 +450,7 @@ fun HomeEmptyState(onRestoreHomeCards: () -> Unit) {
         modifier =
             Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

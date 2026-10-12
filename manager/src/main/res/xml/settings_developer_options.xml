@@ -55,6 +55,91 @@
             app:useSimpleSummaryProvider="true"
             android:icon="@drawable/ic_smartphone_24" />
 
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="device_control_home_enabled"
+            android:title="@string/settings_device_control_home_title"
+            android:summary="@string/settings_device_control_home_summary"
+            android:icon="@drawable/ic_devices_24"
+            android:defaultValue="false"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="window_manager_plus_enabled"
+            android:title="@string/settings_window_manager_plus"
+            android:summary="@string/settings_window_manager_plus_summary"
+            android:icon="@drawable/ic_window_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_window_manager_plus_title"
+            app:infoDetail="@string/help_window_manager_plus_detail"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="overlay_manager_plus_enabled"
+            android:title="@string/settings_overlay_manager_plus"
+            android:summary="@string/settings_overlay_manager_plus_summary"
+            android:icon="@drawable/ic_palette_24"
+            android:defaultValue="false"
+            android:dependency="window_manager_plus_enabled"
+            app:infoTitle="@string/help_overlay_manager_plus_title"
+            app:infoDetail="@string/help_overlay_manager_plus_detail"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="ai_core_plus_enabled"
+            android:title="AI Bridge &amp; NPU"
+            android:summary="@string/settings_ai_core_plus_summary"
+            android:icon="@drawable/ic_integration_instructions_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_ai_core_plus_title"
+            app:infoDetail="@string/help_ai_core_plus_detail"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="ai_core_master_enabled"
+            android:title="@string/settings_ai_core_master"
+            android:summary="@string/settings_ai_core_master_summary"
+            android:icon="@drawable/ic_integration_instructions_24"
+            android:defaultValue="false"
+            android:dependency="ai_core_plus_enabled"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="npu_acceleration_enabled"
+            android:title="@string/settings_npu_acceleration"
+            android:summary="@string/settings_npu_acceleration_summary"
+            android:icon="@drawable/ic_settings_suggest_24"
+            android:defaultValue="false"
+            android:dependency="ai_core_master_enabled"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="native_window_crawler_enabled"
+            android:title="@string/settings_window_crawler"
+            android:summary="@string/settings_window_crawler_summary"
+            android:icon="@drawable/ic_code_24"
+            android:defaultValue="false"
+            android:dependency="ai_core_master_enabled"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="ai_core_experimental_enabled"
+            android:title="@string/settings_ai_automation_experimental"
+            android:summary="@string/settings_ai_automation_experimental_summary"
+            android:icon="@drawable/ic_science_24"
+            android:defaultValue="false"
+            android:dependency="ai_core_plus_enabled"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="display_tuner_plus_enabled"
+            android:title="@string/settings_display_tuner_plus_title"
+            android:summary="@string/settings_display_tuner_plus_summary"
+            android:icon="@drawable/ic_smartphone_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_display_tuner_plus_title"
+            app:infoDetail="@string/help_display_tuner_plus_detail"
+            app:badgeType="experimental" />
+
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
 </PreferenceScreen>

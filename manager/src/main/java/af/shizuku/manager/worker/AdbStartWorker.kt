@@ -38,6 +38,11 @@ import kotlinx.coroutines.launch
 import java.io.EOFException
 import java.util.concurrent.TimeoutException
 
+private data class AdbTarget(
+    val host: String = "127.0.0.1",
+    val port: Int,
+)
+
 class AdbStartWorker(
     context: Context,
     params: WorkerParameters,
@@ -137,15 +142,15 @@ class AdbStartWorker(
                 }
             }
 
-            val port =
+            val target =
                 when {
-                    tcpPort > 0 && isWifiOk -> tcpPort
-                    savedPort > 0 && isWifiOk && runAttemptCount == 0 -> savedPort
+                    tcpPort > 0 && isWifiOk && AdbPortProber.isPortOpen(tcpPort, 200) -> AdbTarget("127.0.0.1", tcpPort)
+                    savedPort > 0 && isWifiOk && runAttemptCount == 0 && AdbPortProber.isPortOpen(savedPort, 200) -> AdbTarget("127.0.0.1", savedPort)
                     else ->
                         callbackFlow {
                             val adbMdns =
                                 AdbMdns(applicationContext, AdbMdns.TLS_CONNECT) { p ->
-                                    if (p > 0) trySend(p)
+                                    if (p > 0) trySend(AdbTarget(adbMdns.resolvedHost, p))
                                 }
 
                             var awaitingAuth = false
@@ -265,11 +270,13 @@ class AdbStartWorker(
                         }.first()
                 }
 
+            val port = target.port
+            val host = target.host
             AdbConnectionPlanner.recordMethod(applicationContext, if (port == tcpPort || port == savedPort) "known port" else "Wireless Debugging discovery", port)
             timber.log.Timber
                 .tag("AdbStartWorker")
-                .i("doWork: resolved port %d, starting ADB client", port)
-            AdbStarter.startAdb(applicationContext, port)
+                .i("doWork: resolved host %s, port %d, starting ADB client", host, port)
+            AdbStarter.startAdb(applicationContext, port, host = host)
             Starter.waitForBinder()
             timber.log.Timber
                 .tag("AdbStartWorker")

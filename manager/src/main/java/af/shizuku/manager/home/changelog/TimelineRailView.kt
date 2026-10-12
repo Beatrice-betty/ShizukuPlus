@@ -22,7 +22,11 @@ class TimelineRailView
         private val railPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeWidth = 2f * density }
         private val nodePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f * density }
+        private val ringPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = 2f * density
+            }
 
         private var haloScale = 1f
         private var pulse: ValueAnimator? = null

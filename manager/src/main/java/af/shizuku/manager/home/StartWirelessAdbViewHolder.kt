@@ -220,12 +220,14 @@ class StartWirelessAdbViewHolder(
         if (EnvironmentUtils.isTlsSupported()) {
             if (runningViaAdb) {
                 binding.button1.setText(R.string.home_wireless_adb_button_reconnect)
+                binding.button1.contentDescription = context.getString(R.string.home_wireless_adb_button_reconnect)
                 binding.text1.text =
                     context
                         .getString(R.string.home_wireless_adb_description_active)
                         .toHtml(HtmlCompat.FROM_HTML_OPTION_TRIM_WHITESPACE)
             } else {
                 binding.button1.setText(R.string.home_root_button_start)
+                binding.button1.contentDescription = context.getString(R.string.home_root_button_start)
                 binding.text1.text =
                     context
                         .getString(R.string.home_wireless_adb_description)

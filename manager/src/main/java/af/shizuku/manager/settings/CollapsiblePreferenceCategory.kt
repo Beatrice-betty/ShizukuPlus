@@ -116,9 +116,11 @@ class CollapsiblePreferenceCategory
                 if (isAnimating) return@setOnClickListener
                 expanded = !expanded
                 if (expanded) {
-                    af.shizuku.manager.utils.HapticUtils.toggleOn(holder.itemView)
+                    af.shizuku.manager.utils.HapticUtils
+                        .toggleOn(holder.itemView)
                 } else {
-                    af.shizuku.manager.utils.HapticUtils.toggleOff(holder.itemView)
+                    af.shizuku.manager.utils.HapticUtils
+                        .toggleOff(holder.itemView)
                 }
                 if (shouldPersist()) persistBoolean(expanded)
                 // Animate arrow with M3E spring-style motion

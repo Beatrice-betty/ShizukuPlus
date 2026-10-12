@@ -20,6 +20,12 @@ class ActivityLogSettingsImpl : ActivityLogSettings {
     ) {
         if (!ShizukuSettings.isActivityLogEnabled()) return
         if (!ShizukuSettings.isLiveActivityEnabled()) return
-        LiveActivityNotificationManager.show(af.shizuku.manager.ShizukuApplication.appContext, "$appName: $action")
+        val text =
+            when {
+                appName.isNotBlank() && action.isNotBlank() -> "$appName: $action"
+                appName.isNotBlank() -> appName
+                else -> action
+            }.removePrefix(":").trim()
+        LiveActivityNotificationManager.show(af.shizuku.manager.ShizukuApplication.appContext, text)
     }
 }

@@ -12,7 +12,6 @@ import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.RecyclerView
 
 object HomeEditMode {
@@ -114,9 +113,8 @@ object HomeEditMode {
             binding.removeBtn.contentDescription = ctx.getString(R.string.accessibility_card_hide)
         }
 
-        // Dragging is not possible with TalkBack/switch access; offer move actions on the card.
-        ViewCompat.setAccessibilityDelegate(
-            binding.root,
+        // Dragging is not possible with TalkBack/switch access; offer move actions on the card and drag handle.
+        val a11yDelegate =
             object : AccessibilityDelegateCompat() {
                 override fun onInitializeAccessibilityNodeInfo(
                     host: android.view.View,
@@ -124,8 +122,18 @@ object HomeEditMode {
                 ) {
                     super.onInitializeAccessibilityNodeInfo(host, info)
                     if (!isActive) return
-                    info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.action_move_card_up, host.context.getString(R.string.accessibility_move_card_up)))
-                    info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.action_move_card_down, host.context.getString(R.string.accessibility_move_card_down)))
+                    info.addAction(
+                        AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                            R.id.action_move_card_up,
+                            host.context.getString(R.string.accessibility_move_card_up),
+                        ),
+                    )
+                    info.addAction(
+                        AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                            R.id.action_move_card_down,
+                            host.context.getString(R.string.accessibility_move_card_down),
+                        ),
+                    )
                 }
 
                 override fun performAccessibilityAction(
@@ -140,12 +148,14 @@ object HomeEditMode {
                                 R.id.action_move_card_down -> 1
                                 else -> 0
                             }
-                        if (delta != 0) return moveCardCallback?.invoke(host, delta) ?: false
+                        if (delta != 0) return moveCardCallback?.invoke(binding.root, delta) ?: false
                     }
                     return super.performAccessibilityAction(host, action, args)
                 }
-            },
-        )
+            }
+        ViewCompat.setAccessibilityDelegate(binding.root, a11yDelegate)
+        ViewCompat.setAccessibilityDelegate(binding.dragHandle, a11yDelegate)
+        binding.dragHandle.isFocusable = isActive
 
         binding.removeBtn.background = chipBg
         binding.removeBtn.imageTintList = fgTintList
@@ -153,18 +163,5 @@ object HomeEditMode {
         // Drag handle: matching darkened hollow chip and on-surface-variant tint
         binding.dragHandle.background = darkenedHollowChip(alphaMultiplier)
         binding.dragHandle.imageTintList = fgTintList
-
-        val res = binding.cardContent.resources
-        val base = res.getDimensionPixelSize(R.dimen.card_content_padding)
-        // drag_handle and remove_btn now sit side-by-side in a single top-end row (48dp each +
-        // 4dp gap + 12dp end margin) instead of stacked/overlapping on the same corner; reserve
-        // clearance for the whole row so content never sits under either control.
-        val overlayClearance =
-            if (isActive) {
-                (112 * res.displayMetrics.density).toInt()
-            } else {
-                0
-            }
-        binding.cardContent.updatePaddingRelative(end = base + overlayClearance)
     }
 }

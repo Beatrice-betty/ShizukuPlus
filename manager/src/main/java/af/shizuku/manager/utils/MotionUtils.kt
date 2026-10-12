@@ -40,7 +40,6 @@ object MotionUtils {
             }
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    v?.let { HapticUtils.tap(it) }
                     springX.animateToFinalPosition(scale)
                     springY.animateToFinalPosition(scale)
                 }

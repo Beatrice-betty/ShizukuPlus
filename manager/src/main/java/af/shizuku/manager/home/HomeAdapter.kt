@@ -6,6 +6,7 @@ import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.management.AppsViewModel
 import af.shizuku.manager.model.ServiceStatus
 import af.shizuku.manager.utils.EnvironmentUtils
+import af.shizuku.manager.utils.HapticUtils
 import android.os.Build
 import com.airbnb.mvrx.withState
 import kotlinx.coroutines.CoroutineScope
@@ -115,6 +116,9 @@ class HomeAdapter(
     fun restoreAllCards() {
         ShizukuSettings.setHiddenHomeCards(emptySet())
         ShizukuSettings.setBackupCardVisible(true)
+        ShizukuSettings.setCardOrder(null)
+        cardOrder.clear()
+        cardOrder.addAll(DEFAULT_ORDER)
         updateData()
     }
 
@@ -180,7 +184,7 @@ class HomeAdapter(
 
                 notifyDataSetChanged()
 
-                val hasVisibleCards = itemCount > fixedCardCount
+                val hasVisibleCards = itemCount > 0
                 onEmptyStateChanged?.invoke(!hasVisibleCards)
 
                 isUpdating = false
@@ -290,7 +294,16 @@ class HomeAdapter(
                 }
             val iconRes = if (isHidden) R.drawable.ic_visibility_off_24 else R.drawable.ic_visibility_24
             removeBtn.setImageResource(iconRes)
-            removeBtn.setOnClickListener { HomeEditMode.removeCardCallback?.invoke(id) }
+            removeBtn.contentDescription =
+                removeBtn.context.getString(if (isHidden) R.string.accessibility_card_show else R.string.accessibility_card_hide)
+            removeBtn.setOnClickListener {
+                if (isHidden) {
+                    HapticUtils.toggleOn(it)
+                } else {
+                    HapticUtils.toggleOff(it)
+                }
+                HomeEditMode.removeCardCallback?.invoke(id)
+            }
         }
 
         super.onBindViewHolder(holder, position)

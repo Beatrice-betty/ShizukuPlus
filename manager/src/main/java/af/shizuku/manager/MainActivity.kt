@@ -100,6 +100,7 @@ class MainActivity : HomeActivity() {
      *
      * Supports both the new "r{N}" tag format and the legacy "v{semver}.r{N}" format.
      */
+
     /**
      * Returning users see the style chooser inside What's New once (forcing the dialog open even
      * without a version bump); fresh installs just get the default.

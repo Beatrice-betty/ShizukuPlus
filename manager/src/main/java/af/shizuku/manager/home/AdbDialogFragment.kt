@@ -181,6 +181,9 @@ class AdbDialogFragment : DialogFragment() {
         val intent =
             Intent(context, StarterActivity::class.java).apply {
                 putExtra(StarterActivity.EXTRA_PORT, port)
+                adbMdns?.resolvedHost?.let {
+                    putExtra(StarterActivity.EXTRA_HOST, it)
+                }
             }
         requireContext().startActivity(intent)
 

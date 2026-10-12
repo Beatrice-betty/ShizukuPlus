@@ -3,8 +3,12 @@ import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.ShizukuSettings.Keys.*
 import af.shizuku.manager.activitylog.ActivityLogActivity
+import af.shizuku.manager.backup.BackupKeyUnavailableException
+import af.shizuku.manager.backup.BackupRestoreManager
+import af.shizuku.manager.backup.CryptoUtils
 import af.shizuku.manager.database.AppContextManager
 import af.shizuku.manager.ktx.setComponentEnabled
+import af.shizuku.manager.security.BiometricLock
 import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.EnvironmentUtils
 import android.content.ClipData
@@ -12,18 +16,154 @@ import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricPrompt
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.TwoStatePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import javax.crypto.AEADBadTagException
 
 class AdvancedSettingsFragment : BaseSettingsFragment() {
     override fun getTitle(): CharSequence? = getString(R.string.settings_main_nav_advanced_diagnostics_title)
+
+    private fun backupErrorMessage(
+        prefix: String,
+        e: Exception,
+    ): String =
+        when (e) {
+            is KeyPermanentlyInvalidatedException ->
+                "$prefix: your device's screen lock or biometrics changed since this backup's " +
+                    "encryption key was created, which permanently invalidates it by design. " +
+                    if (prefix == "Restore failed") {
+                        "This backup can no longer be decrypted."
+                    } else {
+                        "Please try again to generate a new key."
+                    }
+            is BackupKeyUnavailableException -> "$prefix: ${e.message}"
+            is AEADBadTagException ->
+                "$prefix: this backup could not be decrypted. It was most likely created by a different " +
+                    "installation of Shizuku+ — backups are encrypted per-install and can't be restored " +
+                    "after reinstalling or clearing the app's data."
+            else -> "$prefix: ${e.message ?: e.javaClass.simpleName}"
+        }
+
+    private val createPlainBackupLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            if (uri == null) return@registerForActivityResult
+            val ctx = requireContext()
+            try {
+                val payload = BackupRestoreManager.createPlainBackupPayload(ctx)
+                ctx.contentResolver.openOutputStream(uri)?.use { os ->
+                    OutputStreamWriter(os, Charsets.UTF_8).use { it.write(payload) }
+                }
+                Toast.makeText(ctx, R.string.backup_plain_exported, Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(ctx, ctx.getString(R.string.backup_failed_generic, e.message), Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val createBackupLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            if (uri == null) return@registerForActivityResult
+            val ctx = requireContext()
+            val lock = BiometricLock(requireActivity())
+            val useAuth = lock.canAuthenticate(ctx)
+
+            if (!useAuth) {
+                try {
+                    val cipher = CryptoUtils.getCipherForEncryption(userAuthRequired = false)
+                    val payload = BackupRestoreManager.createBackupPayload(ctx, cipher)
+                    ctx.contentResolver.openOutputStream(uri)?.use { os ->
+                        OutputStreamWriter(os, Charsets.UTF_8).use { it.write(payload) }
+                    }
+                    Toast.makeText(ctx, R.string.backup_exported_success, Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(ctx, backupErrorMessage("Backup failed", e), Toast.LENGTH_LONG).show()
+                }
+                return@registerForActivityResult
+            }
+
+            try {
+                val cipher = CryptoUtils.getCipherForEncryption(userAuthRequired = true)
+                lock.authenticate(onSuccess = { crypto ->
+                    try {
+                        val payload = BackupRestoreManager.createBackupPayload(ctx, crypto?.cipher ?: cipher)
+                        ctx.contentResolver.openOutputStream(uri)?.use { os ->
+                            OutputStreamWriter(os, Charsets.UTF_8).use { it.write(payload) }
+                        }
+                        Toast.makeText(ctx, R.string.backup_exported_success, Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(ctx, backupErrorMessage("Backup failed", e), Toast.LENGTH_LONG).show()
+                    }
+                }, onError = { errCode ->
+                    Toast.makeText(ctx, ctx.getString(R.string.backup_auth_failed, errCode), Toast.LENGTH_SHORT).show()
+                }, crypto = BiometricPrompt.CryptoObject(cipher))
+            } catch (e: Exception) {
+                Toast.makeText(ctx, ctx.getString(R.string.backup_failed_generic, e.message), Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val restoreBackupLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) return@registerForActivityResult
+            val ctx = requireContext()
+            val lock = BiometricLock(requireActivity())
+            val useAuth = lock.canAuthenticate(ctx)
+
+            try {
+                val payload =
+                    ctx.contentResolver.openInputStream(uri)?.use { `is` ->
+                        InputStreamReader(`is`, Charsets.UTF_8).readText()
+                    } ?: return@registerForActivityResult
+
+                if (!BackupRestoreManager.isEncrypted(payload)) {
+                    try {
+                        BackupRestoreManager.restoreFromPlainPayload(ctx, payload)
+                        onRestoreSuccess()
+                    } catch (e: Exception) {
+                        Toast.makeText(ctx, ctx.getString(R.string.restore_failed_generic, e.message), Toast.LENGTH_LONG).show()
+                    }
+                    return@registerForActivityResult
+                }
+
+                val iv = BackupRestoreManager.extractIv(payload)
+
+                if (!useAuth) {
+                    try {
+                        val cipher = CryptoUtils.getCipherForDecryption(iv, userAuthRequired = false)
+                        BackupRestoreManager.restoreFromPayload(ctx, payload, cipher)
+                        onRestoreSuccess()
+                    } catch (e: Exception) {
+                        Toast.makeText(ctx, backupErrorMessage("Restore failed", e), Toast.LENGTH_LONG).show()
+                    }
+                    return@registerForActivityResult
+                }
+
+                val cipher = CryptoUtils.getCipherForDecryption(iv, userAuthRequired = true)
+                lock.authenticate(onSuccess = { crypto ->
+                    try {
+                        BackupRestoreManager.restoreFromPayload(ctx, payload, crypto?.cipher ?: cipher)
+                        onRestoreSuccess()
+                    } catch (e: Exception) {
+                        Toast.makeText(ctx, backupErrorMessage("Restore failed", e), Toast.LENGTH_LONG).show()
+                    }
+                }, onError = { errCode ->
+                    Toast.makeText(ctx, ctx.getString(R.string.backup_auth_failed, errCode), Toast.LENGTH_SHORT).show()
+                }, crypto = BiometricPrompt.CryptoObject(cipher))
+            } catch (e: Exception) {
+                Toast.makeText(ctx, ctx.getString(R.string.restore_failed_generic, e.message), Toast.LENGTH_LONG).show()
+            }
+        }
 
     override fun onCreateSettingsPreferences(
         savedInstanceState: Bundle?,
@@ -143,7 +283,7 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
         // The runtime label stored in KEY_CUSTOM_APP_LABEL can be wired into the About screen
         // and the automation intent viewer (HomeActivity) once the UI is fleshed out.
         findPreference<Preference>("package_identity_info")?.apply {
-            summary = getString(R.string.settings_package_identity_current, context.packageName)
+            setCustomSummary(getString(R.string.settings_package_identity_current, context.packageName))
             setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(context)
                     .setTitle(R.string.package_identity_info_title)
@@ -186,5 +326,179 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
                 }
             }
         }
+
+        // Capabilities: Custom API and System Governors
+        findPreference<TwoStatePreference>(KEY_CUSTOM_API_ENABLED)?.apply {
+            isChecked = ShizukuSettings.isCustomApiEnabled()
+            setOnPreferenceChangeListener { _, newValue ->
+                val enabled = newValue as Boolean
+                maybePromptRestart(KEY_CUSTOM_API_ENABLED, enabled) {
+                    ShizukuSettings.setCustomApiEnabled(enabled)
+                    isChecked = enabled
+                    ShizukuSettings.syncAllPlusFeaturesToServer()
+                }
+                false
+            }
+        }
+
+        listOf(
+            "activity_manager_plus_enabled",
+            "status_bar_governor_plus_enabled",
+            "shell_interceptor_enabled",
+            "avf_manager_enabled",
+            "storage_proxy_enabled",
+        ).forEach { key ->
+            findPreference<TwoStatePreference>(key)?.setOnPreferenceChangeListener { _, _ ->
+                ShizukuSettings.syncAllPlusFeaturesToServer()
+                true
+            }
+        }
+
+        // Backup & Restore
+        val backupSettingsPref = findPreference<Preference>("backup_settings")
+        backupSettingsPref?.setOnPreferenceClickListener {
+            val dateStr = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.backup_export_title)
+                .setItems(
+                    arrayOf(
+                        getString(R.string.backup_type_encrypted),
+                        getString(R.string.backup_type_plain),
+                    ),
+                ) { _, which ->
+                    try {
+                        when (which) {
+                            0 -> createBackupLauncher.launch("ShizukuPlus_Settings_$dateStr.json")
+                            1 -> createPlainBackupLauncher.launch("ShizukuPlus_Settings_plain_$dateStr.json")
+                        }
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        Toast.makeText(requireContext(), R.string.backup_no_file_manager_save, Toast.LENGTH_LONG).show()
+                    }
+                }.show()
+            true
+        }
+
+        val restoreSettingsPref = findPreference<Preference>("restore_settings")
+        restoreSettingsPref?.setOnPreferenceClickListener {
+            try {
+                restoreBackupLauncher.launch(arrayOf("application/json", "*/*"))
+            } catch (_: android.content.ActivityNotFoundException) {
+                Toast.makeText(requireContext(), R.string.backup_no_file_manager_open, Toast.LENGTH_LONG).show()
+            }
+            true
+        }
+
+        val syncPeerPref = findPreference<Preference>("sync_peer_settings")
+        val autoSyncPref = findPreference<TwoStatePreference>("auto_sync_peer_settings")
+        val peerLabel = SettingsShareManager.getPeerLabel(requireContext())
+        val isPeerInstalled = SettingsShareManager.isPeerInstalled(requireContext())
+
+        syncPeerPref?.title = getString(R.string.settings_sync_peer_title, peerLabel)
+        syncPeerPref?.setCustomSummary(
+            if (isPeerInstalled) {
+                getString(R.string.settings_sync_peer_summary_installed, peerLabel)
+            } else {
+                getString(R.string.settings_sync_peer_summary_not_installed, peerLabel)
+            },
+        )
+
+        syncPeerPref?.setOnPreferenceClickListener {
+            val ctx = requireContext()
+            if (!SettingsShareManager.isPeerInstalled(ctx)) {
+                MaterialAlertDialogBuilder(ctx)
+                    .setTitle(getString(R.string.settings_sync_peer_title, peerLabel))
+                    .setMessage(getString(R.string.settings_sync_peer_not_installed_dialog, peerLabel))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+                return@setOnPreferenceClickListener true
+            }
+
+            MaterialAlertDialogBuilder(ctx)
+                .setTitle(getString(R.string.settings_sync_peer_title, peerLabel))
+                .setItems(
+                    arrayOf(
+                        getString(R.string.settings_sync_peer_import, peerLabel),
+                        getString(R.string.settings_sync_peer_export, peerLabel),
+                    ),
+                ) { _, which ->
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        when (which) {
+                            0 -> {
+                                val success = SettingsShareManager.importFromPeer(ctx)
+                                withContext(Dispatchers.Main) {
+                                    if (success) {
+                                        Toast
+                                            .makeText(
+                                                ctx,
+                                                getString(R.string.settings_sync_peer_import_success, peerLabel),
+                                                Toast.LENGTH_SHORT,
+                                            ).show()
+                                        onRestoreSuccess()
+                                    } else {
+                                        Toast
+                                            .makeText(
+                                                ctx,
+                                                getString(R.string.settings_sync_peer_failed, peerLabel),
+                                                Toast.LENGTH_LONG,
+                                            ).show()
+                                    }
+                                }
+                            }
+                            1 -> {
+                                val success = SettingsShareManager.exportToPeer(ctx)
+                                withContext(Dispatchers.Main) {
+                                    Toast
+                                        .makeText(
+                                            ctx,
+                                            if (success) {
+                                                getString(R.string.settings_sync_peer_export_success, peerLabel)
+                                            } else {
+                                                getString(R.string.settings_sync_peer_failed, peerLabel)
+                                            },
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                }
+                            }
+                        }
+                    }
+                }.show()
+            true
+        }
+
+        autoSyncPref?.title = getString(R.string.settings_auto_sync_peer_title, peerLabel)
+        autoSyncPref?.setCustomSummary(getString(R.string.settings_auto_sync_peer_summary, peerLabel))
+        autoSyncPref?.isChecked = ShizukuSettings.isAutoSyncPeerSettingsEnabled()
+        autoSyncPref?.setOnPreferenceChangeListener { _, newValue ->
+            if (newValue is Boolean) {
+                ShizukuSettings.setAutoSyncPeerSettingsEnabled(newValue)
+            }
+            true
+        }
+
+        applyBackupCategoryVisibility()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        applyBackupCategoryVisibility()
+    }
+
+    private fun applyBackupCategoryVisibility() {
+        val hide = ShizukuSettings.isHideBackupSettingsEnabled()
+        findPreference<af.shizuku.manager.settings.CollapsiblePreferenceCategory>("category_backup")
+            ?.isVisible = !hide
+    }
+
+    private fun onRestoreSuccess() {
+        if (!isAdded) return
+        Toast.makeText(requireContext(), R.string.backup_restored_success, Toast.LENGTH_SHORT).show()
+        Snackbar
+            .make(
+                requireView(),
+                R.string.backup_restored_restart_hint,
+                Snackbar.LENGTH_LONG,
+            ).setAction(R.string.backup_restored_restart_now) {
+                requireActivity().recreate()
+            }.show()
     }
 }

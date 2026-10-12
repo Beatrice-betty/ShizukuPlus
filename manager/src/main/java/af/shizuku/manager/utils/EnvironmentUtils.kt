@@ -18,6 +18,17 @@ private val appContext: Context
 
 object EnvironmentUtils {
     @JvmStatic
+    fun isDropIn(context: Context? = null): Boolean {
+        val target =
+            context ?: try {
+                appContext
+            } catch (_: Exception) {
+                null
+            }
+        return target?.packageName == "moe.shizuku.privileged.api"
+    }
+
+    @JvmStatic
     fun isWatch(): Boolean =
         af.shizuku.common.util.EnvironmentUtils
             .isWatch(appContext)

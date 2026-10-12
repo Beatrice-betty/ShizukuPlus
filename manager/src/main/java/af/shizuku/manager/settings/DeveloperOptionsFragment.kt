@@ -60,13 +60,32 @@ class DeveloperOptionsFragment : BaseSettingsFragment() {
             true
         }
 
+        val expKeys =
+            listOf(
+                "device_control_home_enabled",
+                "window_manager_plus_enabled",
+                "overlay_manager_plus_enabled",
+                "ai_core_plus_enabled",
+                "ai_core_master_enabled",
+                "npu_acceleration_enabled",
+                "native_window_crawler_enabled",
+                "ai_core_experimental_enabled",
+                "display_tuner_plus_enabled",
+            )
+        expKeys.forEach { key ->
+            findPreference<TwoStatePreference>(key)?.setOnPreferenceChangeListener { _, _ ->
+                ShizukuSettings.syncAllPlusFeaturesToServer()
+                true
+            }
+        }
+
         // Manual Crash Report
         findPreference<Preference>("manual_report")?.apply {
             val ctx = context ?: return@apply
             val hasLastCrash = CrashHandler.getLastCrashReport(ctx) != null
             if (hasLastCrash) {
                 setTitle(R.string.manual_report_last_crash_title)
-                setSummary(R.string.manual_report_last_crash_summary)
+                setCustomSummary(R.string.manual_report_last_crash_summary)
             }
 
             setOnPreferenceClickListener {

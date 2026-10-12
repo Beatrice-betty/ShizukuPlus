@@ -26,8 +26,14 @@
         android:textColor="?colorOnErrorContainer"
         app:layout_constraintStart_toEndOf="@android:id/icon"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@android:id/icon"
-        app:layout_constraintBottom_toBottomOf="@android:id/icon" />
+        app:layout_constraintTop_toTopOf="@android:id/icon" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/header_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="@android:id/icon,@android:id/title" />
 
     <TextView
         android:id="@android:id/text1"
@@ -39,7 +45,7 @@
         android:textColor="?colorOnErrorContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@android:id/icon" />
+        app:layout_constraintTop_toBottomOf="@id/header_barrier" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@android:id/button1"

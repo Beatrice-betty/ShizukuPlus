@@ -222,6 +222,7 @@ object UpdateChecker {
      * this continues collecting releases up to [maxReleases] so the What's New dialog has both
      * all new updates and previous releases available.
      */
+
     /** One page (1-based) of releases, newest first; null on failure so callers can offer a retry. */
     suspend fun fetchReleasesPage(
         page: Int,
