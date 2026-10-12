@@ -515,7 +515,7 @@ public class ShizukuConfigManager extends ConfigManager {
             java.util.Set<String> merged = new java.util.LinkedHashSet<>(config.autoGrantedPermissions);
             merged.addAll(keys);
             config.autoGrantedPermissions = new java.util.ArrayList<>(merged);
-            scheduleWriteLocked();
+            scheduleWriteLocked(true);
         }
     }
 

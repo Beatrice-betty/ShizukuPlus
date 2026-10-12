@@ -736,6 +736,12 @@
     <!-- Service Doctor -->
     <string name="home_service_doctor_title">Service Doctor</string>
     <string name="home_service_doctor_summary">Having trouble starting Shizuku+? Tap to run a diagnostic check.</string>
+    <string name="doctor_tips_title">Troubleshooting &amp; Fixes</string>
+    <string name="doctor_action_rerun">Re-run</string>
+    <string name="doctor_summary_healthy_title">All Systems Healthy</string>
+    <string name="doctor_summary_healthy_subtitle">All diagnostic checks passed. Service environment is optimal.</string>
+    <string name="doctor_summary_issues_title">%1$d Issue(s) Detected</string>
+    <string name="doctor_summary_issues_subtitle">Review recommended fixes below to restore full service reliability.</string>
     <string name="doctor_check_battery">Battery optimization</string>
     <string name="doctor_check_adb">Wireless debugging</string>
     <string name="doctor_check_root">Root access</string>

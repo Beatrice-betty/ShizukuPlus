@@ -120,6 +120,21 @@ Things discussed or sketched that we never formally decided to build.
 
 ## Session History (newest first)
 
+### 2026-10-12 — Antigravity (Gemini 3.8 Flash) [Service Doctor Redesign, Notification Anti-Fatigue & Build Resilience]
+
+- **Service Doctor Modernization & Layout Polish**:
+  - `activity_service_doctor.xml`: added Material 3 diagnostic status card (`card_summary`, `summary_icon`, `summary_title`, `summary_subtitle`, and `btn_rerun`), modernized spacing, and localized tips title `@string/doctor_tips_title`.
+  - `item_doctor_check.xml`: containerized diagnostic check items inside M3 `MaterialCardView` (`?attr/shapeAppearanceCornerLarge`, `?colorSurfaceContainerLow`) with tonal button styling for `btn_fix`.
+  - `ServiceDoctorActivity.kt`: wired dynamic summary state evaluation (`issueCount == 0` displays green checkmark / `colorTertiary` "All Systems Healthy"; issues display error tint / `colorError` count), connected `btn_rerun` to `runDiagnostics()` with haptic feedback, and localized strings.
+- **Notification Anti-Fatigue & Overwhelm Protection**:
+  - Added 60s alert cooldowns (`ERROR_NOTIFICATION_COOLDOWN_MS = 60_000L`, `CRASH_NOTIFICATION_COOLDOWN_MS = 60_000L`), `setOnlyAlertOnce(true)`, and demoted channels to `IMPORTANCE_LOW` with silent alerts across `AdbStartWorker.kt`, `WatchdogService.kt`, `WatchdogWorker.kt`, `ShizukuReceiverStarter.kt`, `AdbPairingService.kt`, `UpdateManager.kt`, `AuthenticatedReceiver.kt`, and `ShellRequestHandlerActivity.kt`.
+  - Added user-facing toggle `watchdog_crash_alerts` in `settings_behavior.xml` and `ShizukuSettings.java`.
+- **AAPT2 & Build Resilience**:
+  - `home_extra_step_required.xml`: fixed AAPT2 barrier syntax by referencing unscoped IDs `android:id/icon,android:id/title` instead of `@android:id/icon,@android:id/title`.
+  - `app-process`: added `compileOnly libs.hidden.stub` to `build.gradle` and safely encapsulated `LoadedApk`/`peekPackageInfo` via reflection in `NewProcess.java`.
+  - `server`: fixed `scheduleWriteLocked(true)` invocation in `ShizukuConfigManager.java`.
+  - Verified spotless compliance with `./gradlew spotlessCheck`.
+
 ### 2026-10-11 — Antigravity (Gemini 3.8 Flash) [Full UX Reviews, System Hub Metrics Fix & Release Preps]
 
 - **Server Permission & Config Persistence (#594, #595)**:

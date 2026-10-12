@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="@android:id/icon,@android:id/title" />
+        app:constraint_referenced_ids="android:id/icon,android:id/title" />
 
     <TextView
         android:id="@android:id/text1"

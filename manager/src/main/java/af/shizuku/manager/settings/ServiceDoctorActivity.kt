@@ -40,6 +40,7 @@ import rikka.shizuku.Shizuku
 import timber.log.Timber
 
 class ServiceDoctorActivity : AppBarActivity() {
+    private lateinit var binding: ActivityServiceDoctorBinding
     private lateinit var checkListAdapter: CheckListAdapter
     private lateinit var tipsTextView: TextView
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -57,10 +58,16 @@ class ServiceDoctorActivity : AppBarActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val binding = ActivityServiceDoctorBinding.inflate(layoutInflater, rootView, true)
+        binding = ActivityServiceDoctorBinding.inflate(layoutInflater, rootView, true)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         tipsTextView = binding.tipsText
+
+        binding.btnRerun.setOnClickListener {
+            af.shizuku.manager.utils.HapticUtils
+                .segmentTick(it)
+            runDiagnostics()
+        }
 
         binding.checkList.clipToPadding = false
         ViewCompat.setOnApplyWindowInsetsListener(binding.checkList) { view, insets ->
@@ -705,6 +712,24 @@ class ServiceDoctorActivity : AppBarActivity() {
         }
 
         checkListAdapter.submitList(checks)
+
+        val issueCount = checks.count { !it.ok }
+        if (issueCount == 0) {
+            binding.summaryTitle.text = getString(R.string.doctor_summary_healthy_title)
+            binding.summarySubtitle.text = getString(R.string.doctor_summary_healthy_subtitle)
+            binding.summaryIcon.setImageResource(R.drawable.ic_server_ok_24)
+            binding.summaryIcon.imageTintList =
+                android.content.res.ColorStateList
+                    .valueOf(themeColor(com.google.android.material.R.attr.colorTertiary))
+        } else {
+            binding.summaryTitle.text = getString(R.string.doctor_summary_issues_title, issueCount)
+            binding.summarySubtitle.text = getString(R.string.doctor_summary_issues_subtitle)
+            binding.summaryIcon.setImageResource(R.drawable.ic_server_error_24)
+            binding.summaryIcon.imageTintList =
+                android.content.res.ColorStateList
+                    .valueOf(themeColor(android.R.attr.colorError))
+        }
+
         if (tips.isEmpty()) {
             tipsTextView.text = getString(R.string.doctor_system_well_configured)
         } else {
