@@ -188,6 +188,25 @@ Things discussed or sketched that we never formally decided to build.
   - #533 (Hex Installer): Overlay Bridge Samsung wizard bypass is in Unreleased, but deeper One UI 7+ compatibility work is still needed — holding off for now.
   - Next step: cut a release tagged `v13.7.0.r{N}` to land all the Unreleased fixes.
 
+### 2026-10-12 — Antigravity [Notification Anti-Fatigue & Overwhelm Protection + Wiki Synced + PR #595 Merged]
+
+**Done:**
+- **Notification Overwhelm Protection & Anti-Fatigue**:
+  - `AdbStartWorker.kt`: added 60-second cooldown (`ERROR_NOTIFICATION_COOLDOWN_MS = 60_000L`) on error notifications (`showErrorNotification`) and added `.setOnlyAlertOnce(true)` to both error alerts and `showMdnsBlockedSuggestion()`.
+  - `WatchdogService.kt`: debounced crash notifications with a 60-second minimum cooldown (`CRASH_NOTIFICATION_COOLDOWN_MS = 60_000L`). Demoted `CRASH_CHANNEL_ID` importance to `NotificationManager.IMPORTANCE_LOW` and added `.setSilent(true)` and `.setOnlyAlertOnce(true)` so repeated crash restarts never trigger chime/vibration spam or heads-up popups. Added `.setSilent(true)` and `.setOnlyAlertOnce(true)` to the persistent watchdog foreground notification.
+  - `WatchdogWorker.kt`: added `.setSilent(true)` and `.setOnlyAlertOnce(true)` on background heal worker notifications.
+  - `ShizukuReceiverStarter.kt`: added `.setOnlyAlertOnce(true)` to `buildNotification()` and `showPermissionErrorNotification()`.
+  - `AdbPairingService.kt`: added `.setOnlyAlertOnce(true)` to `searchingNotification`, `createInputNotification`, `workingNotification`, and final result notification.
+  - `UpdateManager.kt`: added `.setOnlyAlertOnce(true)` to download progress, install-ready, and download-error notifications.
+  - `AuthenticatedReceiver.kt` & `ShellRequestHandlerActivity.kt`: added `.setOnlyAlertOnce(true)` to missing/invalid token notifications.
+  - `ShizukuSettings.java` & `settings_behavior.xml`: added `watchdog_crash_alerts` toggle under Settings → Startup & Behavior so users can completely mute crash notifications if desired.
+- **GitHub Wiki Sync**:
+  - Cloned and updated `ShizukuPlus.wiki` repository (`Home.md`, `Service-Connection.md`, `System-Hub.md`, `Permissions.md`) with latest architecture, parallel probing, responsive UI, and persistent permission safeguards. Pushed directly to `master`.
+- **PR #595 Merged**:
+  - Cherry-picked `cb75d446`, `14617263`, `9ae889ff` from `djbclark:fix/config-save-retry` to `master`.
+- **Verification**:
+  - Ran `./gradlew spotlessApply` and `./gradlew spotlessCheck` (BUILD SUCCESSFUL).
+
 ---
 
 ### 2026-10-03 — Antigravity (Gemini 3.8 Flash) [Settings red flash fix + Drop-In flavor settings sharing + About section restructure + GH issue fixes]

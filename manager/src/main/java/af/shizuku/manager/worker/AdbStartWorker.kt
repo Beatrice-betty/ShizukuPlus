@@ -394,6 +394,7 @@ class AdbStartWorker(
                 ).setContentIntent(pi)
                 .addAction(0, context.getString(R.string.wadb_mdns_switch_tcp_action), pi)
                 .setAutoCancel(true)
+                .setOnlyAlertOnce(true)
                 .build()
         nm.notify(NOTIFICATION_ID_MDNS_BLOCKED, notification)
     }
@@ -402,6 +403,12 @@ class AdbStartWorker(
         context: Context,
         e: Exception,
     ) {
+        val now = System.currentTimeMillis()
+        if (now - lastErrorNotificationMs < ERROR_NOTIFICATION_COOLDOWN_MS) {
+            return
+        }
+        lastErrorNotificationMs = now
+
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
@@ -438,6 +445,7 @@ class AdbStartWorker(
                 .setContentText(shortMsg)
                 .setContentIntent(pendingIntent)
                 .setSilent(true)
+                .setOnlyAlertOnce(true)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
                 .build()
 
@@ -490,5 +498,9 @@ class AdbStartWorker(
         const val CHANNEL_ID = "AdbStartWorker"
         const val NOTIFICATION_ID = 1448
         private const val NOTIFICATION_ID_MDNS_BLOCKED = 1449
+        private const val ERROR_NOTIFICATION_COOLDOWN_MS = 60_000L
+
+        @Volatile
+        private var lastErrorNotificationMs = 0L
     }
 }

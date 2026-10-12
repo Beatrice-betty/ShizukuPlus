@@ -193,6 +193,7 @@ public class ShizukuSettings {
         public static final String KEY_AUTO_RECONNECT_MDNS = "auto_reconnect_mdns";
         public static final String KEY_STEALTH_MODE = "stealth_mode";
         public static final String KEY_DEVICE_HARDENING_ENABLED = "device_hardening_enabled";
+        public static final String KEY_WATCHDOG_CRASH_ALERTS = "watchdog_crash_alerts";
     }
 
     private static SharedPreferences sPreferences;
@@ -598,6 +599,14 @@ public class ShizukuSettings {
         }
         getPreferences().edit().putBoolean(Keys.KEY_WATCHDOG, enable).apply();
         return;
+    }
+
+    public static boolean isWatchdogCrashAlertsEnabled() {
+        return getPreferences().getBoolean(Keys.KEY_WATCHDOG_CRASH_ALERTS, true);
+    }
+
+    public static void setWatchdogCrashAlertsEnabled(boolean enable) {
+        getPreferences().edit().putBoolean(Keys.KEY_WATCHDOG_CRASH_ALERTS, enable).apply();
     }
 
     public static boolean getTcpMode() {

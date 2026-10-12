@@ -264,6 +264,7 @@ class AdbPairingService : Service() {
                 .setSmallIcon(R.drawable.ic_notification_icon)
                 .setContentTitle(title)
                 .setContentText(text)
+                .setOnlyAlertOnce(true)
                 .apply {
                     if (!success) {
                         addAction(retryNotificationAction)
@@ -407,6 +408,7 @@ class AdbPairingService : Service() {
             .setColor(getColor(R.color.notification))
             .setSmallIcon(R.drawable.ic_notification_icon)
             .setContentTitle(getString(R.string.notification_adb_pairing_searching_for_service_title))
+            .setOnlyAlertOnce(true)
             .addAction(stopNotificationAction)
             .build()
     }
@@ -436,6 +438,7 @@ class AdbPairingService : Service() {
                 .setSmallIcon(R.drawable.ic_notification_icon)
                 .setContentIntent(contentIntent)
                 .setAutoCancel(false)
+                .setOnlyAlertOnce(true)
                 .build()
         }
         return Notification
@@ -443,6 +446,7 @@ class AdbPairingService : Service() {
             .setColor(getColor(R.color.notification))
             .setContentTitle(getString(R.string.notification_adb_pairing_service_found_title))
             .setSmallIcon(R.drawable.ic_notification_icon)
+            .setOnlyAlertOnce(true)
             .addAction(replyNotificationAction(port))
             .build()
     }
@@ -453,6 +457,7 @@ class AdbPairingService : Service() {
             .setColor(getColor(R.color.notification))
             .setContentTitle(getString(R.string.notification_adb_pairing_working_title))
             .setSmallIcon(R.drawable.ic_notification_icon)
+            .setOnlyAlertOnce(true)
             .build()
     }
 

@@ -184,6 +184,8 @@ class WatchdogService : Service() {
             .setContentTitle(getString(R.string.watchdog_running))
             .setSmallIcon(R.drawable.ic_notification_icon)
             .setContentIntent(launchPendingIntent)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
             .addAction(
                 R.drawable.ic_close_24,
                 getString(R.string.watchdog_turn_off),
@@ -193,6 +195,15 @@ class WatchdogService : Service() {
     }
 
     private fun showCrashNotification() {
+        if (!ShizukuSettings.isWatchdogCrashAlertsEnabled()) {
+            return
+        }
+        val now = System.currentTimeMillis()
+        if (now - lastCrashNotificationMs < CRASH_NOTIFICATION_COOLDOWN_MS) {
+            return
+        }
+        lastCrashNotificationMs = now
+
         val channelId = CRASH_CHANNEL_ID
         val channelName = "Crash Reports"
 
@@ -202,7 +213,7 @@ class WatchdogService : Service() {
                 NotificationChannel(
                     channelId,
                     channelName,
-                    NotificationManager.IMPORTANCE_DEFAULT,
+                    NotificationManager.IMPORTANCE_LOW,
                 )
             nm.createNotificationChannel(channel)
         }
@@ -228,6 +239,8 @@ class WatchdogService : Service() {
                 .setSmallIcon(R.drawable.ic_notification_icon)
                 .setContentIntent(learnMorePendingIntent)
                 .setAutoCancel(true)
+                .setSilent(true)
+                .setOnlyAlertOnce(true)
                 .addAction(0, getString(R.string.watchdog_shizuku_crashed_action_report_manually), reportPendingIntent)
                 .addAction(0, getString(R.string.watchdog_shizuku_crashed_action_turn_off_alerts), disablePendingIntent)
 
@@ -266,6 +279,10 @@ class WatchdogService : Service() {
 
         private const val BASE_COOLDOWN_MS = 5_000L
         private const val MAX_COOLDOWN_MS = 300_000L // 5 min cap
+        private const val CRASH_NOTIFICATION_COOLDOWN_MS = 60_000L
+
+        @Volatile
+        private var lastCrashNotificationMs = 0L
         private val isRunning = AtomicBoolean(false)
 
         fun backoffMs(crashes: Int): Long =

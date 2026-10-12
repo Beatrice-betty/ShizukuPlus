@@ -294,6 +294,7 @@ class UpdateManager(
                     .setContentText(context.getString(R.string.update_ready_description, versionName))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
+                    .setOnlyAlertOnce(true)
                     .setContentIntent(pendingIntent)
                     .addAction(
                         R.drawable.ic_notification_icon,
@@ -355,6 +356,7 @@ class UpdateManager(
                 .setContentText(context.getString(messageRes))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
+                .setOnlyAlertOnce(true)
                 .build()
 
         notificationManager.notify(NOTIFICATION_ID + 2, notification)

@@ -107,6 +107,7 @@ abstract class AuthenticatedReceiver : BroadcastReceiver() {
                 .setContentText(messageStr)
                 .setContentIntent(launchPendingIntent)
                 .setAutoCancel(true)
+                .setOnlyAlertOnce(true)
                 .setSmallIcon(R.drawable.ic_notification_icon)
                 .build()
 

@@ -45,6 +45,8 @@ class WatchdogWorker(
                 .setContentTitle(applicationContext.getString(R.string.watchdog_running))
                 .setSmallIcon(R.drawable.ic_notification_icon)
                 .setOngoing(true)
+                .setSilent(true)
+                .setOnlyAlertOnce(true)
                 .build()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ForegroundInfo(HEAL_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE)

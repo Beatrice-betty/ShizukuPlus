@@ -21,6 +21,13 @@
             android:icon="@drawable/ic_visibility_24" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="watchdog_crash_alerts"
+            android:summary="@string/settings_watchdog_crash_alerts_summary"
+            android:title="@string/settings_watchdog_crash_alerts"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_warning_24" />
+
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="auto_reconnect_mdns"
             android:title="@string/settings_auto_reconnect_mdns"
             android:summary="@string/settings_auto_reconnect_mdns_summary"
