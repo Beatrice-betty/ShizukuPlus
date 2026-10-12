@@ -171,29 +171,35 @@ class RootIntegrationSettingsFragment : BaseSettingsFragment() {
             true
         }
 
-        findPreference<TwoStatePreference>("samsung_system_uid_escalation_enabled")?.setOnPreferenceChangeListener { _, newValue ->
-            val enabled = newValue as? Boolean ?: false
-            if (enabled) {
-                val ctx = context ?: return@setOnPreferenceChangeListener false
-                MaterialAlertDialogBuilder(ctx)
-                    .setTitle(R.string.settings_samsung_uid_escalation)
-                    .setMessage(R.string.settings_samsung_uid_escalation_summary)
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
+        findPreference<TwoStatePreference>("samsung_system_uid_escalation_enabled")?.let { pref ->
+            if (!EnvironmentUtils.isSamsung()) {
+                pref.isVisible = false
+            } else {
+                pref.setOnPreferenceChangeListener { _, newValue ->
+                    val enabled = newValue as? Boolean ?: false
+                    if (enabled) {
+                        val ctx = context ?: return@setOnPreferenceChangeListener false
+                        MaterialAlertDialogBuilder(ctx)
+                            .setTitle(R.string.settings_samsung_uid_escalation)
+                            .setMessage(R.string.settings_samsung_uid_escalation_summary)
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                preferenceManager.sharedPreferences
+                                    ?.edit()
+                                    ?.putBoolean("samsung_system_uid_escalation_enabled", true)
+                                    ?.apply()
+                                ShizukuSettings.syncAllPlusFeaturesToServer()
+                            }.setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                        false
+                    } else {
                         preferenceManager.sharedPreferences
                             ?.edit()
-                            ?.putBoolean("samsung_system_uid_escalation_enabled", true)
+                            ?.putBoolean("samsung_system_uid_escalation_enabled", false)
                             ?.apply()
                         ShizukuSettings.syncAllPlusFeaturesToServer()
-                    }.setNegativeButton(android.R.string.cancel, null)
-                    .show()
-                false
-            } else {
-                preferenceManager.sharedPreferences
-                    ?.edit()
-                    ?.putBoolean("samsung_system_uid_escalation_enabled", false)
-                    ?.apply()
-                ShizukuSettings.syncAllPlusFeaturesToServer()
-                true
+                        true
+                    }
+                }
             }
         }
 

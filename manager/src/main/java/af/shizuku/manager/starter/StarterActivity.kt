@@ -207,6 +207,20 @@ class ViewModel(
             return
         }
 
+        val fotaInstalled =
+            runCatching {
+                appContext.packageManager.getPackageInfo("com.sdet.fotaagent", 0) != null
+            }.getOrDefault(false)
+
+        if (!fotaInstalled) {
+            log("com.sdet.fotaagent was not found on this device.\n")
+            log("This exploit only works on unpatched Samsung firmware (Android 9–11 / One UI 1–3).\n")
+            log("Samsung patched this vulnerability in modern One UI (Android 12+).\n")
+            log("Please start Shizuku via Wireless Debugging instead.\n\n")
+            log("info: shizuku_starter exit with 1")
+            return
+        }
+
         log("Attempting Samsung System UID Escalation via FOTA agent...\n\n")
 
         withContext(Dispatchers.IO) {

@@ -243,6 +243,7 @@
 
     <!-- Home - Root -->
     <string name="home_root_title"><![CDATA[Start (for rooted devices)]]></string>
+    <string name="home_samsung_system_uid_title"><![CDATA[Start (Samsung System UID)]]></string>
     <string name="home_root_description"><![CDATA[If you are using Magisk, you can try %1$s. For root users, it will eventually replace Shizuku. Note, existing applications need to change a little to use %2$s.]]></string>
     <string name="home_root_description_samsung"><![CDATA[Running via Samsung system UID escalation. No Magisk or root required — Shizuku+ uses a privileged system account available on Samsung devices.]]></string>
     <string name="home_root_button_start">Start</string>
@@ -524,7 +525,7 @@
     <string name="settings_keystore_fallback">Software KeyStore Fallback</string>
     <string name="settings_keystore_fallback_summary">Cache the ADB RSA key encrypted with a software AES key when hardware KeyStore fails (e.g., Samsung Knox). Reduces pairing prompts but decreases security.</string>
     <string name="settings_samsung_uid_escalation">Samsung System UID Escalation</string>
-    <string name="settings_samsung_uid_escalation_summary">Attempt to escalate to UID 1000 (system) using an exploit specific to unpatched Samsung devices (by pascua28). Use at your own risk.</string>
+    <string name="settings_samsung_uid_escalation_summary">Attempt to escalate to UID 1000 (system) using an exploit specific to unpatched Samsung devices (by pascua28). No root required. Note: Samsung patched this on modern One UI (Android 12+).</string>
     <string name="settings_display_tuner_plus_title">Display Tuner</string>
     <string name="settings_device_control_home_title">Device Control Home Card</string>
     <string name="settings_device_control_home_summary">Show the Device Control card on the home screen. Allows privileged control of Wi-Fi, Bluetooth, Mobile Data, display, audio, and power. Experimental — may cause unexpected behavior on some devices.</string>
