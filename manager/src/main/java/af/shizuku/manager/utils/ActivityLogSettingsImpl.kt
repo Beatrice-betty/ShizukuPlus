@@ -28,4 +28,11 @@ class ActivityLogSettingsImpl : ActivityLogSettings {
             }.removePrefix(":").trim()
         LiveActivityNotificationManager.show(af.shizuku.manager.ShizukuApplication.appContext, text)
     }
+
+    override fun showWarningNotification(
+        title: String,
+        message: String,
+    ) {
+        LiveActivityNotificationManager.showWarning(af.shizuku.manager.ShizukuApplication.appContext, title, message)
+    }
 }
