@@ -278,6 +278,59 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Terminal & Environment Setup Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/terminal_setup_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:shapeAppearanceOverlay="?attr/shapeAppearanceCornerExtraLarge"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerHigh">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/su_bridge_terminal_profile_title"
+                    android:textAppearance="?textAppearanceTitleMedium"
+                    android:textColor="?attr/colorPrimary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/su_bridge_terminal_profile_desc"
+                    android:textAppearance="?textAppearanceBodySmall" />
+
+                <TextView
+                    android:id="@+id/termux_command_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="?attr/colorSurfaceContainerHighest"
+                    android:fontFamily="monospace"
+                    android:padding="8dp"
+                    android:text="export PATH=&quot;/data/local/tmp:$PATH&quot;"
+                    android:textAppearance="?textAppearanceLabelMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/btn_copy_termux_setup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/su_path_card"
             

@@ -666,7 +666,7 @@
     <string name="su_bridge_magic_setup_all_no_apps">No supported root apps found for automation.</string>
     <string name="su_bridge_copy_open">Copy path &amp; open</string>
     <string name="su_bridge_no_export">No SU path set. Export Shizuku files first from the Home screen.</string>
-    <string name="root_hub_shizuku_aware_note">The SU Bridge provides root-like access to non-rooted devices. However, "Magic Setup" (automatic configuration) requires Shizuku in Root mode to modify other apps. In ADB mode, use "Copy path" and configure your apps manually.</string>
+    <string name="root_hub_shizuku_aware_note">The SU Bridge gives non-rooted devices root-like command access using Shizuku shell or temporary root privileges. Tap \"Magic Setup\" to auto-configure supported apps, or \"Copy path &amp; open\" to point apps with custom SU settings directly to the bridge.</string>
     <string name="su_bridge_magic_setup_root_required">Magic Setup requires Shizuku in Root mode.</string>
     <string name="su_bridge_no_custom_path_support">This app has no custom path setting. Requires real root.</string>
     <string name="su_bridge_manual_setup_required">Manual setup required in ADB mode</string>
@@ -688,8 +688,13 @@
     <string name="su_bridge_self_test_fail">Bridge not working</string>
     <string name="su_bridge_self_test_copy">Copy result</string>
     <string name="su_bridge_self_test_copied">Self-test result copied</string>
-    <string name="su_bridge_device_identity_title">Device Identity</string>
-    <string name="starter_service_started">Service started.</string>
+    <string name="su_bridge_terminal_profile_title">Terminal &amp; Environment Setup</string>
+    <string name="su_bridge_terminal_profile_desc">For Termux and shell scripts, prepend the SU Bridge to PATH or add an alias so \'su\' runs seamlessly without root.</string>
+    <string name="su_bridge_copy_termux_setup">Copy Termux Profile Command</string>
+    <string name="su_bridge_termux_setup_copied">Termux command copied to clipboard</string>
+    <string name="su_bridge_configure_dialog_title">Configure %s</string>
+    <string name="su_bridge_configure_dialog_message">1. The SU bridge path has been copied to your clipboard:\n\n%1$s\n\n2. Open %2$s and locate its root/binary path setting:\n\n%3$s\n\n3. Paste the copied SU bridge path.</string>
+    <string name="su_bridge_open_app">Open App</string>
     <string name="su_bridge_device_identity_real">Real: %s</string>
     <string name="su_bridge_device_identity_spoofed">Spoofed: %s</string>
     <string name="su_bridge_device_identity_none">None (Real device shown)</string>

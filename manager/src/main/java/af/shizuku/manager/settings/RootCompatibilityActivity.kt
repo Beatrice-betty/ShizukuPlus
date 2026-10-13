@@ -169,6 +169,20 @@ class RootCompatibilityActivity : AppBarActivity() {
             }
         }
 
+        // Terminal & Environment Setup Card (for Termux, bash, zsh, scripts)
+        val termuxCmd = "export PATH=\"${resolvedSuPath?.substringBeforeLast('/') ?: "/data/local/tmp"}:\$PATH\""
+        binding.termuxCommandPreview.text = termuxCmd
+        binding.btnCopyTermuxSetup.setContent {
+            af.shizuku.core.ui.compose.Button(
+                onClick = {
+                    copyToClipboard(termuxCmd)
+                    Toast.makeText(this@RootCompatibilityActivity, R.string.su_bridge_termux_setup_copied, Toast.LENGTH_SHORT).show()
+                },
+            ) {
+                androidx.compose.material3.Text(getString(R.string.su_bridge_copy_termux_setup))
+            }
+        }
+
         // Device Identity Card
         val realModel = android.os.Build.MODEL
         val realManufacturer = android.os.Build.MANUFACTURER
@@ -547,7 +561,17 @@ class RootCompatibilityActivity : AppBarActivity() {
                             val path = resolvedSuPath
                             if (path != null) {
                                 copyToClipboard(path)
-                                launchOrStore(pkg)
+                                val appName =
+                                    holder.binding.title.text
+                                        ?.toString() ?: pkg
+                                com.google.android.material.dialog
+                                    .MaterialAlertDialogBuilder(this@RootCompatibilityActivity)
+                                    .setTitle(getString(R.string.su_bridge_configure_dialog_title, appName))
+                                    .setMessage(getString(R.string.su_bridge_configure_dialog_message, path, appName, navHint))
+                                    .setPositiveButton(R.string.su_bridge_open_app) { _, _ ->
+                                        launchOrStore(pkg)
+                                    }.setNegativeButton(android.R.string.cancel, null)
+                                    .show()
                             } else {
                                 Toast.makeText(this@RootCompatibilityActivity, R.string.su_bridge_no_export, Toast.LENGTH_SHORT).show()
                             }

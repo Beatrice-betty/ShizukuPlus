@@ -87,9 +87,16 @@ object RootCompatHelper {
                             else
                                 sed -i 's|</map>|    <string name="$escapedKey">$escapedPath</string>\n</map>|' '$target'
                             fi
+                        elif [ -d '/data/data/$packageName' ]; then
+                            mkdir -p '/data/data/$packageName/shared_prefs' 2>/dev/null
+                            if [ ! -f '$target' ]; then
+                                echo '<?xml version="1.0" encoding="utf-8" standalone="yes" ?><map><string name="$escapedKey">$escapedPath</string></map>' > '$target'
+                                chmod 660 '$target' 2>/dev/null
+                            fi
                         else
-                            run-as $packageName sh -c "if [ -f shared_prefs/$prefsFile.xml ]; then if grep -q 'name=\"$escapedKey\"' shared_prefs/$prefsFile.xml; then sed -i 's|<string name=\"$escapedKey\">.*</string>|<string name=\"$escapedKey\">$escapedPath</string>|' shared_prefs/$prefsFile.xml; else sed -i 's|</map>|    <string name=\"$escapedKey\">$escapedPath</string>\n</map>|' shared_prefs/$prefsFile.xml; fi; fi" 2>/dev/null
+                            run-as $packageName sh -c "mkdir -p shared_prefs 2>/dev/null; if [ -f shared_prefs/$prefsFile.xml ]; then if grep -q 'name=\"$escapedKey\"' shared_prefs/$prefsFile.xml; then sed -i 's|<string name=\"$escapedKey\">.*</string>|<string name=\"$escapedKey\">$escapedPath</string>|' shared_prefs/$prefsFile.xml; else sed -i 's|</map>|    <string name=\"$escapedKey\">$escapedPath</string>\n</map>|' shared_prefs/$prefsFile.xml; fi; else echo '<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?><map><string name=\"$escapedKey\">$escapedPath</string></map>' > shared_prefs/$prefsFile.xml; fi" 2>/dev/null
                         fi
+                        grep -q 'name="$escapedKey"' '$target' 2>/dev/null || run-as $packageName grep -q 'name="$escapedKey"' shared_prefs/$prefsFile.xml 2>/dev/null
                     """.trimIndent()
                     success = executePrivileged(arrayOf("sh", "-c", cmd))
                 }
