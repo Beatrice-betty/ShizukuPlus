@@ -16,11 +16,11 @@ import timber.log.Timber
 
 object RootCompatHelper {
 
-    /** Returns true if [packageName] supports Magic Setup in the current privilege mode.
-     *  [isTrueRoot] must be true (UID 0) to modify target apps' private shared_prefs.
-     *  In ADB mode (UID 2000), only [GLOBAL_SETTINGS_APPS] can be configured without root. */
-    fun canAutoSetup(packageName: String, isTrueRoot: Boolean): Boolean =
-        packageName in GLOBAL_SETTINGS_APPS || (isTrueRoot && packageName in ROOT_PREFS_APPS)
+    /** Returns true if [packageName] supports Magic Setup.
+     *  In non-root ADB mode (UID 2000), global settings apps are updated directly via system settings,
+     *  and shared_prefs apps attempt privileged shell / run-as / temp-root escalation. */
+    fun canAutoSetup(packageName: String, privilegeAvailable: Boolean): Boolean =
+        packageName in GLOBAL_SETTINGS_APPS || (privilegeAvailable && packageName in ROOT_PREFS_APPS)
 
     private fun escapeSed(s: String) = s
         .replace("\\", "\\\\")
@@ -133,7 +133,7 @@ object RootCompatHelper {
         val installedPackages = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS)
         var processedCount = 0
 
-        val automatable = GLOBAL_SETTINGS_APPS.keys + if (isShizukuTrueRoot()) ROOT_PREFS_APPS.keys else emptySet()
+        val automatable = GLOBAL_SETTINGS_APPS.keys + ROOT_PREFS_APPS.keys
 
         for (pkgInfo in installedPackages) {
             val pkg = pkgInfo.packageName
