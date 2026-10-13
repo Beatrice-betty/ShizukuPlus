@@ -47,7 +47,15 @@ class AppsViewModel(
     private val _packages = MutableLiveData<Resource<List<PackageInfo>>>()
     val packages = _packages as LiveData<Resource<List<PackageInfo>>>
 
-    private val _grantedCount = MutableLiveData<Resource<Int>>()
+    private val _grantedCount =
+        MutableLiveData<Resource<Int>>().apply {
+            val cached =
+                af.shizuku.manager.ShizukuSettings
+                    .getLastGrantedAppCount()
+            if (cached >= 0) {
+                value = Resource.success(cached)
+            }
+        }
     val grantedCount = _grantedCount as LiveData<Resource<Int>>
 
     private val _hiddenCount = MutableLiveData<Int>(hiddenPackages.size)
@@ -120,6 +128,8 @@ class AppsViewModel(
                 if (!onlyCount || filterState != FilterState.ALL) {
                     applyFiltersAndSort()
                 }
+                af.shizuku.manager.ShizukuSettings
+                    .setLastGrantedAppCount(granted)
                 _grantedCount.postValue(Resource.success(granted))
                 _hiddenCount.postValue(hiddenPackages.size)
             } catch (_: CancellationException) {

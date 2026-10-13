@@ -236,6 +236,7 @@ class HomeViewModel(
     }
 
     fun updateGrantedAppCount(count: Int) {
+        ShizukuSettings.setLastGrantedAppCount(count)
         setState { copy(grantedAppCount = count) }
     }
 
@@ -244,6 +245,15 @@ class HomeViewModel(
         override fun create(
             viewModelContext: com.airbnb.mvrx.ViewModelContext,
             state: HomeState,
-        ): HomeViewModel = HomeViewModel(state)
+        ): HomeViewModel {
+            val cached = ShizukuSettings.getLastGrantedAppCount()
+            val initial =
+                if (state.grantedAppCount == null && cached >= 0) {
+                    state.copy(grantedAppCount = cached)
+                } else {
+                    state
+                }
+            return HomeViewModel(initial)
+        }
     }
 }

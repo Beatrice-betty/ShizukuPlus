@@ -161,6 +161,9 @@ public class ShizukuSettings {
         public static final String KEY_FOLLOW_SYSTEM_ANIMATIONS = "follow_system_animations";
         public static final String KEY_FOLLOW_SYSTEM_HAPTICS = "follow_system_haptics";
 
+        // Management cache (Shizuku+ additions)
+        public static final String KEY_LAST_GRANTED_APP_COUNT = "last_granted_app_count";
+
         // Migration (Shizuku+ additions)
         public static final String KEY_MIGRATION_OFFERED = "migration_offered";
         public static final String KEY_HOME_NOTIF_PERMISSION_REQUESTED = "home_notif_permission_requested";
@@ -1556,5 +1559,15 @@ public class ShizukuSettings {
     public static void setSettingsLastModified(long timestamp) {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putLong(Keys.KEY_SETTINGS_LAST_MODIFIED, timestamp).apply();
+    }
+
+    public static int getLastGrantedAppCount() {
+        SharedPreferences p = getPreferences();
+        return p != null ? p.getInt(Keys.KEY_LAST_GRANTED_APP_COUNT, -1) : -1;
+    }
+
+    public static void setLastGrantedAppCount(int count) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putInt(Keys.KEY_LAST_GRANTED_APP_COUNT, count).apply();
     }
 }

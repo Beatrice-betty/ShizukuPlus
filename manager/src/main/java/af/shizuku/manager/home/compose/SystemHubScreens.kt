@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -422,6 +423,12 @@ private fun ActivityLogTimelineRow(
     val density = LocalDensity.current
     var isExpanded by remember { mutableStateOf(false) }
 
+    val chevronRotation by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        animationSpec = tween(if (ShizukuSettings.isExpressiveAnimationsEnabled()) 260 else 0),
+        label = "chevronRotation",
+    )
+
     var appName by remember(record.packageName) {
         mutableStateOf(record.appName.ifEmpty { record.packageName })
     }
@@ -472,16 +479,17 @@ private fun ActivityLogTimelineRow(
             ActivityEventType.OTHER -> stringResource(R.string.activity_log_type_other)
         }
 
-    val railColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    val railColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+    val isExpressive = ShizukuSettings.isExpressiveAnimationsEnabled()
     val haloTransition = rememberInfiniteTransition(label = "haloTransition")
     val pulseScale by
-        if (isLatest) {
+        if (isLatest && isExpressive) {
             haloTransition.animateFloat(
                 initialValue = 1f,
-                targetValue = 1.6f,
+                targetValue = 1.5f,
                 animationSpec =
                     infiniteRepeatable(
-                        animation = tween(1200),
+                        animation = tween(1400),
                         repeatMode = RepeatMode.Reverse,
                     ),
                 label = "haloScale",
@@ -497,71 +505,75 @@ private fun ActivityLogTimelineRow(
                 .semantics(mergeDescendants = true) {},
         verticalAlignment = Alignment.Top,
     ) {
-        // Vertical connecting timeline rail (Changelog / Morphe TimelineRailView pattern)
+        // Vertical connecting timeline rail matching Changelog TimelineRailView
         Canvas(
             modifier =
                 Modifier
-                    .width(32.dp)
-                    .defaultMinSize(minHeight = 72.dp),
+                    .width(28.dp)
+                    .defaultMinSize(minHeight = 76.dp),
         ) {
             val cx = size.width / 2f
-            val nodeY = 24.dp.toPx()
+            val nodeY = 22.dp.toPx()
             val railStroke = 2.dp.toPx()
 
-            // Connecting track lines
-            if (!isFirst) {
+            // Continuous connecting rail
+            val startY = if (isFirst) nodeY else 0f
+            val endY = if (isLast) nodeY else size.height
+            if (endY > startY) {
                 drawLine(
                     color = railColor,
-                    start = Offset(cx, 0f),
-                    end = Offset(cx, nodeY),
-                    strokeWidth = railStroke,
-                )
-            }
-            if (!isLast) {
-                drawLine(
-                    color = railColor,
-                    start = Offset(cx, nodeY),
-                    end = Offset(cx, size.height),
+                    start = Offset(cx, startY),
+                    end = Offset(cx, endY),
                     strokeWidth = railStroke,
                 )
             }
 
-            // Outer halo glow
+            // Outer glowing halo (matching Changelog TimelineRailView 10dp * scale)
             val haloRadius = 10.dp.toPx() * if (isLatest) pulseScale else 1f
             drawCircle(
-                color = typeColor.copy(alpha = if (isLatest) 0.35f else 0.15f),
+                color = typeColor.copy(alpha = if (isLatest) 0.32f else 0.16f),
                 radius = haloRadius,
                 center = Offset(cx, nodeY),
             )
 
-            // Inner node
+            // Outer colored border / ring (matching TimelineRailView 6dp outer ring)
             drawCircle(
                 color = typeColor,
-                radius = 5.dp.toPx(),
+                radius = 6.dp.toPx(),
                 center = Offset(cx, nodeY),
             )
+
+            // Inner center dot (matching filled / hollow node style)
+            if (!isLatest) {
+                drawCircle(
+                    color = railColor,
+                    radius = 2.5.dp.toPx(),
+                    center = Offset(cx, nodeY),
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(6.dp))
 
-        // Morphe-inspired tonal card with expandable details
+        // M3E expressive Card with interactive elevation & animated expansion
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(18.dp),
             colors =
                 CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
                 ),
             modifier =
                 Modifier
                     .weight(1f)
-                    .padding(bottom = 8.dp)
-                    .animateContentSize()
-                    .clickable {
-                        HapticUtils.tap(view)
+                    .padding(bottom = 10.dp)
+                    .animateContentSize(
+                        animationSpec = tween(if (isExpressive) 260 else 0),
+                    ).clickable {
+                        HapticUtils.segmentTick(view)
                         isExpanded = !isExpanded
                     },
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
@@ -571,13 +583,13 @@ private fun ActivityLogTimelineRow(
                         Image(
                             bitmap = bitmap,
                             contentDescription = null,
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(36.dp),
                         )
                     } else {
                         Icon(
                             painterResource(R.drawable.ic_system_icon),
                             contentDescription = null,
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(36.dp),
                             tint = typeColor,
                         )
                     }
@@ -585,9 +597,10 @@ private fun ActivityLogTimelineRow(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = appName,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                         )
+                        Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             text = dateFormat.format(Date(record.timestamp)),
                             style = MaterialTheme.typography.labelSmall,
@@ -595,25 +608,36 @@ private fun ActivityLogTimelineRow(
                         )
                     }
                     Spacer(modifier = Modifier.width(6.dp))
-                    // Event type status badge
+                    // Event type status badge (matching Changelog pill badges)
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(100.dp),
                         color = typeColor.copy(alpha = 0.16f),
                     ) {
                         Text(
                             text = typeLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = typeColor,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
                         )
                     }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    // Interactive chevron indicator (matching Changelog release expandable row)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_outline_expand_more_24),
+                        contentDescription = null,
+                        modifier =
+                            Modifier
+                                .size(22.dp)
+                                .graphicsLayer(rotationZ = chevronRotation),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = record.action,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
 
@@ -623,13 +647,13 @@ private fun ActivityLogTimelineRow(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(top = 8.dp),
+                                .padding(top = 10.dp),
                     ) {
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                             thickness = 0.5.dp,
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth(),
@@ -642,6 +666,7 @@ private fun ActivityLogTimelineRow(
                             )
                             IconButton(
                                 onClick = {
+                                    HapticUtils.tap(view)
                                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     cm.setPrimaryClip(ClipData.newPlainText("Package Name", record.packageName))
                                     Toast

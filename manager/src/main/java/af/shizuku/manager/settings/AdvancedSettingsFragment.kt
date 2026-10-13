@@ -393,86 +393,76 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
         val peerLabel = SettingsShareManager.getPeerLabel(requireContext())
         val isPeerInstalled = SettingsShareManager.isPeerInstalled(requireContext())
 
-        syncPeerPref?.title = getString(R.string.settings_sync_peer_title, peerLabel)
-        syncPeerPref?.setCustomSummary(
-            if (isPeerInstalled) {
-                getString(R.string.settings_sync_peer_summary_installed, peerLabel)
-            } else {
-                getString(R.string.settings_sync_peer_summary_not_installed, peerLabel)
-            },
-        )
+        syncPeerPref?.isVisible = isPeerInstalled
+        autoSyncPref?.isVisible = isPeerInstalled
 
-        syncPeerPref?.setOnPreferenceClickListener {
-            val ctx = requireContext()
-            if (!SettingsShareManager.isPeerInstalled(ctx)) {
+        if (isPeerInstalled) {
+            syncPeerPref?.title = getString(R.string.settings_sync_peer_title, peerLabel)
+            syncPeerPref?.setCustomSummary(getString(R.string.settings_sync_peer_summary_installed, peerLabel))
+
+            syncPeerPref?.setOnPreferenceClickListener {
+                val ctx = requireContext()
                 MaterialAlertDialogBuilder(ctx)
                     .setTitle(getString(R.string.settings_sync_peer_title, peerLabel))
-                    .setMessage(getString(R.string.settings_sync_peer_not_installed_dialog, peerLabel))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show()
-                return@setOnPreferenceClickListener true
-            }
-
-            MaterialAlertDialogBuilder(ctx)
-                .setTitle(getString(R.string.settings_sync_peer_title, peerLabel))
-                .setItems(
-                    arrayOf(
-                        getString(R.string.settings_sync_peer_import, peerLabel),
-                        getString(R.string.settings_sync_peer_export, peerLabel),
-                    ),
-                ) { _, which ->
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        when (which) {
-                            0 -> {
-                                val success = SettingsShareManager.importFromPeer(ctx)
-                                withContext(Dispatchers.Main) {
-                                    if (success) {
+                    .setItems(
+                        arrayOf(
+                            getString(R.string.settings_sync_peer_import, peerLabel),
+                            getString(R.string.settings_sync_peer_export, peerLabel),
+                        ),
+                    ) { _, which ->
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            when (which) {
+                                0 -> {
+                                    val success = SettingsShareManager.importFromPeer(ctx)
+                                    withContext(Dispatchers.Main) {
+                                        if (success) {
+                                            Toast
+                                                .makeText(
+                                                    ctx,
+                                                    getString(R.string.settings_sync_peer_import_success, peerLabel),
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                            onRestoreSuccess()
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    ctx,
+                                                    getString(R.string.settings_sync_peer_failed, peerLabel),
+                                                    Toast.LENGTH_LONG,
+                                                ).show()
+                                        }
+                                    }
+                                }
+                                1 -> {
+                                    val success = SettingsShareManager.exportToPeer(ctx)
+                                    withContext(Dispatchers.Main) {
                                         Toast
                                             .makeText(
                                                 ctx,
-                                                getString(R.string.settings_sync_peer_import_success, peerLabel),
+                                                if (success) {
+                                                    getString(R.string.settings_sync_peer_export_success, peerLabel)
+                                                } else {
+                                                    getString(R.string.settings_sync_peer_failed, peerLabel)
+                                                },
                                                 Toast.LENGTH_SHORT,
-                                            ).show()
-                                        onRestoreSuccess()
-                                    } else {
-                                        Toast
-                                            .makeText(
-                                                ctx,
-                                                getString(R.string.settings_sync_peer_failed, peerLabel),
-                                                Toast.LENGTH_LONG,
                                             ).show()
                                     }
                                 }
                             }
-                            1 -> {
-                                val success = SettingsShareManager.exportToPeer(ctx)
-                                withContext(Dispatchers.Main) {
-                                    Toast
-                                        .makeText(
-                                            ctx,
-                                            if (success) {
-                                                getString(R.string.settings_sync_peer_export_success, peerLabel)
-                                            } else {
-                                                getString(R.string.settings_sync_peer_failed, peerLabel)
-                                            },
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
-                                }
-                            }
                         }
-                    }
-                }.show()
-            true
-        }
-
-        autoSyncPref?.title = getString(R.string.settings_auto_sync_peer_title, peerLabel)
-        autoSyncPref?.setCustomSummary(getString(R.string.settings_auto_sync_peer_summary, peerLabel))
-        autoSyncPref?.isChecked = ShizukuSettings.isAutoSyncPeerSettingsEnabled()
-        autoSyncPref?.setOnPreferenceChangeListener { _, newValue ->
-            if (newValue is Boolean) {
-                ShizukuSettings.setAutoSyncPeerSettingsEnabled(newValue)
+                    }.show()
+                true
             }
-            true
+
+            autoSyncPref?.title = getString(R.string.settings_auto_sync_peer_title, peerLabel)
+            autoSyncPref?.setCustomSummary(getString(R.string.settings_auto_sync_peer_summary, peerLabel))
+            autoSyncPref?.isChecked = ShizukuSettings.isAutoSyncPeerSettingsEnabled()
+            autoSyncPref?.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue is Boolean) {
+                    ShizukuSettings.setAutoSyncPeerSettingsEnabled(newValue)
+                }
+                true
+            }
         }
 
         applyBackupCategoryVisibility()
