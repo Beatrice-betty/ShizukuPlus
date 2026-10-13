@@ -258,7 +258,7 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
     ): RecyclerView {
         val recyclerView = super.onCreateRecyclerView(inflater, parent, savedInstanceState)
         val context = recyclerView.context
-        val cardMarginPx = (16 * context.resources.displayMetrics.density).toInt()
+        val cardMarginPx = context.resources.getDimensionPixelSize(R.dimen.margin_horizontal)
 
         // Fix: Disable LayoutTransition to prevent IllegalArgumentException
         // "Providing a LayoutTransition into RecyclerView is not supported"
@@ -480,9 +480,23 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
     protected class SettingsItemDecoration(
         context: Context,
     ) : af.shizuku.manager.widget.M3ECardItemDecoration(context) {
+        private val effectiveCornerRadius: Float =
+            if (!ShizukuSettings.isRoundedEdgesEnabled()) {
+                0f
+            } else {
+                val cornerStyle = ShizukuSettings.getPreferences()?.getString("settings_card_corner_style", "global") ?: "global"
+                when (cornerStyle) {
+                    "sharp" -> 0f
+                    "rounded" -> 12f * density
+                    "large" -> 24f * density
+                    "squircle" -> 28f * density
+                    "xlarge" -> 36f * density
+                    else -> cornerRadius
+                }
+            }
         private val gap = 2f * density
-        private val innerRadius = 4f * density
-        private val pressedRadius = 20f * density
+        private val innerRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else minOf(4f * density, effectiveCornerRadius)
+        private val pressedRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else maxOf(20f * density, effectiveCornerRadius)
         private val progress = java.util.WeakHashMap<View, Float>()
         private val shapes = java.util.WeakHashMap<View, FloatArray>()
         private val path = android.graphics.Path()
@@ -545,8 +559,8 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
                 // rows such as the diagnostics dashboard don't count as neighbours either way.
                 val first = isHeader(child) || startsGroup(parent, pos)
                 val last = endsGroup(parent, adapter.itemCount, pos)
-                val top = if (first) cornerRadius else innerRadius
-                val bottom = if (last) cornerRadius else innerRadius
+                val top = if (first) effectiveCornerRadius else innerRadius
+                val bottom = if (last) effectiveCornerRadius else innerRadius
 
                 val target = if (child.isPressed) 1f else 0f
                 val current = progress[child] ?: 0f
