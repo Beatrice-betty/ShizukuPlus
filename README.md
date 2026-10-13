@@ -1,5 +1,6 @@
 <div align="center">
 NOTICE: 
+
 I'm in the process of simplifying, restructuring, and improving the code quality, and visual quality of the app locally. 
 
 Releases are less frequent as I'm doing more local tests before pushing a release. 
