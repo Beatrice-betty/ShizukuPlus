@@ -172,9 +172,8 @@ class RootIntegrationSettingsFragment : BaseSettingsFragment() {
         }
 
         findPreference<TwoStatePreference>("samsung_system_uid_escalation_enabled")?.let { pref ->
-            if (!EnvironmentUtils.isSamsung()) {
-                pref.isVisible = false
-            } else {
+            setChildAvailable(pref, EnvironmentUtils.isSamsung())
+            if (EnvironmentUtils.isSamsung()) {
                 pref.setOnPreferenceChangeListener { _, newValue ->
                     val enabled = newValue as? Boolean ?: false
                     if (enabled) {
@@ -453,6 +452,10 @@ class RootIntegrationSettingsFragment : BaseSettingsFragment() {
         val baseSummary = getString(R.string.settings_dhizuku_mode_summary)
         pref.setCustomSummary("$statusLine\n\n$baseSummary")
         findPreference<Preference>("clear_device_owner")?.let { setChildAvailable(it, active) }
+        findPreference<PreferenceGroup>("category_dhizuku_admin")?.apply {
+            isEnabled = active
+            setCustomSummary(if (!active) getString(R.string.dpm_requires_device_owner) else null)
+        }
     }
 
     private fun showClearDeviceOwnerDialog(ctx: Context) {

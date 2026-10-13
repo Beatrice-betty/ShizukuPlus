@@ -87,6 +87,24 @@ class PlusFeaturePreference(
                     resolveColor(com.google.android.material.R.attr.colorTertiaryContainer, 0xFFFFD8E4.toInt()),
                     resolveColor(com.google.android.material.R.attr.colorOnTertiaryContainer, 0xFF31111D.toInt()),
                 )
+            4 ->
+                Triple(
+                    "ADB",
+                    resolveColor(com.google.android.material.R.attr.colorSecondaryContainer, 0xFFE8DEF8.toInt()),
+                    resolveColor(com.google.android.material.R.attr.colorOnSecondaryContainer, 0xFF1D192B.toInt()),
+                )
+            5 ->
+                Triple(
+                    "DEVICE OWNER",
+                    resolveColor(com.google.android.material.R.attr.colorPrimaryContainer, 0xFFEADDFF.toInt()),
+                    resolveColor(com.google.android.material.R.attr.colorOnPrimaryContainer, 0xFF21005D.toInt()),
+                )
+            6 ->
+                Triple(
+                    "ONE UI",
+                    0xFFD0E4FF.toInt(),
+                    0xFF001D36.toInt(),
+                )
             else -> null
         }
 

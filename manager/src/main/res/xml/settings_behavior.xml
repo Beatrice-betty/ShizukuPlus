@@ -27,12 +27,13 @@
             android:defaultValue="true"
             android:icon="@drawable/ic_warning_24" />
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+        <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="auto_reconnect_mdns"
             android:title="@string/settings_auto_reconnect_mdns"
             android:summary="@string/settings_auto_reconnect_mdns_summary"
             android:defaultValue="false"
-            android:icon="@drawable/ic_server_restart" />
+            android:icon="@drawable/ic_server_restart"
+            app:badgeType="adb" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="device_hardening_enabled"

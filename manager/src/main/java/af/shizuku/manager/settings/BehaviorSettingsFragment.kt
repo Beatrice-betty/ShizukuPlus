@@ -357,7 +357,8 @@ class BehaviorSettingsFragment :
             networkCategory.setChildAvailable(KEY_TCP_MODE, true)
             syncTcpPortVisibility()
         }
-        startupCategory.setChildAvailable(KEY_AUTO_RECONNECT_MDNS, isAdbMode)
+        val mdnsSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+        startupCategory.setChildAvailable(KEY_AUTO_RECONNECT_MDNS, isAdbMode && mdnsSupported)
 
         // Category summaries as mode indicators
         networkCategory.setCustomSummary(if (isRootMode) getString(R.string.settings_mode_indicator_root) else null)

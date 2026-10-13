@@ -23,6 +23,9 @@
             <enum name="plus" value="1" />
             <enum name="root" value="2" />
             <enum name="experimental" value="3" />
+            <enum name="adb" value="4" />
+            <enum name="device_owner" value="5" />
+            <enum name="oneui" value="6" />
         </attr>
         <!-- Independent of badgeType (category) - a risk-severity signal, so a feature can be
              both e.g. ROOT and DANGEROUS without one badge overwriting the other. -->

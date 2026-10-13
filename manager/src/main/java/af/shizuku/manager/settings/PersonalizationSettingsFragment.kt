@@ -7,6 +7,7 @@ import af.shizuku.manager.ShizukuSettings.Keys.*
 import af.shizuku.manager.app.ThemeHelper
 import af.shizuku.manager.ktx.toHtml
 import af.shizuku.manager.utils.CustomTabsHelper
+import af.shizuku.manager.utils.EnvironmentUtils
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
@@ -80,7 +81,10 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
         blackNightThemePreference.apply {
             if (blackNightAvailable) {
                 isChecked = ThemeHelper.isBlackNightTheme(context)
-                setOnPreferenceChangeListener { _, _ ->
+                setOnPreferenceChangeListener { _, newValue ->
+                    if (newValue is Boolean) {
+                        setChildAvailable(amoledPlusPreference, newValue)
+                    }
                     if (ResourceUtils.isNightMode(context.resources.configuration)) {
                         applyTheme(requiresRecreate = false)
                     }
@@ -89,6 +93,10 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
             }
         }
 
+        setChildAvailable(
+            amoledPlusPreference,
+            blackNightAvailable && ThemeHelper.isBlackNightTheme(context),
+        )
         amoledPlusPreference.apply {
             isChecked = ShizukuSettings.isAmoledPlusEnabled()
             setOnPreferenceChangeListener { _, _ ->
@@ -253,6 +261,7 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
 
         oneUiThemePreference = requireNotNull(findPreference(KEY_ONEUI_THEME))
         oneUiThemePreference.isChecked = ShizukuSettings.isOneUiThemeEnabled()
+        setChildAvailable(oneUiThemePreference, EnvironmentUtils.isSamsung())
         oneUiThemePreference.setOnPreferenceChangeListener { _, _ ->
             applyTheme(requiresRecreate = false)
             true
@@ -326,9 +335,14 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
     }
 
     private fun syncDependentVisibility() {
+        val nightOn = ShizukuSettings.getNightMode() != AppCompatDelegate.MODE_NIGHT_NO
         setChildAvailable(
             blackNightThemePreference,
-            ShizukuSettings.getNightMode() != AppCompatDelegate.MODE_NIGHT_NO,
+            nightOn,
+        )
+        setChildAvailable(
+            amoledPlusPreference,
+            nightOn && ThemeHelper.isBlackNightTheme(requireContext()),
         )
     }
 

@@ -43,12 +43,13 @@
             android:entryValues="@array/custom_accents_values"
             android:icon="@drawable/ic_palette_24" />
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+        <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="oneui_theme_enabled"
             android:title="@string/settings_oneui_theme"
             android:summary="@string/settings_oneui_theme_summary"
             android:defaultValue="false"
-            android:icon="@drawable/ic_palette_24" />
+            android:icon="@drawable/ic_palette_24"
+            app:badgeType="oneui" />
 
         <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="floating_nav_enabled"

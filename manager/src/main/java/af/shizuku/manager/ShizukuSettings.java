@@ -163,6 +163,7 @@ public class ShizukuSettings {
 
         // Management cache (Shizuku+ additions)
         public static final String KEY_LAST_GRANTED_APP_COUNT = "last_granted_app_count";
+        public static final String KEY_SHOW_ADVANCED_SETTINGS = "show_advanced_settings";
 
         // Migration (Shizuku+ additions)
         public static final String KEY_MIGRATION_OFFERED = "migration_offered";
@@ -1569,5 +1570,15 @@ public class ShizukuSettings {
     public static void setLastGrantedAppCount(int count) {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putInt(Keys.KEY_LAST_GRANTED_APP_COUNT, count).apply();
+    }
+
+    public static boolean isShowAdvancedSettingsEnabled() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_SHOW_ADVANCED_SETTINGS, false);
+    }
+
+    public static void setShowAdvancedSettingsEnabled(boolean enabled) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_SHOW_ADVANCED_SETTINGS, enabled).apply();
     }
 }

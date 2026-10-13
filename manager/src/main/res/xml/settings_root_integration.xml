@@ -68,7 +68,8 @@
             android:icon="@drawable/ic_settings_suggest_24"
             android:defaultValue="false"
             app:infoTitle="@string/help_root_build_prop_title"
-            app:infoDetail="@string/help_root_build_prop_detail" />
+            app:infoDetail="@string/help_root_build_prop_detail"
+            app:badgeType="root" />
 
         <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="root_auto_grant_enabled"
@@ -77,7 +78,8 @@
             android:icon="@drawable/ic_admin_panel_settings_24"
             android:defaultValue="false"
             app:infoTitle="@string/help_root_auto_grant_title"
-            app:infoDetail="@string/help_root_auto_grant_detail" />
+            app:infoDetail="@string/help_root_auto_grant_detail"
+            app:badgeType="root" />
 
         <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="root_file_interceptor_enabled"
@@ -86,7 +88,8 @@
             android:icon="@drawable/ic_folder_24"
             android:defaultValue="false"
             app:infoTitle="@string/help_root_file_interceptor_title"
-            app:infoDetail="@string/help_root_file_interceptor_detail" />
+            app:infoDetail="@string/help_root_file_interceptor_detail"
+            app:badgeType="root" />
 
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
@@ -197,7 +200,7 @@
             android:icon="@drawable/ic_admin_panel_settings_24"
             app:infoTitle="@string/help_dhizuku_title"
             app:infoDetail="@string/help_dhizuku_detail"
-            app:badgeType="plus" />
+            app:badgeType="device_owner" />
 
         <!-- Only shown when app is active Device Owner; tapping clears DO status -->
         <Preference
@@ -243,7 +246,7 @@
             android:summary="@string/settings_samsung_uid_escalation_summary"
             android:icon="@drawable/ic_warning_24"
             android:defaultValue="false"
-            app:badgeType="experimental"
+            app:badgeType="oneui"
             app:severityBadge="dangerous" />
 
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>

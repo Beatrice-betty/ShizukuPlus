@@ -1750,4 +1750,17 @@
     <string name="activity_log_copied">Copied %1$s to clipboard</string>
     <string name="activity_log_clear_confirm_title">Clear activity logs?</string>
     <string name="activity_log_clear_confirm_message">All recorded activity log events will be permanently deleted.</string>
+
+    <!-- Adaptive settings & tiered complexity -->
+    <string name="settings_main_category_preferences">Preferences</string>
+    <string name="settings_status_banner_title">Service Status</string>
+    <string name="settings_show_advanced_title">Show advanced options</string>
+    <string name="settings_show_advanced_summary">Reveal specialized power-user tools, system governors, and low-level bridges</string>
+    <string name="settings_status_banner_running_root">Mode: Rooted (Superuser privileges active)</string>
+    <string name="settings_status_banner_running_adb">Mode: ADB Shell (Wireless / USB privileges active)</string>
+    <string name="settings_status_banner_stopped">Status: Shizuku Service is stopped</string>
+    <string name="badge_root_only">ROOT</string>
+    <string name="badge_wireless_adb">ADB</string>
+    <string name="badge_device_owner">DEVICE OWNER</string>
+    <string name="badge_samsung_only">ONE UI</string>
 </resources>
