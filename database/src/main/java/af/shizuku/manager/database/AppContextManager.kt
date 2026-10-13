@@ -148,6 +148,7 @@ object AppContextManager {
         put("tk.zwander.wifilist", AppMetadata("WiFiList: View saved WiFi passwords.", listOf(ENH_SHELL), true))
 
         // --- Tools & Terminals ---
+        put("com.termux", AppMetadata("Termux: Powerful terminal emulator and Linux environment. Export Shizuku files or use PATH=\"/data/local/tmp:\$PATH\" to invoke 'su'.", listOf(ENH_SHELL, ENH_STORAGE), true, suPathSettingNav = "Export Shizuku files to Termux or prepend /data/local/tmp to PATH", rootSupportLevel = RootSupportLevel.FULL))
         put("p.shashank.ashellyou", AppMetadata("aShell You: Material local ADB shell.", listOf(ENH_SHELL), true))
         put("rohitkushvaha01.reterminal", AppMetadata("ReTerminal: Material 3 terminal emulator.", listOf(ENH_SHELL, ENH_VM), true))
         put("com.imranr98.obtainium", AppMetadata("Obtainium: App updates from source.", listOf(ENH_SHELL), true))

@@ -17,10 +17,10 @@ import timber.log.Timber
 object RootCompatHelper {
 
     /** Returns true if [packageName] supports Magic Setup in the current privilege mode.
-     *  Pass [rootMode] = true when Shizuku is running as UID 0 or ADB mode (UID 2000).
-     *  This is the single source of truth for whether the Magic Setup button should be enabled. */
-    fun canAutoSetup(packageName: String, rootMode: Boolean): Boolean =
-        packageName in GLOBAL_SETTINGS_APPS || (rootMode && packageName in ROOT_PREFS_APPS)
+     *  [isTrueRoot] must be true (UID 0) to modify target apps' private shared_prefs.
+     *  In ADB mode (UID 2000), only [GLOBAL_SETTINGS_APPS] can be configured without root. */
+    fun canAutoSetup(packageName: String, isTrueRoot: Boolean): Boolean =
+        packageName in GLOBAL_SETTINGS_APPS || (isTrueRoot && packageName in ROOT_PREFS_APPS)
 
     private fun escapeSed(s: String) = s
         .replace("\\", "\\\\")
@@ -105,9 +105,9 @@ object RootCompatHelper {
         success
     }
 
-    private fun isShizukuRoot(): Boolean {
+    private fun isShizukuTrueRoot(): Boolean {
         return try {
-            Shizuku.pingBinder() && (Shizuku.getUid() == 0 || Shizuku.getUid() == 2000)
+            Shizuku.pingBinder() && Shizuku.getUid() == 0
         } catch (_: Exception) {
             false
         }
@@ -133,7 +133,7 @@ object RootCompatHelper {
         val installedPackages = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS)
         var processedCount = 0
 
-        val automatable = GLOBAL_SETTINGS_APPS.keys + if (isShizukuRoot()) ROOT_PREFS_APPS.keys else emptySet()
+        val automatable = GLOBAL_SETTINGS_APPS.keys + if (isShizukuTrueRoot()) ROOT_PREFS_APPS.keys else emptySet()
 
         for (pkgInfo in installedPackages) {
             val pkg = pkgInfo.packageName

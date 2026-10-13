@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
@@ -39,25 +40,96 @@ class ActivityLogFragment : Fragment() {
         NEWEST(R.string.changelog_sort_newest),
         OLDEST(R.string.changelog_sort_oldest),
         BY_APP(R.string.activity_log_sort_by_app),
+        BY_TYPE(R.string.activity_log_sort_by_type),
+        MOST_ACTIVE(R.string.activity_log_sort_most_active),
     }
+
+    data class LogDisplayGroup(
+        val primaryRecord: ActivityLogRecord,
+        val stackedRecords: List<ActivityLogRecord>,
+        val isFirst: Boolean,
+        val isLast: Boolean,
+        val isExpanded: Boolean,
+    )
 
     private val adapter = LogAdapter()
     private lateinit var emptyStateView: EmptyStateView
     private var allRecords: List<ActivityLogRecord> = emptyList()
     private val selectedTypes = mutableSetOf<ActivityEventType>()
     private var sort = Sort.NEWEST
+    private var stackRepetitive = true
+    private val expandedGroupIds = mutableSetOf<String>()
     private var listView: View? = null
+
+    private fun getGroupKey(record: ActivityLogRecord): String =
+        "${record.packageName}|${record.eventType}|${record.action}"
 
     private fun applyFilterSort() {
         val filtered = allRecords.filter { selectedTypes.isEmpty() || it.eventType in selectedTypes }
-        val sorted =
-            when (sort) {
-                Sort.NEWEST -> filtered.sortedByDescending { it.timestamp }
-                Sort.OLDEST -> filtered.sortedBy { it.timestamp }
-                Sort.BY_APP -> filtered.sortedWith(compareBy({ it.appName.lowercase() }, { -it.timestamp }))
+
+        val groups: List<LogDisplayGroup> =
+            if (stackRepetitive) {
+                // Group consecutive or identical events by app + eventType + action within close proximity (or overall)
+                val groupedMap = linkedMapOf<String, MutableList<ActivityLogRecord>>()
+                for (record in filtered) {
+                    val key = getGroupKey(record)
+                    groupedMap.getOrPut(key) { mutableListOf() }.add(record)
+                }
+
+                val groupList =
+                    groupedMap.values.map { list ->
+                        val primary = list.maxByOrNull { it.timestamp } ?: list.first()
+                        val others = list.filter { it != primary }.sortedByDescending { it.timestamp }
+                        val key = getGroupKey(primary)
+                        LogDisplayGroup(
+                            primaryRecord = primary,
+                            stackedRecords = others,
+                            isFirst = false,
+                            isLast = false,
+                            isExpanded = expandedGroupIds.contains(key),
+                        )
+                    }
+
+                when (sort) {
+                    Sort.NEWEST -> groupList.sortedByDescending { it.primaryRecord.timestamp }
+                    Sort.OLDEST -> groupList.sortedBy { it.primaryRecord.timestamp }
+                    Sort.BY_APP -> groupList.sortedWith(compareBy({ it.primaryRecord.appName.lowercase() }, { -it.primaryRecord.timestamp }))
+                    Sort.BY_TYPE -> groupList.sortedWith(compareBy({ it.primaryRecord.eventType.ordinal }, { -it.primaryRecord.timestamp }))
+                    Sort.MOST_ACTIVE -> groupList.sortedByDescending { it.stackedRecords.size + 1 }
+                }
+            } else {
+                val sortedRecords =
+                    when (sort) {
+                        Sort.NEWEST -> filtered.sortedByDescending { it.timestamp }
+                        Sort.OLDEST -> filtered.sortedBy { it.timestamp }
+                        Sort.BY_APP -> filtered.sortedWith(compareBy({ it.appName.lowercase() }, { -it.timestamp }))
+                        Sort.BY_TYPE -> filtered.sortedWith(compareBy({ it.eventType.ordinal }, { -it.timestamp }))
+                        Sort.MOST_ACTIVE -> {
+                            val counts = filtered.groupingBy { it.packageName }.eachCount()
+                            filtered.sortedWith(compareBy({ -(counts[it.packageName] ?: 0) }, { -it.timestamp }))
+                        }
+                    }
+                sortedRecords.map {
+                    LogDisplayGroup(
+                        primaryRecord = it,
+                        stackedRecords = emptyList(),
+                        isFirst = false,
+                        isLast = false,
+                        isExpanded = false,
+                    )
+                }
             }
-        adapter.submitList(sorted)
-        val isEmpty = sorted.isEmpty()
+
+        val positionedGroups =
+            groups.mapIndexed { index, grp ->
+                grp.copy(
+                    isFirst = index == 0,
+                    isLast = index == groups.size - 1,
+                )
+            }
+
+        adapter.submitList(positionedGroups)
+        val isEmpty = positionedGroups.isEmpty()
         emptyStateView.visibility = if (isEmpty) View.VISIBLE else View.GONE
         listView?.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
@@ -79,7 +151,6 @@ class ActivityLogFragment : Fragment() {
                 isChipIconVisible = true
                 setOnClickListener { anchor ->
                     HapticUtils.tap(anchor)
-                    // AppCompat's PopupMenu resolves the theme's M3 popupMenuStyle; the framework one doesn't.
                     androidx.appcompat.widget
                         .PopupMenu(ctx, anchor)
                         .apply {
@@ -95,6 +166,20 @@ class ActivityLogFragment : Fragment() {
                 }
             }
         group.addView(sortChip)
+
+        val stackChip =
+            com.google.android.material.chip.Chip(ctx).apply {
+                setText(R.string.activity_log_stack_activities)
+                isCheckable = true
+                isChecked = stackRepetitive
+                setOnClickListener {
+                    HapticUtils.segmentTick(this)
+                    stackRepetitive = isChecked
+                    applyFilterSort()
+                }
+            }
+        group.addView(stackChip)
+
         ActivityEventType.values().forEach { type ->
             group.addView(
                 com.google.android.material.chip.Chip(ctx).apply {
@@ -173,41 +258,52 @@ class ActivityLogFragment : Fragment() {
         return binding.root
     }
 
-    internal class LogAdapter : ListAdapter<ActivityLogRecord, LogViewHolder>(DIFF) {
+    internal inner class LogAdapter : ListAdapter<LogDisplayGroup, LogViewHolder>(DIFF) {
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int,
-        ) = LogViewHolder.create(parent)
+        ) = LogViewHolder(
+            ItemActivityLogBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+            onToggleExpand = { key ->
+                if (expandedGroupIds.contains(key)) {
+                    expandedGroupIds.remove(key)
+                } else {
+                    expandedGroupIds.add(key)
+                }
+                applyFilterSort()
+            },
+        )
 
         override fun onBindViewHolder(
             holder: LogViewHolder,
             position: Int,
         ) = holder.bind(getItem(position))
+    }
 
-        companion object {
-            private val DIFF =
-                object : DiffUtil.ItemCallback<ActivityLogRecord>() {
-                    override fun areItemsTheSame(
-                        a: ActivityLogRecord,
-                        b: ActivityLogRecord,
-                    ) =
-                        a.timestamp == b.timestamp && a.packageName == b.packageName
+    companion object {
+        private val DIFF =
+            object : DiffUtil.ItemCallback<LogDisplayGroup>() {
+                override fun areItemsTheSame(
+                    a: LogDisplayGroup,
+                    b: LogDisplayGroup,
+                ) =
+                    a.primaryRecord.timestamp == b.primaryRecord.timestamp &&
+                        a.primaryRecord.packageName == b.primaryRecord.packageName &&
+                        a.primaryRecord.action == b.primaryRecord.action &&
+                        a.primaryRecord.eventType == b.primaryRecord.eventType
 
-                    override fun areContentsTheSame(
-                        a: ActivityLogRecord,
-                        b: ActivityLogRecord,
-                    ) = a == b
-                }
-        }
+                override fun areContentsTheSame(
+                    a: LogDisplayGroup,
+                    b: LogDisplayGroup,
+                ) = a == b
+            }
     }
 
     internal class LogViewHolder(
         private val binding: ItemActivityLogBinding,
+        private val onToggleExpand: (String) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         companion object {
-            // Include the date, not just the time: logs persist across days and a bare "HH:mm:ss"
-            // makes yesterday's entry indistinguishable from today's. MEDIUM date keeps a 4-digit
-            // year; SHORT time keeps the row compact. Locale-aware.
             private val dateFormat =
                 java.text.DateFormat.getDateTimeInstance(
                     java.text.DateFormat.MEDIUM,
@@ -215,7 +311,11 @@ class ActivityLogFragment : Fragment() {
                     Locale.getDefault(),
                 )
 
-            fun create(parent: ViewGroup) = LogViewHolder(ItemActivityLogBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+            private val timeOnlyFormat =
+                java.text.DateFormat.getTimeInstance(
+                    java.text.DateFormat.SHORT,
+                    Locale.getDefault(),
+                )
 
             private fun resolveAttrColor(
                 view: View,
@@ -229,7 +329,8 @@ class ActivityLogFragment : Fragment() {
 
         private var lookupJob: Job? = null
 
-        fun bind(record: ActivityLogRecord) {
+        fun bind(group: LogDisplayGroup) {
+            val record = group.primaryRecord
             val context = binding.root.context
             val pm = context.packageManager
             val capturedPackage = record.packageName
@@ -238,16 +339,59 @@ class ActivityLogFragment : Fragment() {
             binding.action.text = record.action
             binding.timestamp.text = dateFormat.format(Date(record.timestamp))
 
-            // Fallback shown immediately; replaced once the (cached, off-main-thread) lookup below
-            // resolves. pm.getApplicationInfo() is a real IPC and loadIcon() a synchronous decode -
-            // doing both inline on bind (as this used to) stalls the UI thread on every scroll, and
-            // handing an already-decoded Drawable to Coil defeats its own async/caching pipeline.
-            // AppIconCache (used elsewhere for the same lookup) avoids both problems.
             binding.appName.text = record.appName.ifEmpty { record.packageName }
             binding.icon.setTag(R.id.tag_app_icon_package, null)
             binding.icon.load(R.drawable.ic_system_icon)
 
-            applyEventType(record.eventType)
+            val accentColor = applyEventType(record.eventType)
+
+            // Morphe-inspired timeline rail styling
+            val outlineColor = resolveAttrColor(binding.root, com.google.android.material.R.attr.colorOutlineVariant)
+            val haloColor = ColorUtils.setAlphaComponent(accentColor, 0x30)
+            binding.rail.setColors(outlineColor, accentColor, haloColor)
+            binding.rail.isFirst = group.isFirst
+            binding.rail.isLast = group.isLast
+            binding.rail.filled = group.isFirst || group.stackedRecords.isNotEmpty()
+            binding.rail.setPulsing(group.isFirst)
+
+            // Repetitive Activity Stacking & Badge
+            val groupKey = "${record.packageName}|${record.eventType}|${record.action}"
+            val totalCount = group.stackedRecords.size + 1
+            if (group.stackedRecords.isNotEmpty()) {
+                binding.stackChip.visibility = View.VISIBLE
+                binding.stackChip.text = context.getString(R.string.activity_log_stacked_count, totalCount)
+                binding.stackChip.setOnClickListener {
+                    HapticUtils.tap(it)
+                    onToggleExpand(groupKey)
+                }
+
+                binding.root.setOnClickListener {
+                    HapticUtils.tap(it)
+                    onToggleExpand(groupKey)
+                }
+
+                if (group.isExpanded) {
+                    binding.expandedStackContainer.visibility = View.VISIBLE
+                    binding.expandedStackContainer.removeAllViews()
+                    group.stackedRecords.forEach { stacked ->
+                        val subRow =
+                            TextView(context).apply {
+                                text = "• ${timeOnlyFormat.format(Date(stacked.timestamp))} — ${stacked.action}"
+                                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodySmall)
+                                setTextColor(resolveAttrColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant))
+                                setPadding(0, (2 * resources.displayMetrics.density).toInt(), 0, (2 * resources.displayMetrics.density).toInt())
+                            }
+                        binding.expandedStackContainer.addView(subRow)
+                    }
+                } else {
+                    binding.expandedStackContainer.visibility = View.GONE
+                }
+            } else {
+                binding.stackChip.visibility = View.GONE
+                binding.expandedStackContainer.visibility = View.GONE
+                binding.root.setOnClickListener(null)
+            }
+
             binding.root.contentDescription =
                 "${binding.appName.text}, ${binding.eventChip.text}, ${record.action}, ${binding.timestamp.text}"
 
@@ -270,8 +414,7 @@ class ActivityLogFragment : Fragment() {
                 }
         }
 
-        private fun applyEventType(eventType: ActivityEventType) {
-            val ctx = binding.root.context
+        private fun applyEventType(eventType: ActivityEventType): Int {
             val (labelRes, colorAttr) =
                 when (eventType) {
                     ActivityEventType.SERVICE_START -> R.string.activity_log_type_start to androidx.appcompat.R.attr.colorPrimary
@@ -293,6 +436,7 @@ class ActivityLogFragment : Fragment() {
             binding.eventIndicator.backgroundTintList =
                 android.content.res.ColorStateList
                     .valueOf(accentColor)
+            return accentColor
         }
     }
 }

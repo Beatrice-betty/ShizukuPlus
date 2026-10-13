@@ -570,8 +570,8 @@ class RootCompatibilityActivity : AppBarActivity() {
 
                 // Magic Setup is only meaningful when we know how to configure this specific app.
                 // canAutoSetup() is the single source of truth: GLOBAL_SETTINGS_APPS in any mode,
-                // ROOT_PREFS_APPS when running as root (UID 0) or ADB shell (UID 2000).
-                val canMagicSetup = RootCompatHelper.canAutoSetup(pkg, isRoot || isAdbMode)
+                // and ROOT_PREFS_APPS strictly when running as true root (UID 0).
+                val canMagicSetup = RootCompatHelper.canAutoSetup(pkg, isRoot)
                 holder.binding.suMagicSetup.isVisible = isInstalled && !isShizukuNative
                 if (isInstalled) {
                     holder.binding.suMagicSetup.alpha = if (canMagicSetup) 1.0f else 0.5f

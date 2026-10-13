@@ -671,10 +671,10 @@
     <string name="su_bridge_no_custom_path_support">This app has no custom path setting. Requires real root.</string>
     <string name="su_bridge_manual_setup_required">Manual setup required in ADB mode</string>
     <string name="su_bridge_how_to_use">How to use:</string>
-    <string name="su_bridge_step_1">1. Export Shizuku files from the Home screen.</string>
-    <string name="su_bridge_step_2">2. In your root app, look for "SU Path" or "Binary Path" in its settings.</string>
-    <string name="su_bridge_step_3">3. Change it to the path of the exported \'su\' file.</string>
-    <string name="su_bridge_step_4">4. For apps without a custom path setting, enable "SU Bridge" in Shizuku+ settings. This automatically redirects many legacy su calls.</string>
+    <string name="su_bridge_step_1">1. Export Shizuku files or deploy the SU bridge to /data/local/tmp from the Home screen.</string>
+    <string name="su_bridge_step_2">2. In apps that support a custom binary (e.g. AdAway, Solid Explorer), point their "SU Path" setting to the bridge path.</string>
+    <string name="su_bridge_step_3">3. For terminals (e.g. Termux), run \'export PATH="/data/local/tmp:$PATH"\' to use \'su\' immediately.</string>
+    <string name="su_bridge_step_4">4. For apps without a custom SU setting, "Magic Setup" can auto-configure supported apps when Shizuku runs as Root. Other apps require true system root (/system/bin/su).</string>
     <string name="su_bridge_app_instruction">Set path in Settings > %s</string>
     <string name="su_bridge_path_label">Exported su path</string>
     <string name="su_bridge_su_path_label">Exported su path</string>
@@ -1075,6 +1075,11 @@
     <string name="empty_state_title_activity_log_empty">No activity recorded</string>
     <string name="empty_state_description_activity_log_empty">Shizuku API calls and events will appear here when activity logging is enabled.</string>
     <string name="activity_log_sort_by_app">By app</string>
+    <string name="activity_log_sort_by_type">By type</string>
+    <string name="activity_log_sort_most_active">Most active</string>
+    <string name="activity_log_stack_activities">Stack repetitive events</string>
+    <string name="activity_log_stacked_count">%d occurrences</string>
+    <string name="activity_log_stacked_expand">Tap to see all occurrences</string>
     <string name="activity_log_type_start">Start</string>
     <string name="activity_log_type_stop">Stop</string>
     <string name="activity_log_type_permission">Permission</string>
