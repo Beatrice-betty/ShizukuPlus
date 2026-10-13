@@ -1,6 +1,7 @@
 package af.shizuku.manager.home.compose
 
 import af.shizuku.manager.R
+import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.database.ActivityEventType
 import af.shizuku.manager.database.ActivityLogManager
 import af.shizuku.manager.database.ActivityLogRecord
@@ -62,7 +63,7 @@ fun ServerMetricsScreen() {
                     val shizukuService =
                         moe.shizuku.server.IShizukuService.Stub
                             .asInterface(binder)
-                    var ai = shizukuService.aiCorePlus
+                    var ai: af.shizuku.server.IAICorePlus? = shizukuService.aiCorePlus
                     if (ai == null) {
                         withContext(Dispatchers.IO) {
                             ShizukuSettings.syncAllPlusFeaturesToServer()

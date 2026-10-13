@@ -514,4 +514,13 @@ class RootIntegrationSettingsFragment : BaseSettingsFragment() {
         return readProp("ro.boot.flash.locked") == "0" ||
             readProp("ro.boot.verifiedbootstate") == "orange"
     }
+
+    private fun setChildAvailable(
+        pref: Preference,
+        available: Boolean,
+    ) {
+        val key = pref.key ?: return
+        (pref.parent as? CollapsiblePreferenceCategory)?.setChildAvailable(key, available)
+            ?: run { pref.isVisible = available }
+    }
 }

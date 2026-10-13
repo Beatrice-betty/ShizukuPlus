@@ -148,7 +148,8 @@ class AdbStartWorker(
                     savedPort > 0 && isWifiOk && runAttemptCount == 0 && AdbPortProber.isPortOpen(savedPort, 200) -> AdbTarget("127.0.0.1", savedPort)
                     else ->
                         callbackFlow {
-                            val adbMdns =
+                            lateinit var adbMdns: AdbMdns
+                            adbMdns =
                                 AdbMdns(applicationContext, AdbMdns.TLS_CONNECT) { p ->
                                     if (p > 0) trySend(AdbTarget(adbMdns.resolvedHost, p))
                                 }

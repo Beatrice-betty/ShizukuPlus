@@ -1,5 +1,6 @@
 package af.shizuku.manager.home
 
+import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.databinding.FragmentServerMetricsBinding
 import af.shizuku.server.IAICorePlus
 import android.os.Bundle

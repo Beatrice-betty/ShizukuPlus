@@ -316,7 +316,14 @@ class BehaviorSettingsFragment :
         }
 
         findPreference<Preference>("automation_trusted_networks")?.setOnPreferenceChangeListener { _, _ ->
-            AutomationService.startOrStop(context)
+            val ctx = context
+            if (ctx != null) {
+                if (ShizukuSettings.hasAnyAutomationRulesConfigured()) {
+                    AutomationService.startIfNeeded(ctx)
+                } else {
+                    AutomationService.stopIfRunning(ctx)
+                }
+            }
             true
         }
 
