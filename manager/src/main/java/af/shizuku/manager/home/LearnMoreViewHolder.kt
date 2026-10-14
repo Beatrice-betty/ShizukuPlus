@@ -1,9 +1,7 @@
 package af.shizuku.manager.home
 
-import af.shizuku.manager.Helps
 import af.shizuku.manager.databinding.HomeItemContainerBinding
 import af.shizuku.manager.databinding.HomeLearnMoreBinding
-import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.IconStyleHelper
 import af.shizuku.manager.utils.MotionUtils.applySpringTouch
 import android.view.LayoutInflater
@@ -30,7 +28,12 @@ class LearnMoreViewHolder(
 
     init {
         containerBinding.root.applySpringTouch()
-        containerBinding.root.setOnClickListener { v: View -> CustomTabsHelper.launchUrlOrCopy(v.context, Helps.HOME.get()) }
+        containerBinding.root.setOnClickListener { v: View ->
+            af.shizuku.manager.knowledgebase.KnowledgebaseHelper.show(
+                v.context,
+                af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_SECURITY_PRIVACY,
+            )
+        }
         containerBinding.root.setOnLongClickListener {
             HomeEditMode.enter()
             true

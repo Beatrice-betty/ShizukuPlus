@@ -10,6 +10,7 @@ import af.shizuku.manager.databinding.ActivityRootCompatibilityBinding
 import af.shizuku.manager.databinding.AppListItemBinding
 import af.shizuku.manager.databinding.ListSectionHeaderBinding
 import af.shizuku.manager.shell.ShellTutorialActivity
+import af.shizuku.manager.starter.StarterActivity
 import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -102,6 +103,25 @@ class RootCompatibilityActivity : AppBarActivity() {
                     },
                 ) {
                     androidx.compose.material3.Text(getString(R.string.su_bridge_export_files))
+                }
+            }
+        }
+
+        // KernelSU installed but Shizuku is running as ADB (uid=2000): offer a one-tap restart
+        // under KernelSU so the bridge escalates from shell-uid to true root (uid=0).
+        val kernelSuInstalled = RootCompatHelper.isKernelSuInstalled(this)
+        if (kernelSuInstalled && isAdbMode) {
+            binding.kernelsuUpgradeCard.visibility = View.VISIBLE
+            binding.btnKernelsuRestart.setContent {
+                af.shizuku.core.ui.compose.Button(
+                    onClick = {
+                        startActivity(
+                            Intent(this@RootCompatibilityActivity, StarterActivity::class.java)
+                                .putExtra(StarterActivity.EXTRA_IS_ROOT, true),
+                        )
+                    },
+                ) {
+                    androidx.compose.material3.Text(getString(R.string.su_bridge_kernelsu_restart_shizuku))
                 }
             }
         }
@@ -373,6 +393,11 @@ class RootCompatibilityActivity : AppBarActivity() {
                         Toast.makeText(this@RootCompatibilityActivity, R.string.su_bridge_cleanup_failed, Toast.LENGTH_SHORT).show()
                     }
                 }
+                return true
+            }
+            R.id.action_knowledgebase -> {
+                af.shizuku.manager.knowledgebase.KnowledgebaseHelper
+                    .show(this, af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_ROOT_COMPAT)
                 return true
             }
         }

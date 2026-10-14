@@ -61,6 +61,11 @@ class PlusFeaturePreference(
 
         holder.itemView.requestLayout()
 
+        androidx.appcompat.widget.TooltipCompat.setTooltipText(
+            holder.itemView,
+            summary ?: title,
+        )
+
         holder.itemView.setOnLongClickListener {
             if (integrationPackage != null) launchIntegration() else showHelp()
             true
@@ -239,7 +244,23 @@ class PlusFeaturePreference(
     }
 
     private fun showHelp() {
-        if (infoDetail != 0) {
+        val topicId =
+            af.shizuku.manager.knowledgebase.KnowledgebaseRegistry
+                .topicForPrefKey(key)
+        if (topicId != null) {
+            af.shizuku.manager.knowledgebase.KnowledgebaseHelper
+                .show(context, topicId)
+            return
+        }
+
+        val detailText =
+            if (infoDetail != 0) {
+                context.getString(infoDetail)
+            } else {
+                summary?.toString() ?: title?.toString()
+            }
+
+        if (detailText != null) {
             val dialog =
                 com.google.android.material.bottomsheet
                     .BottomSheetDialog(context)
@@ -278,7 +299,8 @@ class PlusFeaturePreference(
             // Title
             val titleTextView =
                 TextView(context).apply {
-                    text = context.getString(if (infoTitle != 0) infoTitle else R.string.settings_plus_learn_more)
+                    val customTitle = if (infoTitle != 0) context.getString(infoTitle) else title?.toString()
+                    text = customTitle ?: context.getString(R.string.settings_plus_learn_more)
                     setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 20f)
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setTextColor(resolveColor(com.google.android.material.R.attr.colorOnSurface, 0xFF000000.toInt()))
@@ -306,7 +328,7 @@ class PlusFeaturePreference(
 
             val detailTextView =
                 TextView(context).apply {
-                    text = context.getString(infoDetail)
+                    text = detailText
                     setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
                     setTextColor(resolveColor(com.google.android.material.R.attr.colorOnSurfaceVariant, 0xFF333333.toInt()))
                     setLineSpacing(0f, 1.25f)

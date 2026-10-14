@@ -128,6 +128,20 @@ object RootCompatHelper {
         }
     }
 
+    /** True when KernelSU manager is installed (package me.weishu.kernelsu present). */
+    fun isKernelSuInstalled(context: Context): Boolean = try {
+        context.packageManager.getPackageInfo("me.weishu.kernelsu", 0)
+        true
+    } catch (_: PackageManager.NameNotFoundException) { false }
+
+    /**
+     * True when KernelSU is installed AND Shizuku is already running as root (uid=0).
+     * False when KernelSU is installed but Shizuku is still ADB-mode (uid=2000) — in
+     * that case the bridge can be upgraded by restarting Shizuku under KernelSU.
+     */
+    fun isKernelSuActive(context: Context): Boolean =
+        isKernelSuInstalled(context) && isShizukuTrueRoot()
+
     suspend fun autoSetupAll(context: Context, suPath: String): Int = withContext(Dispatchers.IO) {
         if (!isShizukuAvailable()) return@withContext 0
 

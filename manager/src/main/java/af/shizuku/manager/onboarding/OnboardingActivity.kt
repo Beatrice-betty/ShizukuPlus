@@ -1,7 +1,6 @@
 package af.shizuku.manager.onboarding
 
 import af.shizuku.core.ui.AppActivity
-import af.shizuku.manager.Helps
 import af.shizuku.manager.MainActivity
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
@@ -17,7 +16,6 @@ import af.shizuku.manager.home.showAccessibilityDialog
 import af.shizuku.manager.ktx.themeColor
 import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.starter.StarterActivity
-import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.HapticUtils
 import af.shizuku.manager.utils.ShizukuStateMachine
@@ -256,7 +254,10 @@ class OnboardingActivity : AppActivity() {
                 }
 
                 binding.btnWadbGuide.setOnClickListener {
-                    CustomTabsHelper.launchUrlOrCopy(this@OnboardingActivity, Helps.ADB_ANDROID11.get())
+                    af.shizuku.manager.knowledgebase.KnowledgebaseHelper.show(
+                        this@OnboardingActivity,
+                        af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_WIRELESS_ADB,
+                    )
                 }
                 binding.btnWadbStart.setOnClickListener {
                     StartWirelessAdbViewHolder.start(this@OnboardingActivity, lifecycleScope)

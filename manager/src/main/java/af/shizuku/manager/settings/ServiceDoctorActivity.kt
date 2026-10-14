@@ -743,6 +743,7 @@ class ServiceDoctorActivity : AppBarActivity() {
         val status: String,
         val ok: Boolean,
         val onFix: (() -> Unit)? = null,
+        val topicId: String? = null,
     )
 
     private inner class CheckListAdapter : RecyclerView.Adapter<CheckViewHolder>() {
@@ -789,6 +790,25 @@ class ServiceDoctorActivity : AppBarActivity() {
             holder.binding.icon.imageTintList =
                 android.content.res.ColorStateList
                     .valueOf(context.themeColor(colorAttr))
+
+            androidx.appcompat.widget.TooltipCompat.setTooltipText(
+                holder.itemView,
+                "${check.title}: ${check.status}",
+            )
+
+            val topic =
+                check.topicId ?: when {
+                    check.title.contains("battery", ignoreCase = true) || check.title.contains("sleeping", ignoreCase = true) || check.title.contains("autostart", ignoreCase = true) || check.title.contains("blocker", ignoreCase = true) -> af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_BATTERY_OEM
+                    check.title.contains("adb", ignoreCase = true) || check.title.contains("network", ignoreCase = true) -> af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_WIRELESS_ADB
+                    check.title.contains("su", ignoreCase = true) || check.title.contains("root", ignoreCase = true) || check.title.contains("wallet", ignoreCase = true) -> af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_ROOT_COMPAT
+                    else -> af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_BATTERY_OEM
+                }
+            holder.itemView.setOnClickListener {
+                af.shizuku.manager.utils.HapticUtils
+                    .tap(it)
+                af.shizuku.manager.knowledgebase.KnowledgebaseHelper
+                    .show(context, topic)
+            }
 
             if (check.onFix != null) {
                 holder.binding.btnFix.visibility = View.VISIBLE

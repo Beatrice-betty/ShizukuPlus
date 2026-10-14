@@ -644,9 +644,9 @@
     <string name="settings_on_device_adb_tcp_summary">Enable ADB TCP mode (port 5555) directly on the device. Requires Shizuku with root. Useful for ADB tools without WiFi.</string>
     <string name="settings_force_start_wadb">Bypass Wi-Fi check for WADB</string>
     <string name="settings_force_start_wadb_summary">Attempt to start Shizuku via ADB TCP even if Wi-Fi is disconnected. Useful for local loopback or mobile data ADB.</string>
-    <string name="settings_fake_su">SU Bridge (su wrapper)</string>
-    <string name="settings_fake_su_summary">Provide a Shizuku-backed \'su\' binary for legacy root apps that support custom paths.</string>
-    <string name="settings_root_integration_hub">Root Integration Hub</string>
+    <string name="settings_fake_su">Root App Translator (SU Bridge)</string>
+    <string name="settings_fake_su_summary">Allow standard root-only apps (like NeoBackup, AdAway, and Swift Backup) to work through Shizuku+ without permanently rooting your phone.</string>
+    <string name="settings_root_integration_hub">Root Compatibility Hub</string>
     <string name="settings_root_integration_hub_summary">Configure and manage root apps to work with Shizuku+ privileges.</string>
     <string name="settings_root_compatibility_hub">Root Compatibility Hub</string>
     <string name="settings_root_compatibility_hub_summary">Configure and manage root apps to work with Shizuku+ privileges.</string>
@@ -1362,12 +1362,12 @@
     <string name="remote_db_sync_channel_name">App Database Updates</string>
 
     <!-- Binder Enhancements (Issue #199) -->
-    <string name="settings_binder_firewall">Binder Firewall</string>
-    <string name="settings_binder_firewall_summary">Audit and block sensitive system transactions from unauthorized apps</string>
-    <string name="settings_binder_logging">AIDL Transaction Logging</string>
-    <string name="settings_binder_logging_summary">Log all proxied Binder transactions to the system log (Logcat) for debugging</string>
-    <string name="settings_shadow_binder">Shadow Binder</string>
-    <string name="settings_shadow_binder_summary">Intercept and mock system service calls to hide device information or app state</string>
+    <string name="settings_binder_firewall">App Connection Firewall (Binder Shield)</string>
+    <string name="settings_binder_firewall_summary">Inspect and block sneaky background requests from apps attempting to access restricted Android system services without your consent</string>
+    <string name="settings_binder_logging">Communication Diagnostic Log</string>
+    <string name="settings_binder_logging_summary">Record internal app-to-system requests to the system log to assist with diagnosing connection issues</string>
+    <string name="settings_shadow_binder">App Cloaking &amp; Stealth Shield</string>
+    <string name="settings_shadow_binder_summary">Hide Shizuku+ and selected sensitive apps from being detected by root-checkers, banking apps, and game scanners</string>
     <string name="settings_shadow_binder_hidden_packages">Hidden Packages</string>
     <string name="settings_shadow_binder_hidden_packages_summary">Comma-separated list of package names to hide from other apps. If you have both OG Shizuku and Shizuku+ installed, add both (moe.shizuku.privileged.api, af.shizuku.manager) to prevent conflicts.</string>
 
@@ -1578,6 +1578,9 @@
     <string name="su_bridge_api36_adb_warning_title">Android 16 ADB Limitation</string>
     <string name="su_bridge_api36_adb_warning_body">The ADB shell process cannot write to /data/local/tmp on Android 16+. Export Shizuku files to a folder instead — the SU Bridge will use that exported path.</string>
     <string name="su_bridge_export_files">Export Files…</string>
+    <string name="su_bridge_kernelsu_upgrade_title">KernelSU detected — upgrade to root bridge</string>
+    <string name="su_bridge_kernelsu_upgrade_body">KernelSU is installed and active this boot. Restart the Shizuku service under KernelSU to give the bridge true uid=0 root instead of uid=2000 (ADB shell). Apps authorized in both Shizuku+ and KernelSU will then run with full root privileges.</string>
+    <string name="su_bridge_kernelsu_restart_shizuku">Restart Shizuku as Root</string>
     <string name="settings_status_bar_governor_plus_summary">Control the status bar and Quick Settings panel: collapse/expand the shade, toggle expansion lock, and manage tile layout — all without user interaction.</string>
     <string name="help_status_bar_governor_plus_title">Status Bar Control</string>
     <string name="help_status_bar_governor_plus_detail">Grants privileged access to the status bar and Quick Settings panel via the system statusbar service. Apps and automations can collapse or expand the notification shade, lock expansion to prevent user access, click individual QS tiles, and read or rewrite the full tile list — all without requiring the device to be unlocked or user gestures.</string>
@@ -1773,4 +1776,23 @@
     <string name="badge_wireless_adb">ADB</string>
     <string name="badge_device_owner">DEVICE OWNER</string>
     <string name="badge_samsung_only">ONE UI</string>
+
+    <!-- In-App Knowledgebase & Consumer-friendly settings -->
+    <string name="open_in_browser">Open in browser</string>
+    <string name="knowledgebase_title">Knowledgebase</string>
+    <string name="knowledgebase_peek">Peek at Knowledgebase</string>
+    <string name="knowledgebase_action_view_guide">View in Knowledgebase</string>
+
+    <string name="settings_samsung_autoblocker_consumer_title">Samsung Knox Auto-Protection (Auto Blocker)</string>
+    <string name="settings_samsung_autoblocker_consumer_summary">Samsung built-in shield that blocks background system tools and ADB debugging. Turn off to allow Shizuku+ to stay connected continuously.</string>
+    <string name="settings_binder_firewall_consumer_title">App Connection Firewall (Binder Shield)</string>
+    <string name="settings_binder_firewall_consumer_summary">Inspect and block sneaky background requests from apps attempting to access restricted Android system services without your consent.</string>
+    <string name="settings_shadow_binder_consumer_title">App Cloaking &amp; Stealth Shield</string>
+    <string name="settings_shadow_binder_consumer_summary">Hide Shizuku+ and selected sensitive apps from being detected by root-checkers, banking apps, and game scanners.</string>
+    <string name="settings_mdns_consumer_title">Automatic Wi-Fi Port Discovery (Wireless ADB)</string>
+    <string name="settings_mdns_consumer_summary">Automatically scan your local Wi-Fi connection to find your phone\'s active wireless debugging port without typing numbers manually.</string>
+    <string name="settings_fake_su_consumer_title">Root App Translator (SU Bridge)</string>
+    <string name="settings_fake_su_consumer_summary">Allow standard root-only apps (like AdAway or Franco Kernel) to work through Shizuku+ without permanently rooting your phone.</string>
+    <string name="settings_root_file_interceptor_consumer_title">File Permission &amp; Security Label Preserver</string>
+    <string name="settings_root_file_interceptor_consumer_summary">Preserve original ownership and system security rules when copying app files, preventing crashes and broken data.</string>
 </resources>

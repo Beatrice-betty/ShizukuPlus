@@ -1,6 +1,5 @@
 package af.shizuku.manager.home
 
-import af.shizuku.manager.Helps
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.adb.AdbPairingTutorialActivity
@@ -12,7 +11,6 @@ import af.shizuku.manager.ktx.toHtml
 import af.shizuku.manager.model.ServiceStatus
 import af.shizuku.manager.receiver.NotifCancelReceiver
 import af.shizuku.manager.starter.StarterActivity
-import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.IconStyleHelper
 import af.shizuku.manager.utils.MotionUtils.applySpringTouch
@@ -192,7 +190,10 @@ class StartWirelessAdbViewHolder(
 
         if (EnvironmentUtils.isTlsSupported()) {
             binding.button3.setOnClickListener { v: View ->
-                CustomTabsHelper.launchUrlOrCopy(v.context, Helps.ADB_ANDROID11.get())
+                af.shizuku.manager.knowledgebase.KnowledgebaseHelper.show(
+                    v.context,
+                    af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_WIRELESS_ADB,
+                )
             }
             binding.button2.setOnClickListener { v: View ->
                 onPairClicked(v.context)

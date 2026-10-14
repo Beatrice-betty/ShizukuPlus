@@ -48,7 +48,8 @@ object ShizukuReceiverStarter {
             af.shizuku.manager.utils.UserStopFlag
                 .clear()
         }
-        if (!forceStart && (
+        if (!forceStart &&
+            (
                 UserHandleCompat.myUserId() > 0 ||
                     ShizukuStateMachine.isRunning() ||
                     ShizukuStateMachine.get() == ShizukuStateMachine.State.STARTING

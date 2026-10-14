@@ -30,11 +30,12 @@ Get the latest release from [GitHub Releases](https://github.com/thejaustin/Shiz
 *   **Customizable Gestures**: Swipe left, swipe right, and long-press actions, configurable per app.
 *   **In-App Changelogs**: See what's new after an update without leaving the app.
 *   **Bulk Management**: Multi-select apps to grant/revoke permissions or hide them in one tap.
-*   **Activity Log**: Audit trail of API calls and `su` bridge commands, with app icons and real-time updates.
-*   **Root Compatibility Hub**: Dashboard for legacy root apps, with granular module control (Magisk mocking, auto-grant, file interceptor, and more).
-*   **Universal SU Automation**: One-tap 'Magic Setup' to point all installed root apps at the Shizuku+ SU Bridge.
-*   **Service Doctor**: Diagnoses and fixes service startup issues (Samsung Auto Blocker included).
-*   **Integrated Feature Guides**: Every Plus feature has an info icon with a plain-language explanation of what it does.
+*   **In-App Knowledgebase**: Clean, offline-first Material 3 peek dialogs with rich guides, copyable command snippets, and direct action buttons without navigating away.
+*   **Activity Log with Morphe Timeline**: Visual node rails with dynamic pulsing status halos, repetitive activity occurrence grouping, and multi-criteria sorting.
+*   **Root Compatibility Hub & Enhanced SU Bridge**: Seamless translation of legacy `su -c` commands into Shizuku IPC with POSIX argument parsing and Android 14–17 support.
+*   **Universal SU Automation**: One-tap 'Magic Setup' to configure installed root apps to use the Shizuku+ SU Bridge.
+*   **Adaptive Service Doctor**: Proactively diagnoses and fixes service startup, Knox Auto Blocker, and OEM background battery restrictions.
+*   **Integrated Feature Guides & Smart Tooltips**: Long-press any setting for contextual explanations and direct links to the relevant knowledgebase guide.
 *   **Quick Settings Tile**: Check and toggle the service status from your notification panel.
 
 <details>

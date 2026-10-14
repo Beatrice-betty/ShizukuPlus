@@ -1,10 +1,8 @@
 package af.shizuku.manager.home
 
-import af.shizuku.manager.Helps
 import af.shizuku.manager.databinding.HomeExtraStepRequiredBinding
 import af.shizuku.manager.databinding.HomeItemContainerBinding
 import af.shizuku.manager.ktx.themeColor
-import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.IconStyleHelper
 import af.shizuku.manager.utils.MotionUtils.applySpringTouch
 import android.view.LayoutInflater
@@ -28,7 +26,12 @@ class AdbPermissionLimitedViewHolder(
 
     init {
         itemView.applySpringTouch()
-        binding.button1.setOnClickListener { v: View -> CustomTabsHelper.launchUrlOrCopy(v.context, Helps.ADB_PERMISSION.get()) }
+        binding.button1.setOnClickListener { v: View ->
+            af.shizuku.manager.knowledgebase.KnowledgebaseHelper.show(
+                v.context,
+                af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_WIRELESS_ADB,
+            )
+        }
     }
 
     override fun onBind() {

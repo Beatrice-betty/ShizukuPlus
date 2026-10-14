@@ -1,12 +1,10 @@
 package af.shizuku.manager.shell
 
 import af.shizuku.core.ui.AppBarActivity
-import af.shizuku.manager.Helps
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.databinding.TerminalTutorialActivityBinding
 import af.shizuku.manager.ktx.toHtml
-import af.shizuku.manager.utils.CustomTabsHelper
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -192,7 +190,12 @@ class ShellTutorialActivity : AppBarActivity() {
                         .show()
                 }
             }
-            button2.setOnClickListener { v: View -> CustomTabsHelper.launchUrlOrCopy(v.context, Helps.RISH.get()) }
+            button2.setOnClickListener { v: View ->
+                af.shizuku.manager.knowledgebase.KnowledgebaseHelper.show(
+                    v.context,
+                    af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_TERMINAL_RISH,
+                )
+            }
         }
     }
 
