@@ -235,6 +235,21 @@ class KnowledgebaseBottomSheet : BottomSheetDialogFragment() {
         return root
     }
 
+    override fun onStart() {
+        super.onStart()
+        val d = dialog as? com.google.android.material.bottomsheet.BottomSheetDialog ?: return
+        val bottomSheet = d.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) ?: return
+        val behavior =
+            com.google.android.material.bottomsheet.BottomSheetBehavior
+                .from(bottomSheet)
+        val displayHeight = resources.displayMetrics.heightPixels
+        behavior.peekHeight = (displayHeight * 0.70f).toInt()
+        behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+        behavior.skipCollapsed = true
+        bottomSheet.layoutParams.height = (displayHeight * 0.85f).toInt()
+        bottomSheet.requestLayout()
+    }
+
     private fun resolveThemeColor(
         context: Context,
         attr: Int,
@@ -256,6 +271,9 @@ class KnowledgebaseBottomSheet : BottomSheetDialogFragment() {
             fragmentManager: FragmentManager,
             topicId: String,
         ) {
+            if (fragmentManager.isStateSaved || fragmentManager.isDestroyed) return
+            val existing = fragmentManager.findFragmentByTag(TAG)
+            if (existing != null && existing.isAdded) return
             val sheet =
                 KnowledgebaseBottomSheet().apply {
                     arguments =

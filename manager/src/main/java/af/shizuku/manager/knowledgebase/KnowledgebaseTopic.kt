@@ -72,20 +72,33 @@ object KnowledgebaseRegistry {
     /** Maps settings preference keys to specific knowledgebase topics. */
     fun topicForPrefKey(key: String?): String? =
         when (key) {
-            "fake_su", "su_bridge", "root_auto_grant", "root_build_prop", "root_file_interceptor",
-            "root_iptables", "root_magisk", "root_busybox", "dhizuku",
+            "fake_su", "su_bridge", "su_bridge_enabled", "root_auto_grant", "root_auto_grant_enabled",
+            "root_build_prop", "root_build_prop_redirect_enabled", "root_file_interceptor",
+            "root_file_interceptor_enabled", "root_iptables", "root_iptables_mocking_enabled",
+            "root_magisk", "root_magisk_mocking_enabled", "root_busybox", "root_busybox_mocking_enabled",
+            "root_kernel_ghosting_enabled", "root_partition_ghosting_enabled", "root_power_ghosting_enabled",
+            "overlay_fs_proxy_enabled", "samsung_system_uid_escalation_enabled", "software_keystore_fallback_enabled",
+            "dhizuku", "dhizuku_mode", "dhizuku_disallow_usb", "dhizuku_disable_screencap", "dhizuku_suspended_packages",
+            "custom_su_path", "root_compatibility_hub", "experimental_root_compat", "clear_device_owner",
+            "category_su_bridge", "category_dhizuku_admin", "category_ghost_bridge",
             -> TOPIC_ROOT_COMPAT
 
-            "auto_reconnect_mdns", "tcp_mode", "tcp_port", "start_wireless_adb" -> TOPIC_WIRELESS_ADB
+            "auto_reconnect_mdns", "tcp_mode", "tcp_port", "randomize_tcp_port", "start_wireless_adb",
+            "wireless_debugging", "network_governor_plus", "reconnect_wifi",
+            -> TOPIC_WIRELESS_ADB
 
             "watchdog", "start_on_boot", "continuity_bridge", "rampart_enabled",
-            "rampart_max_restrictions_enabled", "network_governor_plus",
+            "rampart_max_restrictions_enabled", "vendor_battery", "battery_optimization",
+            "category_watchdog_keepalive",
             -> TOPIC_BATTERY_OEM
 
-            "shell_interceptor", "terminal_entry", "pty_mode" -> TOPIC_TERMINAL_RISH
+            "shell_interceptor", "terminal_entry", "pty_mode", "terminal_setup",
+            "use_pty", "terminal_command",
+            -> TOPIC_TERMINAL_RISH
 
-            "stealth_mode", "binder_firewall", "shadow_binder", "binder_logging",
-            "spoof_device", "package_governor_plus",
+            "stealth_mode", "binder_firewall", "shadow_binder", "shadow_binder_enabled",
+            "shadow_binder_hidden_packages", "binder_logging", "spoof_device", "spoof_device_enabled",
+            "spoof_target", "package_governor_plus", "category_security",
             -> TOPIC_SECURITY_PRIVACY
 
             else -> null

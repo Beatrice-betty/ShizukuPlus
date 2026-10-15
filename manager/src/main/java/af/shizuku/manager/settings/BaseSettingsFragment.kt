@@ -344,6 +344,80 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         return recyclerView
     }
 
+    override fun onCreateAdapter(preferenceScreen: androidx.preference.PreferenceScreen): RecyclerView.Adapter<*> {
+        val adapter = super.onCreateAdapter(preferenceScreen)
+        return object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            init {
+                adapter.registerAdapterDataObserver(
+                    object : RecyclerView.AdapterDataObserver() {
+                        override fun onChanged() = notifyDataSetChanged()
+
+                        override fun onItemRangeChanged(
+                            positionStart: Int,
+                            itemCount: Int,
+                        ) = notifyItemRangeChanged(positionStart, itemCount)
+
+                        override fun onItemRangeInserted(
+                            positionStart: Int,
+                            itemCount: Int,
+                        ) = notifyItemRangeInserted(positionStart, itemCount)
+
+                        override fun onItemRangeRemoved(
+                            positionStart: Int,
+                            itemCount: Int,
+                        ) = notifyItemRangeRemoved(positionStart, itemCount)
+
+                        override fun onItemRangeMoved(
+                            fromPosition: Int,
+                            toPosition: Int,
+                            itemCount: Int,
+                        ) {
+                            for (i in 0 until itemCount) notifyItemMoved(fromPosition + i, toPosition + i)
+                        }
+                    },
+                )
+            }
+
+            override fun getItemCount(): Int = adapter.itemCount
+
+            override fun getItemViewType(position: Int): Int = adapter.getItemViewType(position)
+
+            override fun getItemId(position: Int): Long = adapter.getItemId(position)
+
+            override fun onCreateViewHolder(
+                parent: ViewGroup,
+                viewType: Int,
+            ): RecyclerView.ViewHolder = adapter.onCreateViewHolder(parent, viewType)
+
+            override fun onBindViewHolder(
+                holder: RecyclerView.ViewHolder,
+                position: Int,
+            ) {
+                adapter.onBindViewHolder(holder, position)
+                val pref = (adapter as? androidx.preference.PreferenceGroupAdapter)?.getItem(position)
+                if (pref != null && pref !is PlusFeaturePreference) {
+                    androidx.appcompat.widget.TooltipCompat.setTooltipText(
+                        holder.itemView,
+                        pref.summary ?: pref.title,
+                    )
+                    holder.itemView.setOnLongClickListener {
+                        val topicId =
+                            af.shizuku.manager.knowledgebase.KnowledgebaseRegistry
+                                .topicForPrefKey(pref.key)
+                        if (topicId != null) {
+                            HapticUtils.tap(holder.itemView)
+                            af.shizuku.manager.knowledgebase.KnowledgebaseHelper
+                                .show(holder.itemView.context, topicId)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     protected fun needsRestart(
         setting: String,
         newValue: Any? = null,
