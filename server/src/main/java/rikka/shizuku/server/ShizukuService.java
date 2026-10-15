@@ -823,7 +823,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             return featureEnabledMap.get(key + "_enabled");
         }
         // Core bridge, mocking, and diagnostic AI features default to true so standalone CLI / ADB runs work
-        if (key.equals("su_bridge") || key.equals("shell_interceptor") || key.equals("root_magisk_mocking") || key.equals("root_auto_grant") || key.equals("ai_core_plus")) {
+        if (key.equals("su_bridge") || key.equals("shell_interceptor") || key.equals("root_magisk_mocking") || key.equals("ai_core_plus")) {
             return true;
         }
         return featureEnabledMap.getOrDefault(key, false);
