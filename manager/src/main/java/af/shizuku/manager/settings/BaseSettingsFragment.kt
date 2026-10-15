@@ -299,7 +299,12 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
 
         ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { _, insets ->
             val systemBarsInsets = insets.getInsets(Type.systemBars() or Type.displayCutout())
-            val navBarClearancePx = (72 * context.resources.displayMetrics.density).toInt()
+            val navBarClearancePx =
+                if (ShizukuSettings.isFloatingNavBarEnabled()) {
+                    (72 * context.resources.displayMetrics.density).toInt()
+                } else {
+                    (16 * context.resources.displayMetrics.density).toInt()
+                }
             val currentOneHandedTop =
                 if (ShizukuSettings.isOneHandedModeEnabled()) {
                     (context.resources.displayMetrics.heightPixels * 0.16f).toInt()
@@ -533,9 +538,11 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
             val pos = parent.getChildAdapterPosition(view)
             if (pos == RecyclerView.NO_POSITION) return
 
-            if (isHeader(view)) {
+            if (pos == 0) {
+                outRect.top = 0
+            } else if (isHeader(view)) {
                 // 16dp spacing above subsequent category headers to cleanly separate groups
-                if (pos > 0) outRect.top = (16 * density).toInt()
+                outRect.top = (16 * density).toInt()
             } else {
                 outRect.top = gap.toInt()
             }

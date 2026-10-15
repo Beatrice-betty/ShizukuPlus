@@ -388,7 +388,12 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
                 } else {
                     locale.getDisplayName(locale)
                 }
-            val localeName = rawLocaleName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+            val localeName =
+                if (displayLocale == "az" || displayLocale == "az-AZ") {
+                    "Azərbaycan dili"
+                } else {
+                    rawLocaleName.replaceFirstChar { if (it.isLowerCase()) it.uppercase(locale) else it.toString() }
+                }
 
             val rawLocalizedLocaleName =
                 if (!TextUtils.isEmpty(locale.script)) {
@@ -396,7 +401,7 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
                 } else {
                     locale.getDisplayName(currentLocale)
                 }
-            val localizedLocaleName = rawLocalizedLocaleName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale) else it.toString() }
+            val localizedLocaleName = rawLocalizedLocaleName.replaceFirstChar { if (it.isLowerCase()) it.uppercase(currentLocale) else it.toString() }
 
             localizedLocales.add(
                 if (index != currentLocaleIndex) {

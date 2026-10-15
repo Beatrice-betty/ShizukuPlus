@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Shizuku+</string>
     <!-- To translators: you can leave your here -->
@@ -23,21 +24,21 @@
         <item>İki çalarlı</item>
     </string-array>
     <string-array name="icon_styles_value">
-        <item>standard</item>
-        <item>outlined</item>
-        <item>twotone</item>
+        <item>standart</item>
+        <item>konturlanmış</item>
+        <item>iki rəngli</item>
     </string-array>
     <string-array name="shape_styles">
         <item>Zen (Bədii)</item>
         <item>Müasir (Material 3)</item>
         <item>Klassik (Material 2)</item>
-        <item>Üzvi (Skvirkli)</item>
+        <item>Üzvi (Dairəvi)</item>
     </string-array>
     <string-array name="shape_styles_value">
         <item>zen</item>
-        <item>modern</item>
-        <item>classic</item>
-        <item>squircle</item>
+        <item>müasir</item>
+        <item>klassik</item>
+        <item>dairəvi</item>
     </string-array>
     <string-array name="animation_intensities">
         <item>Yoxdur</item>
@@ -86,7 +87,7 @@
     <string name="dialog_adb_pairing_paring_code">Qoşalaşdırma kodu</string>
     <string name="paring_code_is_wrong">Qoşalaşdırma kodu yanlışdır.</string>
     <string name="cannot_connect_port">Simsiz sazlama xidmətinə qoşulmaq mümkün olmadı.\n\nXahiş edirik Shizuku-nun şəbəkə keçidini məhdudlaşdıran bütün fayrvol, reklam blokerləri, VPN və ya bənzər tətbiqlərdə istisna siyahısına əlavə olunduğundan əmin olun.</string>
-    <string name="dialog_wireless_adb_not_enabled">Simsiz sazlama aktiv deyil.\nQeyd: Android 11-dən əvvəlki versiyalarda naqilsiz xətaların kənarlaşdırılmasını aktiv etmək üçün kompüterə qoşulmaq mütləqdir.</string>
+    <string name="dialog_wireless_adb_not_enabled">Simsiz sazlama aktiv deyil.\nQeyd: Android 11-dən əvvəlki versiyalarda simsiz sazlamanı aktiv etmək üçün kompüterə qoşulmaq mütləqdir.</string>
     <string name="dialog_usb_debugging_not_enabled">USB sazlama aktiv deyil.\nXahiş edirik onu "Tərtibatçı seçimləri" bölməsindən aktivləşdirin.</string>
     <string name="dialog_adb_pairing_message">Xahiş edirik aşağıdakı addımları yerinə yetirərək qoşalaşdırmanı başladın:\n- "Tərtibatçı seçimləri" bölməsinə keçin\n- "USB sazlaması" və "Simsiz sazlama" funksiyalarını aktivləşdirin\n- "Simsiz Sazlama" mətni üzərinə toxunun\n- "Cihazı qoşalaşdırma kodu ilə birləşdir" seçimini edin\n- Bildiriş bölməsində qoşalaşdırma kodunu daxil edin</string>
     <string name="dialog_adb_pairing_accessibility_permission">Android 14-də Shizuku-nu Paket Quraşdırıcı ilə quraşdırdıqda/yenilədikdə cütləşdirmə üçün xüsusi imkanlar xidmətini aktivləşdirməyə kömək edən %1$s icazəsi ləğv edilir.\n\nİcazə vermək üçün aşağıdakı ADB əmrini icra edin:\n\n%2$s\n\nƏmri icra etdikdən sonra cütləşdirmə prosesinə davam edə bilərsiniz.\n\nQeyd: Shizuku-nu ADB vasitəsilə quraşdıraraq/yeniləyərək bu addımdan yan keçə bilərsiniz.</string>
@@ -126,10 +127,10 @@
     <!-- App Management -->
     <string name="app_management_badge_format">&lt;b&gt;&lt;font color=\"%1$s\"&gt;[%2$s]&lt;/font&gt;&lt;/b&gt; %3$s</string>
     <string name="dialog_adb_pairing_accessibility_enable">Xahiş edirik cütləşdirmə prosesini başlatmaq üçün xüsusi imkanlar xidmətini aktivləşdirin. Bu, Shizuku-ya cütləşdirmə kodunu aşkar etməyə imkan verir.\n\nEnerjiyə qənaət etmək üçün kod tapıldıqdan sonra və ya 1 dəqiqə ərzində xüsusi imkanlar xidməti avtomatik söndürüləcək.</string>
-    <string name="dialog_adb_pairing_accessibility_navigate">Xahiş edirik aşağıdakı addımları yerinə yetirərək cütləşdirməni başladın:\n- "Tərtibatçı seçimləri" bölməsinə keçin\n- "USB xətaların kənarlaşdırılması" və "Naqilsiz xətaların kənarlaşdırılması" funksiyalarını aktivləşdirin\n- "Naqilsiz xətaların kənarlaşdırılması" mətni üzərinə toxunun\n- "Cihazı cütləşdirmə kodu ilə cütləşdir" seçimini edin. Shizuku cütləşdirmə kodunu avtomatik aşkar edəcək.</string>
+    <string name="dialog_adb_pairing_accessibility_navigate">Xahiş edirik aşağıdakı addımları yerinə yetirərək cütləşdirməni başladın:\n- "Tərtibatçı seçimləri" bölməsinə keçin\n- "USB sazlaması" və "Simsiz sazlama" funksiyalarını aktivləşdirin\n- "Simsiz sazlama" mətni üzərinə toxunun\n- "Cihazı cütləşdirmə kodu ilə cütləşdir" seçimini edin. Shizuku cütləşdirmə kodunu avtomatik aşkar edəcək.</string>
     <string name="adb_pairing_requires_multi_window">Xahiş edirik əvvəlcə bölünmüş ekran (çoxpəncərəli) rejiminə keçin.</string>
     <string name="adb_pairing_requires_multi_window_reason">Sistem cütləşdirmə dialoqunun həmişə görünən olmasını tələb edir. Bölünmüş ekran rejimindən istifadə etmək bu tətbiqin və sistem dialoqunun eyni vaxtda görünməsinə imkan verən yeganə üsuldur.</string>
-    <string name="adb_error_key_store">Naqilsiz xətaların kənarlaşdırılması üçün açar yaratmaq mümkün olmadı.\nBu, cihazın KeyStore mexanizminin zədələnməsi səbəbindən ola bilər.</string>
+    <string name="adb_error_key_store">Simsiz sazlama üçün açar yaratmaq olmadı.\nBu, cihazın KeyStore mexanizminin zədələnməsi səbəbindən ola bilər.</string>
     <string name="adb_stopping_tcp">TCP portu bağlanır</string>
     <string name="adb_error_stop_tcp">TCP üzərindən ADB dayandırıla bilmədi</string>
     <string name="adb_pair_required">Xahiş edirik əvvəlcə cütləşdirmə addımını yerinə yetirin.</string>
@@ -165,10 +166,10 @@
     <string name="home_automation_description_device_restriction">Cihazınızda başlatma intent-indən istifadə etmək üçün əvvəlcə kompüterdən %1$s əmrini icra edərək TCP üzərindən ADB-ni aktivləşdirməlisiniz.</string>
     <string name="home_automation_button_view_intents">İntent-lərə bax</string>
     <string name="home_automation_bottom_sheet_intents">İntent-lər</string>
-    <string name="home_automation_bottom_sheet_label_action">Əməl (Action)</string>
+    <string name="home_automation_bottom_sheet_label_action">Fəaliyyət</string>
     <string name="home_automation_bottom_sheet_label_package">Paket</string>
     <string name="home_automation_bottom_sheet_label_target">Hədəf</string>
-    <string name="home_automation_bottom_sheet_label_extras">Əlavələr (Extras)</string>
+    <string name="home_automation_bottom_sheet_label_extras">Əlavələr</string>
     <string name="home_automation_regenerate_token">Token yenidən yaradılsın?</string>
     <string name="home_automation_regenerate_token_message">İntent-lərinizi yeni token ilə yenidən tənzimləməli olacaqsınız.</string>
     <!-- Home - Learn more -->
@@ -277,7 +278,7 @@
     <string name="settings_start_on_boot_summary">Android 11+ və ya root tələb olunur</string>
     <string name="settings_start_on_boot_bug">Android 11-12 versiyalarındakı xəta səbəbindən simsiz sazlama icazə verilmiş şəbəkələri yadda saxlamır.\n\nHər dəfə sistem yenidən başladıqda icazə dialoqu göründükdə "İcazə ver" toxunaraq şəbəkəni yenidən təsdiqləməlisiniz.</string>
     <string name="settings_use_system_color">Sistem mövzu rəngindən istifadə et</string>
-    <string name="settings_watchdog">Gözətçi (Watchdog)</string>
+    <string name="settings_watchdog">Gözətçi</string>
     <string name="settings_watchdog_summary">Shizuku sıradan çıxdıqda onu avtomatik yenidən başlat</string>
     <string name="settings_tcp_mode">TCP rejimi</string>
     <string name="settings_tcp_mode_summary">"Shizuku-ya Wi-Fi olmadan yenidən başlamağa icazə verir. (Shizuku sistem açılandan sonra ən azı bir dəfə başlamış olmalıdır)"</string>
@@ -331,14 +332,14 @@
     <!-- Shizuku+ Features -->
     <string name="settings_shizuku_plus_features">Shizuku+ Özəllikləri</string>
     <string name="settings_dhizuku_mode">Dhizuku Rejimi</string>
-    <string name="settings_dhizuku_mode_summary">Cihaz Sahibi (DevicePolicyManager) hüquqlarını Dhizuku-nu dəstəkləyən tətbiqlərə həvalə edin.</string>
+    <string name="settings_dhizuku_mode_summary">Cihaz Sahibi hüquqlarını Dhizuku-nu dəstəkləyən tətbiqlərə həvalə edin.</string>
     <string name="dhizuku_device_owner_label">Shizuku+ (Dhizuku Rejimi)</string>
     <string name="dhizuku_device_owner_desc">Dhizuku Rejiminin Cihaz Sahibi hüquqlarını icazəli tətbiqlərlə bölüşməsi üçün tələb olunur.</string>
     <string name="dhizuku_device_owner_enabled">Dhizuku Cihaz Sahibi Aktivdir</string>
     <string name="dhizuku_device_owner_disabled">Dhizuku Cihaz Sahibi Söndürülüb</string>
     <string name="settings_enhanced_api">Shizuku+ Təkmilləşdirilmiş API</string>
     <string name="settings_enhanced_api_summary">Qabaqcıl istifadəçilər üçün mürəkkəb sistem interfeyslərini aktivləşdirin. Bütün özəl Shizuku+ funksiyaları üçün tələb olunur.</string>
-    <string name="settings_shell_interceptor">Shell Sürətləndiricisi</string>
+    <string name="settings_shell_interceptor">Shell Tutucu</string>
     <string name="settings_shell_interceptor_summary">Yerli API-lər vasitəsilə shell əmrlərini sürətləndirin. MacroDroid və Tasker tapşırıqlarının məhsuldarlığını artırır.</string>
     <string name="settings_avf_manager">Virtual Maşın Meneceri (AVF)</string>
     <string name="settings_avf_manager_summary">Təcrid olunmuş Microdroid və ya Linux VM-lərini işlədin. Virtual mühitləri idarə etmək üçün Hyperbox və Termux-VM ilə birlikdə istifadə olunur.</string>
@@ -363,9 +364,9 @@
     <string name="help_general_plus_summary">Shizuku+ əsas Shizuku strukturunu güclü sistem səviyyəli körpülərlə genişləndirir. Bu xüsusiyyətlər MacroDroid və Tasker kimi üçüncü tərəf avtomatlaşdırma alətlərinə, həmçinin Hex Installer kimi mövzu mühərriklərinə təhlükəsiz şəkildə imtiyazlı əməliyyatlar icra etməyə imkan verir. Hər bir funksiya sevimli tətbiqləriniz üçün yüksək məhsuldarlıq və dərin sistem inteqrasiyasını təmin edərək root tələb edən imkanlar ilə standart Android API arasında körpü yaratmaq üçün nəzərdə tutulub.</string>
     <!-- Detailed Help Strings -->
     <string name="help_dhizuku_title">Dhizuku Rejimi haqqında</string>
-    <string name="help_dhizuku_detail">Dhizuku Shizuku-ya Cihaz Sahibi (DevicePolicyManager) hüquqlarını üçüncü tərəf tətbiqləri ilə bölüşməyə imkan verir. Bu, təkbaşına Cihaz Sahibi olmadan sistem siyasətlərini idarə etməli olan Dhizuku Manager kimi tətbiqlər və ya müəyyən köşk (kiosk) rejimi alətləri üçün vacibdir.</string>
-    <string name="help_shell_interceptor_title">Shell Sürətləndiricisi haqqında</string>
-    <string name="help_shell_interceptor_detail">Shell Sürətləndiricisi standart shell əmrlərini (am, pm, settings) tutur və onları birbaşa Shizuku server API çağırışlarına çevirir. Bu, hər əmr üçün yeni bir /system/bin/sh prosesinin yaradılmasının yüksək yükünün qarşısını alır, MacroDroid və ya Tasker-də avtomatlaşdırmanı əhəmiyyətli dərəcədə sürətli və batareyaya qənaətcil edir.</string>
+    <string name="help_dhizuku_detail">Dhizuku Shizuku-ya Cihaz Sahibi hüquqlarını üçüncü tərəf tətbiqləri ilə bölüşməyə imkan verir. Bu, təkbaşına Cihaz Sahibi olmadan sistem siyasətlərini idarə etməli olan Dhizuku Manager kimi tətbiqlər və ya müəyyən köşk (kiosk) rejimi alətləri üçün vacibdir.</string>
+    <string name="help_shell_interceptor_title">Shell Tutucu haqqında</string>
+    <string name="help_shell_interceptor_detail">Shell Tutucu standart shell əmrlərini (am, pm, settings) tutur və onları birbaşa Shizuku server API çağırışlarına çevirir. Bu, hər əmr üçün yeni bir /system/bin/sh prosesinin yaradılmasının yüksək yükünün qarşısını alır, MacroDroid və ya Tasker-də avtomatlaşdırmanı əhəmiyyətli dərəcədə sürətli və batareyaya qənaətcil edir.</string>
     <string name="help_avf_manager_title">AVF Meneceri haqqında</string>
     <string name="help_avf_manager_detail">Android Virtuallaşdırma Çərçivəsi (AVF) Meneceri təcrid olunmuş Linux və ya Microdroid virtual maşınlarını işlətməyə imkan verir. Dəstəklənən avadanlıqlarda (Snapdragon 8 Gen 1+, Tensor G2+) bu, masaüstü Linux mühitlərini və ya təcrid olunmuş təhlükəsiz tapşırıqları işlətmək üçün VirtIO-GPU dəstəyi ilə aparat sürətləndirilməli virtuallaşdırmanı aktivləşdirir.</string>
     <string name="help_storage_proxy_title">Yaddaş Körpüsü haqqında</string>
@@ -383,7 +384,7 @@
     <string name="help_activity_manager_plus_title">Dərin Proses İdarəetməsi haqqında</string>
     <string name="help_activity_manager_plus_detail">Dərin Proses İdarəetməsi serverə standart tətbiq yuxusu və gözləmə rejimi məhdudiyyətlərindən yan keçməyə imkan verir. Tətbiqləri RESTRICTED gözləmə rejiminə keçirə və ya batareyaya aqressiv qənaət alətləri üçün vacib olan həqiqi deepForceStop (bütün xidmətləri və arxa fon tapşırıqlarını dayandırmaq) əməliyyatını icra edə bilər.</string>
     <!-- Plus settings category titles -->
-    <string name="settings_plus_category_framework">Struktur (Framework)</string>
+    <string name="settings_plus_category_framework">Struktur</string>
     <string name="settings_plus_category_performance">Məhsuldarlıq və Proses İdarəetməsi</string>
     <string name="settings_plus_category_files">Fayllar və Virtual Maşınlar</string>
     <string name="settings_plus_category_display">Ekran və Mövzular</string>
@@ -434,7 +435,7 @@
     <string name="settings_on_device_adb_tcp_summary">ADB TCP rejimini (port 5555) birbaşa cihazda aktivləşdirin. Root ilə Shizuku tələb olunur. Wi-Fi olmayan ADB alətləri üçün faydalıdır.</string>
     <string name="settings_force_start_wadb">WADB üçün Wi-Fi yoxlanışından yan keç</string>
     <string name="settings_force_start_wadb_summary">Wi-Fi kəsilsə belə, ADB TCP vasitəsilə Shizuku-nu başlatmağa çalışın. Yerli dövrə (loopback) və ya mobil data ADB üçün faydalıdır.</string>
-    <string name="settings_fake_su">SU Körpüsü (su wrapper)</string>
+    <string name="settings_fake_su">SU Körpüsü</string>
     <string name="settings_fake_su_summary">Fərdi yolları dəstəkləyən köhnə root tətbiqləri üçün Shizuku dəstəkli \'su\' faylı təmin edin.</string>
     <string name="settings_root_integration_hub">Root İnteqrasiya Mərkəzi</string>
     <string name="settings_root_integration_hub_summary">Root tətbiqlərini Shizuku+ imtiyazları ilə işləmək üçün tənzimləyin və idarə edin.</string>
@@ -515,11 +516,11 @@
     <string name="bug_report_dialog_method_2">Əks halda, e-poçt göndərə bilərsiniz.</string>
     <string name="bug_report_dialog_button_email">E-poçt</string>
     <!-- Service Doctor -->
-    <string name="home_service_doctor_title">Xidmət Həkimi (Doctor)</string>
+    <string name="home_service_doctor_title">Xidmət Həkimi</string>
     <string name="home_service_doctor_summary">Shizuku-nu başlatmaqda çətinlik çəkirsiniz? Diaqnostik yoxlama aparmaq üçün toxunun.</string>
     <string name="doctor_dialog_title">Sistem Diaqnostikası</string>
     <string name="doctor_check_battery">Batareya optimallaşdırılması: %1$s</string>
-    <string name="doctor_check_adb">Naqilsiz xətaların kənarlaşdırılması: %1$s</string>
+    <string name="doctor_check_adb">Simsiz sazlama: %1$s</string>
     <string name="doctor_check_root">Root girişi: %1$s</string>
     <string name="doctor_check_secure_settings">Təhlükəsiz Tənzimləmələr: %1$s</string>
     <string name="doctor_check_permission">ADB icazəsi: %1$s</string>
@@ -534,11 +535,11 @@
     <string name="doctor_status_optimized">Optimallaşdırılıb (Xidməti dayandıra bilər)</string>
     <string name="doctor_status_unlocked">Kilid açıldı</string>
     <string name="doctor_status_restricted_bg">Məhdudlaşdırılmış arxa fon icrası</string>
-    <string name="doctor_tip_xiaomi">Xiaomi/HyperOS: Tərtibatçı Seçimlərində "USB xətaların kənarlaşdırılması (Təhlükəsizlik tənzimləmələri)" funksiyasını aktivləşdirin.</string>
+    <string name="doctor_tip_xiaomi">Xiaomi/HyperOS: Tərtibatçı Seçimlərində "USB Sazlaması (Təhlükəsizlik tənzimləmələri)" funksiyasını aktivləşdirin.</string>
     <string name="doctor_tip_oppo_permission">Oppo/Realme/OnePlus: Arxa fon xidmətinin dayandırılmasının qarşısını almaq üçün Tərtibatçı Seçimlərində "İcazələrin Monitorinqi"ni söndürün.</string>
     <string name="doctor_tip_tcl_background">TCL: Tənzimləmələrdə Shizuku+-ın "Avto-başlama" və "Yüksək arxa fon enerji sərfiyyatı" ağ siyahılarına əlavə olunduğundan əmin olun.</string>
     <string name="doctor_tip_battery">Arxa fonda baglanmasının qarşısını almaq üçün Shizuku+ üçün batareya optimallaşdırılmasını söndürün.</string>
-    <string name="doctor_tip_adb">Sistem yenidən başladıqdan sonra Shizuku-nun root olmayan rejimdə başlaması üçün Naqilsiz xətaların kənarlaşdırılması aktiv olmalıdır.</string>
+    <string name="doctor_tip_adb">Sistem yenidən başladıqdan sonra Shizuku-nun root olmayan rejimdə başlaması üçün Simsiz sazlama aktiv olmalıdır.</string>
     <string name="doctor_button_fix">Düzəlt</string>
     <!-- Snackbar -->
     <string name="snackbar_invalid_port">Port 1 və 65535 arasında olmalıdır</string>
@@ -550,7 +551,7 @@
     <string name="toast_shizuku_already_starting">Shizuku artıq arxa fonda başlayır</string>
     <string name="toast_accessibility_tv_only">Bu avtomatlaşdırma TLS dəstəyi olan TV və ya Samsung One UI cihazları üçündür.</string>
     <string name="toast_pairing_timeout">Shizuku cütləşdirmə xidmətinin vaxtı bitdi</string>
-    <string name="toast_adb_ssl_error">Naqilsiz ADB əl sıxması uğursuz oldu (SSL protokol xətası). Xahiş edirik Tərtibatçı Seçimlərində \'ADB Açarlarını Sıfırla\' funksiyasından istifadə edin və yenidən cəhd edin.</string>
+    <string name="toast_adb_ssl_error">Naqilsiz ADB əl sıxması uğursuz oldu (SSL protokol xətası). Xahiş edirik Tərtibatçı Seçimlərində \'ADB Açarlarını Sıfırla'\ funksiyasından istifadə edin və yenidən cəhd edin.</string>
     <string name="adb_error_ssl_title">Bağlantı Xətası</string>
     <string name="adb_error_ssl_message">Naqilsiz ADB əl sıxması uğursuz oldu (SSL protokol xətası). Bu adətən ADB açarları zədələndikdə baş verir. Onları Tərtibatçı Seçimlərində sıfırlamaq istəyirsiniz?</string>
     <string name="adb_error_ssl_button_reset">Tərtibatçı Seçimlərinə Keç</string>
@@ -601,7 +602,7 @@
     <!-- Starter -->
     <string name="starter">Başladıcı</string>
     <string name="starting_root_shell" translatable="false">Starting root shell…</string>
-    <string name="start_with_root_failed">Root icazəsi verilmədiyi və ya bu cihaz root olunmadığı üçün xidmət başladılan bilməz.</string>
+    <string name="start_with_root_failed">Root icazəsi verilmədiyi və ya bu cihaz root olunmadığı üçün xidmət başladıla bilməz.</string>
     <string name="starter_waiting">Xidmət gözlənilir…</string>
     <string name="starter_waiting_description">Qoşulur — dayandırmaq üçün İmtina düyməsinə toxunun.</string>
     <string name="starter_retrying">Qoşulma yenidən cəhd edilir…\n</string>
@@ -624,7 +625,7 @@
     <string name="watchdog_shizuku_crashed_text">Gözətçi xidməti yenidən başlatdı. Gələcəkdə çökmələrin qarşısını almaq üçün potensial həll yolları haqqında öyrənmək üçün toxunun.</string>
     <string name="watchdog_shizuku_crashed_action_turn_off_alerts">Xəbərdarlıqları Söndür</string>
     <!-- Misc -->
-    <string name="dialog_cannot_open_browser_title">Səyahətçini başlatmaq mümkün olmadı</string>
+    <string name="dialog_cannot_open_browser_title">Brauzeri başlatmaq mümkün olmadı</string>
     <string name="toast_copied_to_clipboard">Mübadilə buferinə kopyalandı</string>
     <string name="accessibility_service_description">Bildirişlərin və ya bölünmüş ekranın asanlıqla istifadə edilə bilmədiyi cihazlar (məsələn, TV-lər və Samsung One UI telefonları) üçün cütləşdirmə dəstəyi təmin edir.\n\nShizuku+-a simsiz sazlama cütləşdirmə ekranından cütləşdirmə kodunu çıxarmağa imkan verir. Cütləşdirmə kodu tapıldıqdan sonra özünü söndürəcək.</string>
     <!-- Messages for legacy -->
@@ -649,7 +650,7 @@
     <string name="settings_category_appearance">Xarici görünüş</string>
     <string name="settings_category_advanced">Genişləndirilmiş</string>
     <string name="settings_nav_behavior_summary">Sistem açılanda başlatma, Gözətçi və TCP rejimi</string>
-    <string name="settings_nav_shizuku_plus_summary">Təkmilləşdirilmiş API, shell sürətləndiricisi və daha çoxu</string>
+    <string name="settings_nav_shizuku_plus_summary">Təkmilləşdirilmiş API, shell tutucu və daha çoxu</string>
     <string name="settings_nav_ui_summary">Mövzu, rənglər, dil</string>
     <string name="settings_nav_app_management_summary">Sürüşdürmə və basıb saxlama əməliyyatları</string>
     <string name="settings_nav_home_summary">Görünən kartlar və qısayollar</string>
@@ -810,10 +811,10 @@
     <string name="action_open_github">GitHub</string>
     <!-- Service Doctor auto-fix -->
     <string name="service_doctor_fix_phantom_attempted">Fantom proses məhdudiyyəti söndürüldü. Ehtiyac olarsa xidməti yenidən başladın.</string>
-    <string name="service_doctor_fix_requires_service">Bu düzəlişi avtomatik tətbiq etmək üçün Shizuku işləyir olmalıdır.</string>
+    <string name="service_doctor_fix_requires_service">Bu düzəlişi avtomatik tətbiq etmək üçün Shizuku aktiv olmalıdır.</string>
     <string name="service_doctor_fix_failed">Avto-düzəliş uğursuz oldu: %1$s</string>
     <!-- ADB Pairing -->
-    <string name="adb_foreground_op_denied">Ön plan xidmətini başlatmaq mümkün olmadı — START_FOREGROUND icazəsi imtaz edildi. Xahiş edirik cihazınızın tətbiq icazələrini yoxlayın.</string>
+    <string name="adb_foreground_op_denied">Ön plan xidmətini başlatmaq mümkün olmadı — START_FOREGROUND icazəsi rədd edildi. Xahiş edirik cihazınızın tətbiq icazələrini yoxlayın.</string>
     <!-- Update dialog -->
     <string name="update_no_release_notes">Buraxılış qeydləri mövcud deyil.</string>
     <!-- Accessibility service status -->
@@ -831,8 +832,8 @@
     <string name="settings_binder_firewall">Binder Fayrvolu</string>
     <string name="settings_binder_firewall_summary">Səlahiyyətsiz tətbiqlərdən həssas sistem əməliyyatlarını audit edin və bloklayın</string>
     <string name="settings_binder_logging">AIDL Tranzaksiya Jurnalı</string>
-    <string name="settings_binder_logging_summary">Xətaların kənarlaşdırılması üçün proksilənmiş bütün Binder tranzaksiyalarını sistem jurnalına (Logcat) yazın</string>
-    <string name="settings_shadow_binder">Kölgə Binder (Shadow Binder)</string>
+    <string name="settings_binder_logging_summary">USB sazlaması üçün proksilənmiş bütün Binder tranzaksiyalarını sistem jurnalına yazın</string>
+    <string name="settings_shadow_binder">Kölgə Binder</string>
     <string name="settings_shadow_binder_summary">Cihaz məlumatlarını və ya tətbiq vəziyyətini gizlətmək üçün sistem xidməti çağırışlarını tutun və simulyasiya edin</string>
     <string name="settings_shadow_binder_hidden_packages">Gizli Paketlər</string>
     <string name="settings_shadow_binder_hidden_packages_summary">Başqa tətbiqlərdən gizlədiləcək paket adlarının vergüllə ayrılmış siyahısı</string>
@@ -841,7 +842,7 @@
         <item quantity="other">%d tətbiq seçildi</item>
     </plurals>
     <!-- Companion Mode -->
-    <string name="settings_category_companion">Müşayiətçi Rejimi (Companion)</string>
+    <string name="settings_category_companion">Müşayiətçi Rejimi</string>
     <string name="settings_companion_mode">Müşayiətçi Kartını Göstər</string>
     <string name="settings_companion_mode_summary">Orijinal Shizuku-ya tez keçmək üçün əsas ekranda bir kart göstərin</string>
     <string name="settings_companion_fallback">Sıradan Çıxma Ehtiyatı</string>
@@ -853,6 +854,7 @@
     <string name="home_companion_install">Quraşdır</string>
     <string name="watchdog_open_stock_shizuku">Orijinal Shizuku-nu Aç</string>
     <string name="settings_live_activity">Canlı Fəaliyyət Bildirişləri</string>
+    <string name="settings_live_activity_summary">Gözətçi bildirişində real vaxtlı xidmət fəaliyyətini göstər</string>
     <!-- App picker dialog -->
     <string name="app_management_empty">Tətbiq tapılmadı</string>
     <string name="app_management_search_hint">Tətbiqləri axtarın</string>
@@ -873,8 +875,8 @@
     <string name="root_hub_device_identity_real">Həqiqi: %s</string>
     <string name="root_hub_device_identity_spoofed">Saxtalaşdırılmış: %s</string>
     <!-- Home Automation dialog labels -->
-    <string name="home_automation_dialog_label_action">Əməl (Action)</string>
-    <string name="home_automation_dialog_label_class">Sinif (Class)</string>
+    <string name="home_automation_dialog_label_action">Fəaliyyət</string>
+    <string name="home_automation_dialog_label_class">Sinif</string>
     <string name="home_automation_dialog_label_package">Paket</string>
     <string name="home_automation_dialog_label_target">Hədəf</string>
     <!-- Misc -->

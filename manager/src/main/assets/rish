@@ -7,14 +7,25 @@ if [ ! -f "$DEX" ]; then
   exit 1
 fi
 
-if [ $(getprop ro.build.version.sdk) -ge 34 ]; then
+if [ $(getprop ro.build.version.sdk 2>/dev/null || echo 0) -ge 34 ]; then
   if [ -w "$DEX" ]; then
     chmod 444 "$DEX" 2>/dev/null || chmod a-w "$DEX" 2>/dev/null
   fi
   if [ -w "$DEX" ]; then
-    echo "Cannot remove write permission of $DEX."
-    echo "Copy the file to the terminal app's private directory (/data/data/<package>) so write permissions can be removed."
-    exit 1
+    # File is on a filesystem where chmod a-w is ineffective (e.g. FUSE/sdcard).
+    # Transparently cache a read-only copy in TMPDIR or /data/local/tmp.
+    _CACHED_DEX="${TMPDIR:-/data/local/tmp}/.rish_shizuku_$(id -u 2>/dev/null || echo 0).dex"
+    if [ ! -f "$_CACHED_DEX" ] || [ "$DEX" -nt "$_CACHED_DEX" ]; then
+      cp -f "$DEX" "$_CACHED_DEX" 2>/dev/null
+      chmod 400 "$_CACHED_DEX" 2>/dev/null || chmod 444 "$_CACHED_DEX" 2>/dev/null || chmod a-w "$_CACHED_DEX" 2>/dev/null
+    fi
+    if [ -f "$_CACHED_DEX" ] && [ ! -w "$_CACHED_DEX" ]; then
+      DEX="$_CACHED_DEX"
+    else
+      echo "Cannot remove write permission of $DEX."
+      echo "Copy the file to the terminal app's private directory (/data/data/<package>) so write permissions can be removed."
+      exit 1
+    fi
   fi
 fi
 
