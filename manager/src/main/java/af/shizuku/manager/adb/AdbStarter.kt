@@ -1,7 +1,9 @@
 package af.shizuku.manager.adb
+
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.database.ActivityLogManager
+import af.shizuku.manager.receiver.ShizukuReceiverStarter
 import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.SettingsPage
@@ -18,21 +20,23 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.sentry.Sentry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.EOFException
 import java.net.ConnectException
 import java.net.SocketException
 import java.net.SocketTimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.net.ssl.SSLException
 
 object AdbStarter {
     private const val TAG = "AdbStarter"
 
-    // True while a connection is holding its socket open waiting for the user to tap
-    // "Allow USB debugging?". Read by AdbStartWorker.enqueue() to switch from REPLACE
-    // to KEEP so the waiting worker is not cancelled and a second dialog is not queued.
     @Volatile var keyOfferInFlight: Boolean = false
 
     private fun Context.getActivity(): Activity? {
@@ -52,24 +56,47 @@ object AdbStarter {
             this is ConnectException ||
             this is SSLException ||
             this is AdbKeyException ||
+            this is AdbAuthPendingException ||
+            this is AdbAuthTimeoutException ||
             (includeIllegalState && this is IllegalStateException)
 
+    /**
+     * @param attempt the background start this call belongs to (see [AdbAuthWait.scheduleAttempt]);
+     * its authorisation prompt is posted as that attempt's. Ignored when [log] is given: an
+     * interactive start reports through its log and posts nothing.
+     */
     suspend fun startAdb(
         context: Context,
         port: Int,
         host: String = "127.0.0.1",
         log: ((String) -> Unit)? = null,
         activityLogMessage: String? = null,
+        attempt: Long = AdbAuthWait.NO_ATTEMPT,
     ) {
         if (port !in 1..65535) {
             Timber.tag(TAG).w("startAdb called with invalid port $port — skipping")
             return
         }
 
+        // Another start is holding adbd's authorisation dialog open; a second connection would
+        // raise a second dialog. Throw rather than return: a silent return looked like success,
+        // and the caller's next step (a 20 s waitForBinder) then timed out while the pending
+        // start was still legitimately waiting its 300 s.
+        if (AdbAuthWait.isWaiting()) {
+            Timber.tag(TAG).i("startAdb stood down: waiting for the adbd authorisation dialog")
+            log?.invoke(context.getString(R.string.wadb_notification_awaiting_auth) + "\n")
+            throw AdbAuthPendingException("another start is waiting for the adbd authorisation dialog to be answered")
+        }
+
+        var stoodDown = false
+
         suspend fun AdbClient.runCommand(cmd: String) {
             command(cmd) { log?.invoke(String(it)) }
         }
 
+        // Counted from here to the end of the starter command: the authorisation wait alone ends
+        // before the server is deployed, and an already-authorised key never waits at all.
+        AdbAuthWait.starts.begin()
         try {
             ShizukuStateMachine.set(ShizukuStateMachine.State.STARTING)
             Timber.tag(TAG).i("startAdb: initiating connection on %s:%d", host, port)
@@ -85,6 +112,16 @@ object AdbStarter {
                                 throw AdbKeyException(it)
                             }
                         }
+
+                // The background worker owns (and later clears) the ongoing notification; an
+                // interactive start reports through its log instead and must not leave one behind.
+                val onPending = {
+                    if (log != null) {
+                        log.invoke(context.getString(R.string.wadb_notification_awaiting_auth) + "\n")
+                    } else {
+                        ShizukuReceiverStarter.postAuthPrompt(context, attempt)
+                    }
+                }
 
                 var activePort = port
                 var activeHost = host
@@ -102,7 +139,7 @@ object AdbStarter {
                         Timber.tag(TAG).d("Switching ADB from port %d to TCP port %d", activePort, tcpPort)
                         log?.invoke("Connecting on port $activePort...")
 
-                        connectAdaptive(activeHost, activePort, key) { client, connectedHost ->
+                        connectAdaptive(activeHost, activePort, key, onPending) { client, connectedHost ->
                             log?.invoke("Successfully connected on port $activePort ($connectedHost)...")
                             log?.invoke("\nRestarting in TCP mode port: $tcpPort")
 
@@ -118,7 +155,7 @@ object AdbStarter {
                 Timber.tag(TAG).i("Connecting to ADB daemon at %s:%d", activeHost, activePort)
                 log?.invoke("Connecting on port $activePort...")
 
-                connectAdaptive(activeHost, activePort, key) { client, connectedHost ->
+                connectAdaptive(activeHost, activePort, key, onPending) { client, connectedHost ->
                     Timber.tag(TAG).i("Connected to ADB at %s:%d; deploying starter command", connectedHost, activePort)
                     log?.invoke("Successfully connected on port $activePort...\n")
                     client.runCommand("shell:${Starter.internalCommand}")
@@ -129,6 +166,7 @@ object AdbStarter {
                     ShizukuSettings.setLastPort(activePort)
                     af.shizuku.manager.utils.UserStopFlag
                         .clear()
+                    AdbAuthWait.clearUnanswered()
                     val msg = activityLogMessage ?: "Service started via ADB on port $activePort"
                     ActivityLogManager.log("Shizuku", context.packageName, msg)
                     ShizukuStateMachine.update()
@@ -136,6 +174,7 @@ object AdbStarter {
                 }
             }
         } catch (e: Exception) {
+            if (e is AdbAuthPendingException) stoodDown = true
             Timber.tag(TAG).e(e, "startAdb failed on port %d: %s", port, e.message)
             if (e !is CancellationException) {
                 runCatching {
@@ -165,35 +204,40 @@ object AdbStarter {
             }
             throw e
         } finally {
-            if (ShizukuSettings.getAutoDisableUsbDebugging() && context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
+            AdbAuthWait.starts.end()
+            if (!stoodDown && ShizukuSettings.getAutoDisableUsbDebugging() && context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
                 Settings.Global.putInt(context.contentResolver, "adb_wifi_enabled", 0)
             }
         }
     }
 
+    /** @return false only if adbd's authorisation dialog was raised and not accepted. */
     suspend fun stopTcp(
         context: Context,
         port: Int,
-    ) {
-        if (port !in 1..65535) return
-        runCatching {
-            val cr = context.contentResolver
-            if (context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
-                Settings.Global.putInt(cr, Settings.Global.ADB_ENABLED, 1)
-                Settings.Global.putLong(cr, "adb_allowed_connection_time", 0L)
-            }
+    ): Boolean {
+        if (port !in 1..65535 || AdbAuthWait.isWaiting()) return true
+        val result =
+            runCatching {
+                val cr = context.contentResolver
+                if (context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
+                    Settings.Global.putInt(cr, Settings.Global.ADB_ENABLED, 1)
+                    Settings.Global.putLong(cr, "adb_allowed_connection_time", 0L)
+                }
 
-            if (!EnvironmentUtils.isAdbEnabled()) throw IllegalStateException("ADB is not enabled")
+                if (!EnvironmentUtils.isAdbEnabled()) throw IllegalStateException("ADB is not enabled")
 
-            ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
-            val key = AdbKey(PreferenceAdbKeyStore(ShizukuSettings.getPreferences()), "shizuku+")
-            withContext(Dispatchers.IO) {
-                connectAdaptive("127.0.0.1", port, key) { client, _ ->
-                    client.command("usb:")
+                ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
+                val key = AdbKey(PreferenceAdbKeyStore(ShizukuSettings.getPreferences()), "shizuku+")
+                withContext(Dispatchers.IO) {
+                    connectAdaptive("127.0.0.1", port, key) { client, _ ->
+                        client.command("usb:")
+                    }
                 }
             }
-        }.onFailure {
-            if (it !is CancellationException && !it.isExpectedAdbError(includeIllegalState = true)) {
+        result.onFailure {
+            if (it is CancellationException) throw it
+            if (!it.isExpectedAdbError(includeIllegalState = true)) {
                 Sentry.captureException(it)
             }
             if (EnvironmentUtils.getAdbTcpPort() > 0) {
@@ -210,6 +254,7 @@ object AdbStarter {
                 }
             }
         }
+        return result.exceptionOrNull() !is AdbAuthTimeoutException
     }
 
     private fun getCandidateHosts(preferredHost: String): List<String> =
@@ -219,45 +264,64 @@ object AdbStarter {
         preferredHost: String,
         port: Int,
         key: AdbKey,
+        onPending: (() -> Unit)? = null,
         action: suspend (client: AdbClient, connectedHost: String) -> Unit,
-    ) {
+    ) = coroutineScope {
         val candidateHosts = getCandidateHosts(preferredHost)
         var delayTime = 400L
         val maxAttempts = 8
         var lastException: Exception? = null
 
-        for (attempt in 1..maxAttempts) {
-            if (attempt > 1) {
-                delay(delayTime)
-                delayTime = (delayTime * 1.4).toLong().coerceAtMost(2500L)
-            }
-
-            for (targetHost in candidateHosts) {
-                val client = AdbClient(targetHost, port, key)
+        val finished = AtomicBoolean(false)
+        var currentClient: AdbClient? = null
+        val watcher =
+            launch {
                 try {
-                    Timber.tag(TAG).d("Connecting to ADB attempt %d/%d (host=%s, port=%d)", attempt, maxAttempts, targetHost, port)
-                    client.connect(
-                        onKeyOffered = { keyOfferInFlight = true },
-                        onKeyOfferDone = { keyOfferInFlight = false },
-                    )
-                    Timber.tag(TAG).i("Connected to ADB at %s:%d on attempt %d", targetHost, port, attempt)
-                    client.use {
-                        action(it, targetHost)
-                    }
-                    return
-                } catch (e: Exception) {
-                    client.close()
-                    lastException = e
-                    if (e is CancellationException) throw e
-                    if (e is ConnectException || e is java.net.NoRouteToHostException) {
-                        Timber.tag(TAG).d("Host %s refused port %d, checking alternate interface...", targetHost, port)
-                        continue
-                    } else {
-                        break
+                    awaitCancellation()
+                } finally {
+                    if (!finished.get()) {
+                        currentClient?.close()
                     }
                 }
             }
+
+        try {
+            for (attempt in 1..maxAttempts) {
+                if (attempt > 1) {
+                    delay(delayTime)
+                    delayTime = (delayTime * 1.4).toLong().coerceAtMost(2500L)
+                }
+
+                for (targetHost in candidateHosts) {
+                    val client = AdbClient(targetHost, port, key, onPending)
+                    currentClient = client
+                    try {
+                        Timber.tag(TAG).d("Connecting to ADB attempt %d/%d (host=%s, port=%d)", attempt, maxAttempts, targetHost, port)
+                        client.connect()
+                        Timber.tag(TAG).i("Connected to ADB at %s:%d on attempt %d", targetHost, port, attempt)
+                        client.use {
+                            action(it, targetHost)
+                        }
+                        return@coroutineScope
+                    } catch (e: Exception) {
+                        ensureActive()
+                        client.close()
+                        lastException = e
+                        if (e is CancellationException) throw e
+                        if (e is AdbAuthTimeoutException || e is AdbAuthPendingException) throw e
+                        if (e is ConnectException || e is java.net.NoRouteToHostException) {
+                            Timber.tag(TAG).d("Host %s refused port %d, checking alternate interface...", targetHost, port)
+                            continue
+                        } else {
+                            break
+                        }
+                    }
+                }
+            }
+            throw lastException ?: ConnectException("Could not connect to ADB daemon on port $port across candidate hosts $candidateHosts")
+        } finally {
+            finished.set(true)
+            watcher.cancel()
         }
-        throw lastException ?: ConnectException("Could not connect to ADB daemon on port $port across candidate hosts $candidateHosts")
     }
 }

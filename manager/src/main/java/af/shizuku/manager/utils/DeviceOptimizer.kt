@@ -208,6 +208,7 @@ object DeviceOptimizer {
         }
         return null
     }
+
     suspend fun applyFixes(context: Context): Boolean =
         withContext(Dispatchers.IO) {
             if (!Shizuku.pingBinder() && !EnvironmentUtils.isRooted()) {

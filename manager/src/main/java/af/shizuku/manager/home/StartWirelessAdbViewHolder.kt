@@ -1,5 +1,6 @@
 package af.shizuku.manager.home
 
+import af.shizuku.manager.Helps
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.adb.AdbPairingTutorialActivity
@@ -11,6 +12,7 @@ import af.shizuku.manager.ktx.toHtml
 import af.shizuku.manager.model.ServiceStatus
 import af.shizuku.manager.receiver.NotifCancelReceiver
 import af.shizuku.manager.starter.StarterActivity
+import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.IconStyleHelper
 import af.shizuku.manager.utils.MotionUtils.applySpringTouch
@@ -144,18 +146,19 @@ class StartWirelessAdbViewHolder(
                 if (validPort <= 0 && !EnvironmentUtils.isTlsSupported()) {
                     WadbNotEnabledDialogFragment().show(context.asActivity<FragmentActivity>().supportFragmentManager)
                 } else if (validPort <= 0) {
-                    AdbDialogFragment().show(context.asActivity<FragmentActivity>().supportFragmentManager)
+                    AdbDialogFragment.forUserGesture().show(context.asActivity<FragmentActivity>().supportFragmentManager)
                 } else if (sysPropPort > 0 && !tcpMode && activeLoopbackPort <= 0) {
                     // A TCP-mode connection is active but the user wants TLS. Stop TCP first, then
                     // open the dialog so mDNS can rediscover the (different) TLS port.
                     AdbStarter.stopTcp(context, sysPropPort)
-                    AdbDialogFragment().show(context.asActivity<FragmentActivity>().supportFragmentManager)
+                    AdbDialogFragment.forUserGesture().show(context.asActivity<FragmentActivity>().supportFragmentManager)
                 } else if (livePort > 0) {
                     // Live port confirmed: loopback responsive, TCP active, or TLS already resolved by mDNS.
                     // Skip the intermediate dialog — go straight to the connect flow.
                     val intent =
                         Intent(context, StarterActivity::class.java).apply {
                             putExtra(StarterActivity.EXTRA_PORT, livePort)
+                            putExtra(StarterActivity.EXTRA_USER_GESTURE, true)
                         }
                     val activity = context.asActivity<android.app.Activity>()
                     if (activity != null) {
@@ -168,11 +171,12 @@ class StartWirelessAdbViewHolder(
                     val intent =
                         Intent(context, StarterActivity::class.java).apply {
                             putExtra(StarterActivity.EXTRA_PORT, lastPort)
+                            putExtra(StarterActivity.EXTRA_USER_GESTURE, true)
                         }
                     context.startActivity(intent)
                 } else {
                     // Only a stale cached TLS port — open dialog so mDNS can rediscover the current port.
-                    AdbDialogFragment().show(context.asActivity<FragmentActivity>().supportFragmentManager)
+                    AdbDialogFragment.forUserGesture().show(context.asActivity<FragmentActivity>().supportFragmentManager)
                 }
             }
         }
@@ -190,10 +194,7 @@ class StartWirelessAdbViewHolder(
 
         if (EnvironmentUtils.isTlsSupported()) {
             binding.button3.setOnClickListener { v: View ->
-                af.shizuku.manager.knowledgebase.KnowledgebaseHelper.show(
-                    v.context,
-                    af.shizuku.manager.knowledgebase.KnowledgebaseRegistry.TOPIC_WIRELESS_ADB,
-                )
+                CustomTabsHelper.launchUrlOrCopy(v.context, Helps.ADB_ANDROID11.get())
             }
             binding.button2.setOnClickListener { v: View ->
                 onPairClicked(v.context)
@@ -221,14 +222,12 @@ class StartWirelessAdbViewHolder(
         if (EnvironmentUtils.isTlsSupported()) {
             if (runningViaAdb) {
                 binding.button1.setText(R.string.home_wireless_adb_button_reconnect)
-                binding.button1.contentDescription = context.getString(R.string.home_wireless_adb_button_reconnect)
                 binding.text1.text =
                     context
                         .getString(R.string.home_wireless_adb_description_active)
                         .toHtml(HtmlCompat.FROM_HTML_OPTION_TRIM_WHITESPACE)
             } else {
                 binding.button1.setText(R.string.home_root_button_start)
-                binding.button1.contentDescription = context.getString(R.string.home_root_button_start)
                 binding.text1.text =
                     context
                         .getString(R.string.home_wireless_adb_description)

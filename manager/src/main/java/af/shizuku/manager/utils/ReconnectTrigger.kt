@@ -87,7 +87,7 @@ object ReconnectTrigger {
             af.shizuku.manager.database.ActivityLogManager
                 .log("Shizuku", context.packageName, "Connection: Wi-Fi available, retrying start")
         }
-        runCatching { ShizukuReceiverStarter.start(context, automatic = true) }
+        runCatching { ShizukuReceiverStarter.start(context, forceStart = false) }
             .onFailure { Timber.tag(TAG).w(it, "Reconnect start failed") }
     }
 }

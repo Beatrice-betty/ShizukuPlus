@@ -10,8 +10,8 @@ import af.shizuku.manager.service.ShizukuLiveService
 import af.shizuku.manager.service.WatchdogService
 import af.shizuku.manager.utils.DeviceOptimizer
 import af.shizuku.manager.utils.EnvironmentUtils
-import af.shizuku.manager.utils.NetworkTrust
 import af.shizuku.manager.utils.LiveActivityNotificationManager
+import af.shizuku.manager.utils.NetworkTrust
 import af.shizuku.manager.utils.ShizukuStateMachine
 import af.shizuku.manager.utils.TcpNetworkGuard
 import android.Manifest
@@ -514,7 +514,10 @@ class BehaviorSettingsFragment :
         }
     }
 
-    private fun syncUsbPhoneSwitchConfig(context: android.content.Context, enabled: Boolean) {
+    private fun syncUsbPhoneSwitchConfig(
+        context: android.content.Context,
+        enabled: Boolean,
+    ) {
         try {
             val docsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOCUMENTS)
             if (docsDir != null && (docsDir.exists() || docsDir.mkdirs())) {

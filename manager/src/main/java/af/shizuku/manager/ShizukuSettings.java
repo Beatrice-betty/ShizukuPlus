@@ -425,6 +425,12 @@ public class ShizukuSettings {
         return sPreferences;
     }
 
+    /** Tests only: replaces the settings store (the one-prompt scenario harness's fake prefs). */
+    @androidx.annotation.VisibleForTesting
+    public static void setPreferencesForTesting(SharedPreferences preferences) {
+        sPreferences = preferences;
+    }
+
     @NonNull
     private static Context getSettingsStorageContext(@NonNull Context context) {
         Context storageContext;
