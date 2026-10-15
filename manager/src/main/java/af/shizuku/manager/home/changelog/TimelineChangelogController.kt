@@ -112,7 +112,9 @@ class TimelineChangelogController(
                     setText(kind.label)
                     isCheckable = true
                     isChecked = kind in selectedKinds
-                    chipIcon = ctx.getDrawable(kind.icon)
+                    chipIcon =
+                        androidx.core.content.ContextCompat
+                            .getDrawable(ctx, kind.icon)
                     isChipIconVisible = true
                     setOnClickListener {
                         HapticUtils.segmentTick(this)

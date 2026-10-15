@@ -59,9 +59,15 @@ class BehaviorSettingsFragment :
     private val stateListener: (ShizukuStateMachine.State) -> Unit = {
         if (ShizukuStateMachine.isRunning()) {
             tcpModePreference.icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
-                ?: tint(requireContext().getDrawable(R.drawable.ic_wadb_24))
+                ?: tint(
+                    androidx.core.content.ContextCompat
+                        .getDrawable(requireContext(), R.drawable.ic_wadb_24),
+                )
             tcpPortPreference.icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
-                ?: tint(requireContext().getDrawable(R.drawable.ic_lan_24))
+                ?: tint(
+                    androidx.core.content.ContextCompat
+                        .getDrawable(requireContext(), R.drawable.ic_lan_24),
+                )
         }
     }
 
@@ -170,7 +176,10 @@ class BehaviorSettingsFragment :
                 tcpModeAvailable = true
                 setCustomSummary(context.getString(R.string.settings_tcp_mode_summary))
                 icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
-                    ?: tint(context.getDrawable(R.drawable.ic_wadb_24))
+                    ?: tint(
+                        androidx.core.content.ContextCompat
+                            .getDrawable(context, R.drawable.ic_wadb_24),
+                    )
                 setOnPreferenceChangeListener { _, newValue ->
                     if (newValue is Boolean) {
                         val applyChange: () -> Unit = {
@@ -179,7 +188,10 @@ class BehaviorSettingsFragment :
                             isEnabled = true
                             setCustomSummary(context.getString(R.string.settings_tcp_mode_summary))
                             icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
-                                ?: tint(context.getDrawable(R.drawable.ic_wadb_24))
+                                ?: tint(
+                                    androidx.core.content.ContextCompat
+                                        .getDrawable(context, R.drawable.ic_wadb_24),
+                                )
                             syncTcpPortVisibility()
                         }
                         if (!newValue && !ShizukuStateMachine.isRunning() && needsRestart(KEY_TCP_MODE, newValue)) {
@@ -207,7 +219,10 @@ class BehaviorSettingsFragment :
         tcpPortPreference.apply {
             syncTcpPortVisibility()
             icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
-                ?: tint(context.getDrawable(R.drawable.ic_lan_24))
+                ?: tint(
+                    androidx.core.content.ContextCompat
+                        .getDrawable(context, R.drawable.ic_lan_24),
+                )
             setOnBindEditTextListener { editText ->
                 editText.hint = context.getString(R.string.settings_tcp_port_hint)
                 editText.inputType = InputType.TYPE_CLASS_NUMBER

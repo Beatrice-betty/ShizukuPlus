@@ -443,9 +443,19 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
     ): Drawable? {
         if (!needsRestart(setting)) {
             // Never return null for a setting with a static icon: assigning null wipes it.
-            return if (fallback != 0) tint(requireContext().getDrawable(fallback)) else null
+            return if (fallback != 0) {
+                tint(
+                    androidx.core.content.ContextCompat
+                        .getDrawable(requireContext(), fallback),
+                )
+            } else {
+                null
+            }
         }
-        return tint(requireContext().getDrawable(R.drawable.ic_server_restart))
+        return tint(
+            androidx.core.content.ContextCompat
+                .getDrawable(requireContext(), R.drawable.ic_server_restart),
+        )
     }
 
     protected fun tint(icon: Drawable?): Drawable? {
