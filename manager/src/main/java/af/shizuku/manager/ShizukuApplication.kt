@@ -67,7 +67,7 @@ class ShizukuApplication :
         private val sentrySessionEventCount =
             java.util.concurrent.atomic
                 .AtomicInteger(0)
-        private const val MAX_SENTRY_EVENTS_PER_SESSION = 100
+        private const val MAX_SENTRY_EVENTS_PER_SESSION = 5
     }
 
     // WorkManager's own internal background thread (e.g. ForceStopRunnable's Room queries) can
@@ -113,6 +113,9 @@ class ShizukuApplication :
             Timber.w("Sentry DSN is empty, skipping initialization")
             return
         }
+
+        af.shizuku.manager.utils.SentryEventDeduper
+            .resetIfWindowExpired()
 
         if (ShizukuSettings.isSentryLimitReached()) {
             Timber.i("Sentry quota reached, skipping initialization")
@@ -187,6 +190,22 @@ class ShizukuApplication :
                     // 0. Session event cap — stop a crash/error loop from draining the quota. The
                     // first events already capture the bug; further identical ones add cost, not signal.
                     if (sentrySessionEventCount.incrementAndGet() > MAX_SENTRY_EVENTS_PER_SESSION) {
+                        return@setBeforeSend null
+                    }
+
+                    // 0a. Daily persistent event cap — hard stop at device daily limit (max 10/day)
+                    if (!af.shizuku.manager.utils.SentryEventDeduper
+                            .checkDailyLimitAndIncrement()
+                    ) {
+                        return@setBeforeSend null
+                    }
+
+                    // 0b. Crash deduplication — drop repeated occurrences of identical errors within 15 mins
+                    val eventTag = event.exceptions?.firstOrNull()?.type ?: event.throwable?.javaClass?.simpleName ?: "Error"
+                    val eventMsg = event.exceptions?.firstOrNull()?.value ?: event.message?.formatted ?: event.throwable?.message ?: ""
+                    if (!af.shizuku.manager.utils.SentryEventDeduper
+                            .shouldSend(eventTag, eventMsg)
+                    ) {
                         return@setBeforeSend null
                     }
 
