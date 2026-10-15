@@ -172,6 +172,13 @@
             android:icon="@drawable/ic_server_restart"
             android:defaultValue="false" />
 
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="usb_phone_switch_notify"
+            android:title="@string/settings_usb_phone_switch_notify"
+            android:summary="@string/settings_usb_phone_switch_notify_summary"
+            android:icon="@drawable/ic_adb_24"
+            android:defaultValue="true" />
+
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
 </PreferenceScreen>

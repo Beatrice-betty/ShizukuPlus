@@ -486,12 +486,28 @@ class BehaviorSettingsFragment :
         key: String?,
     ) {
         if (key == KEY_WATCHDOG) watchdogPreference.isChecked = ShizukuSettings.isWatchdogRunning()
+        if (key == KEY_USB_PHONE_SWITCH_NOTIFY) {
+            context?.let { ctx ->
+                syncUsbPhoneSwitchConfig(ctx, ShizukuSettings.isUsbPhoneSwitchNotifyEnabled())
+            }
+        }
         if (key == NetworkTrust.KEY_MODE || key == NetworkTrust.KEY_AUTO_CLOSE) {
             context?.let {
                 TcpNetworkGuard.sync(it)
                 TcpNetworkGuard.enforce(it)
             }
             syncProtectionVisibility()
+        }
+    }
+
+    private fun syncUsbPhoneSwitchConfig(context: android.content.Context, enabled: Boolean) {
+        try {
+            val docsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOCUMENTS)
+            if (docsDir != null && (docsDir.exists() || docsDir.mkdirs())) {
+                val file = java.io.File(docsDir, "shizuku_usb_switch.json")
+                file.writeText("{\"enabled\": $enabled}")
+            }
+        } catch (_: Throwable) {
         }
     }
 

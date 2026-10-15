@@ -644,6 +644,8 @@
     <string name="settings_on_device_adb_tcp_summary">Enable ADB TCP mode (port 5555) directly on the device. Requires Shizuku with root. Useful for ADB tools without WiFi.</string>
     <string name="settings_force_start_wadb">Bypass Wi-Fi check for WADB</string>
     <string name="settings_force_start_wadb_summary">Attempt to start Shizuku via ADB TCP even if Wi-Fi is disconnected. Useful for local loopback or mobile data ADB.</string>
+    <string name="settings_usb_phone_switch_notify">USB connection &amp; switch notification</string>
+    <string name="settings_usb_phone_switch_notify_summary">Pin a notification with quick settings and tool shortcuts when connected to a phone or USB device</string>
     <string name="settings_fake_su">Root App Translator (SU Bridge)</string>
     <string name="settings_fake_su_summary">Allow standard root-only apps (like NeoBackup, AdAway, and Swift Backup) to work through Shizuku+ without permanently rooting your phone.</string>
     <string name="settings_root_integration_hub">Root Compatibility Hub</string>

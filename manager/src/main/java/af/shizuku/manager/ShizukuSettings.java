@@ -104,6 +104,7 @@ public class ShizukuSettings {
         public static final String KEY_CUSTOM_APP_LABEL = "custom_app_label";
         public static final String KEY_ON_DEVICE_ADB_TCP = "on_device_adb_tcp";
         public static final String KEY_FORCE_START_WADB = "force_start_wadb";
+        public static final String KEY_USB_PHONE_SWITCH_NOTIFY = "usb_phone_switch_notify";
         public static final String KEY_SU_BRIDGE_ENABLED = "su_bridge_enabled";
         public static final String KEY_ROOT_MAGISK_MOCKING_ENABLED = "root_magisk_mocking_enabled";
         public static final String KEY_ROOT_AUTO_GRANT_ENABLED = "root_auto_grant_enabled";
@@ -475,6 +476,18 @@ public class ShizukuSettings {
 
     public static boolean getAutoDisableUsbDebugging() {
         return getPreferences().getBoolean(Keys.KEY_AUTO_DISABLE_USB_DEBUGGING, false);
+    }
+
+    public static boolean isUsbPhoneSwitchNotifyEnabled() {
+        SharedPreferences p = getPreferences();
+        return p == null || p.getBoolean(Keys.KEY_USB_PHONE_SWITCH_NOTIFY, true);
+    }
+
+    public static void setUsbPhoneSwitchNotifyEnabled(boolean enabled) {
+        SharedPreferences p = getPreferences();
+        if (p != null) {
+            p.edit().putBoolean(Keys.KEY_USB_PHONE_SWITCH_NOTIFY, enabled).apply();
+        }
     }
 
     public static String getAuthToken() {
