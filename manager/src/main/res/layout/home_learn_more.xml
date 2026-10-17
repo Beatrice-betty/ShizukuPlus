@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Card.Small">
 
     <ImageView
@@ -74,9 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@string/sentry_offline_report_github"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                app:chipIconResource="@drawable/ic_outline_info_24" />
+                android:text="@string/sentry_offline_report_github" />
 
         </LinearLayout>
 
