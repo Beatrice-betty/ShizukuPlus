@@ -51,37 +51,14 @@
             android:icon="@drawable/ic_palette_24"
             app:badgeType="oneui" />
 
-        <af.shizuku.manager.settings.PlusFeaturePreference
-            android:key="floating_nav_enabled"
-            android:title="@string/settings_floating_nav"
-            android:summary="@string/settings_floating_nav_summary"
-            android:icon="@drawable/ic_nav_apps_24"
-            android:defaultValue="false"
-            app:infoTitle="@string/settings_floating_nav"
-            app:infoDetail="@string/settings_floating_nav_info"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.PlusFeaturePreference
-            android:key="one_handed_mode"
-            android:title="@string/settings_one_handed_mode"
-            android:summary="@string/settings_one_handed_mode_summary"
-            android:defaultValue="false"
-            android:icon="@drawable/ic_smartphone_24"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="bold_typography"
-            android:title="@string/settings_bold_typography"
-            android:summary="@string/settings_bold_typography_summary"
-            android:defaultValue="false"
-            android:icon="@drawable/ic_format_bold_24" />
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="expanded_headers_enabled"
-            android:title="@string/settings_expanded_headers"
-            android:summary="@string/settings_expanded_headers_summary"
-            android:defaultValue="false"
-            android:icon="@drawable/ic_outline_expand_more_24" />
+        <rikka.preference.SimpleMenuPreference
+            android:key="icon_color_mode"
+            android:title="@string/settings_icon_color_mode"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="uniform"
+            android:entries="@array/icon_color_modes"
+            android:entryValues="@array/icon_color_modes_value"
+            android:icon="@drawable/ic_palette_24" />
 
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
@@ -89,7 +66,7 @@
         android:key="category_shape_style"
         android:title="@string/settings_personalization_category_shape_style"
         android:icon="@drawable/ic_window_24"
-        android:defaultValue="true">
+        android:defaultValue="false">
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="rounded_edges_enabled"
@@ -116,15 +93,6 @@
             android:icon="@drawable/ic_settings_suggest_24" />
 
         <rikka.preference.SimpleMenuPreference
-            android:key="changelog_style"
-            android:title="@string/settings_changelog_style"
-            app:useSimpleSummaryProvider="true"
-            android:defaultValue="timeline"
-            android:entries="@array/changelog_styles"
-            android:entryValues="@array/changelog_styles_value"
-            android:icon="@drawable/ic_article_24" />
-
-        <rikka.preference.SimpleMenuPreference
             android:key="icon_style"
             android:title="@string/settings_icon_style"
             app:useSimpleSummaryProvider="true"
@@ -132,15 +100,6 @@
             android:entries="@array/icon_styles"
             android:entryValues="@array/icon_styles_value"
             android:icon="@drawable/ic_settings_suggest_24" />
-
-        <rikka.preference.SimpleMenuPreference
-            android:key="icon_color_mode"
-            android:title="@string/settings_icon_color_mode"
-            app:useSimpleSummaryProvider="true"
-            android:defaultValue="uniform"
-            android:entries="@array/icon_color_modes"
-            android:entryValues="@array/icon_color_modes_value"
-            android:icon="@drawable/ic_palette_24" />
 
         <rikka.preference.SimpleMenuPreference
             android:key="corner_rounding_override"
@@ -175,7 +134,7 @@
         android:key="category_motion_display"
         android:title="@string/settings_personalization_category_motion_display"
         android:icon="@drawable/ic_outline_play_arrow_24"
-        android:defaultValue="true">
+        android:defaultValue="false">
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="follow_system_animations"
@@ -229,6 +188,22 @@
             android:defaultValue="false"
             android:icon="@drawable/ic_palette_24" />
 
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="bold_typography"
+            android:title="@string/settings_bold_typography"
+            android:summary="@string/settings_bold_typography_summary"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_format_bold_24" />
+
+        <rikka.preference.SimpleMenuPreference
+            android:key="changelog_style"
+            android:title="@string/settings_changelog_style"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="timeline"
+            android:entries="@array/changelog_styles"
+            android:entryValues="@array/changelog_styles_value"
+            android:icon="@drawable/ic_article_24" />
+
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
@@ -236,6 +211,31 @@
         android:title="@string/settings_personalization_category_home_screen"
         android:icon="@drawable/ic_smartphone_24"
         android:defaultValue="true">
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="floating_nav_enabled"
+            android:title="@string/settings_floating_nav"
+            android:summary="@string/settings_floating_nav_summary"
+            android:icon="@drawable/ic_nav_apps_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/settings_floating_nav"
+            app:infoDetail="@string/settings_floating_nav_info"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.PlusFeaturePreference
+            android:key="one_handed_mode"
+            android:title="@string/settings_one_handed_mode"
+            android:summary="@string/settings_one_handed_mode_summary"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_smartphone_24"
+            app:badgeType="experimental" />
+
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="expanded_headers_enabled"
+            android:title="@string/settings_expanded_headers"
+            android:summary="@string/settings_expanded_headers_summary"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_outline_expand_more_24" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="show_activity_log_home"

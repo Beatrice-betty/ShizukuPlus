@@ -171,6 +171,9 @@ public class ShizukuSettings {
         // Management cache (Shizuku+ additions)
         public static final String KEY_LAST_GRANTED_APP_COUNT = "last_granted_app_count";
         public static final String KEY_SHOW_ADVANCED_SETTINGS = "show_advanced_settings";
+        public static final String KEY_FLOATING_NAV_BAR_ENABLED = "floating_nav_enabled";
+        public static final String KEY_HIDE_LAUNCHER_ICON = "hide_launcher_icon";
+        public static final String KEY_DEV_OPTIONS_UNLOCKED = "dev_options_unlocked";
 
         // Migration (Shizuku+ additions)
         public static final String KEY_MIGRATION_OFFERED = "migration_offered";
@@ -492,7 +495,7 @@ public class ShizukuSettings {
 
     public static boolean isUsbPhoneSwitchNotifyEnabled() {
         SharedPreferences p = getPreferences();
-        return p == null || p.getBoolean(Keys.KEY_USB_PHONE_SWITCH_NOTIFY, true);
+        return p != null && p.getBoolean(Keys.KEY_USB_PHONE_SWITCH_NOTIFY, false);
     }
 
     public static void setUsbPhoneSwitchNotifyEnabled(boolean enabled) {
@@ -517,7 +520,12 @@ public class ShizukuSettings {
     }
 
     public static boolean isSamsungSystemUidEscalationEnabled() {
-        return getPreferences().getBoolean(Keys.KEY_SAMSUNG_SYSTEM_UID_ESCALATION_ENABLED, false);
+        // Samsung patched system-UID elevation starting with OneUI 7 (Android 15).
+        // Gate the feature to OneUI <= 6 so it never silently fails on modern Samsung devices.
+        int oneUiVersion = af.shizuku.common.util.EnvironmentUtils.getOneUiVersion();
+        return af.shizuku.common.util.EnvironmentUtils.isSamsung()
+                && (oneUiVersion >= 1 && oneUiVersion <= 6)
+                && getPreferences().getBoolean(Keys.KEY_SAMSUNG_SYSTEM_UID_ESCALATION_ENABLED, false);
     }
 
     public static boolean isSoftwareKeystoreFallbackEnabled() {
@@ -1287,6 +1295,26 @@ public class ShizukuSettings {
         if (p != null) p.edit().putBoolean(Keys.KEY_VECTOR_ENABLED, enable).apply();
     }
 
+    public static boolean isDevOptionsUnlocked() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_DEV_OPTIONS_UNLOCKED, false);
+    }
+
+    public static void setDevOptionsUnlocked(boolean unlocked) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_DEV_OPTIONS_UNLOCKED, unlocked).apply();
+    }
+
+    public static boolean isHideLauncherIconEnabled() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_HIDE_LAUNCHER_ICON, false);
+    }
+
+    public static void setHideLauncherIconEnabled(boolean hide) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_HIDE_LAUNCHER_ICON, hide).apply();
+    }
+
     public static boolean isExperimentalRootCompatEnabled() {
         SharedPreferences p = getPreferences();
         return p != null && p.getBoolean(Keys.KEY_EXPERIMENTAL_ROOT_COMPAT, false);
@@ -1407,7 +1435,9 @@ public class ShizukuSettings {
 
     public static java.util.Set<String> getHiddenHomeCards() {
         SharedPreferences p = getPreferences();
-        return p != null ? p.getStringSet(Keys.KEY_HIDDEN_HOME_CARDS, new java.util.HashSet<>()) : new java.util.HashSet<>();
+        // Default: hide "Learn More" (6) — it's informational onboarding content, not an action.
+        java.util.Set<String> defaultHidden = new java.util.HashSet<>(java.util.Arrays.asList("6"));
+        return p != null ? p.getStringSet(Keys.KEY_HIDDEN_HOME_CARDS, defaultHidden) : defaultHidden;
     }
 
     public static void setHiddenHomeCards(java.util.Set<String> hidden) {
@@ -1745,5 +1775,15 @@ public class ShizukuSettings {
     public static void setShowAdvancedSettingsEnabled(boolean enabled) {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putBoolean(Keys.KEY_SHOW_ADVANCED_SETTINGS, enabled).apply();
+    }
+
+    public static boolean isFloatingNavBarEnabled() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_FLOATING_NAV_BAR_ENABLED, false);
+    }
+
+    public static void setFloatingNavBarEnabled(boolean enabled) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_FLOATING_NAV_BAR_ENABLED, enabled).apply();
     }
 }

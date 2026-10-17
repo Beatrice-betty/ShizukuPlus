@@ -14,6 +14,7 @@ import af.shizuku.manager.receiver.ShizukuReceiverStarter
 import af.shizuku.manager.settings.BugReportDialogActivity
 import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.utils.EnvironmentUtils
+import af.shizuku.manager.utils.NetworkTrust
 import af.shizuku.manager.utils.ShizukuStateMachine
 import android.app.KeyguardManager
 import android.app.NotificationChannel
@@ -230,7 +231,15 @@ class AdbStartWorker(
                                                 if (intent.action == Intent.ACTION_USER_PRESENT) {
                                                     context.unregisterReceiver(this)
                                                     unlockReceiver = null
-                                                    Settings.Global.putInt(cr, "adb_wifi_enabled", 1)
+                                                    // If the user has configured network protection and the
+                                                    // current network is untrusted (open, captive portal, or
+                                                    // not in the SSID trust list), suppress wireless debugging
+                                                    // re-activation on unlock to avoid repeated auth dialogs.
+                                                    if (NetworkTrust.shouldBlockTcp(context)) {
+                                                        close(SecurityException("Wireless debugging suppressed on unlock: network is not trusted"))
+                                                    } else {
+                                                        Settings.Global.putInt(cr, "adb_wifi_enabled", 1)
+                                                    }
                                                 }
                                             }
                                         }

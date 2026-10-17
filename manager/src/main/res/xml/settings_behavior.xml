@@ -56,50 +56,10 @@
         android:icon="@drawable/ic_lan_24"
         android:defaultValue="true">
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="tcp_mode"
-            android:title="@string/settings_tcp_mode"
-            android:icon="@drawable/ic_adb_24"
-            android:defaultValue="true" />
-
-        <EditTextPreference
-            android:key="tcp_port"
-            android:title="@string/settings_tcp_port"
-            android:icon="@drawable/ic_lan_24"
-            android:inputType="number"
-            app:useSimpleSummaryProvider="true" />
-
-        <Preference
-            android:key="tcp_port_randomize"
-            android:title="@string/settings_tcp_randomize_port"
-            android:summary="@string/settings_tcp_randomize_port_summary"
-            android:icon="@drawable/ic_refresh_24" />
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="tcp_auto_close_port"
-            android:title="@string/settings_tcp_auto_close_port"
-            android:summary="@string/settings_tcp_auto_close_port_summary"
-            android:icon="@drawable/ic_shield_24" />
-
-        <rikka.preference.SimpleMenuPreference
-            android:key="tcp_network_protection"
-            android:title="@string/settings_tcp_protection"
-            android:icon="@drawable/ic_shield_24"
-            android:entries="@array/tcp_network_protection_entries"
-            android:entryValues="@array/tcp_network_protection_values"
-            android:defaultValue="off"
-            app:useSimpleSummaryProvider="true" />
-
-        <Preference
-            android:key="tcp_trusted_networks"
-            android:title="@string/settings_tcp_trusted_networks"
-            android:icon="@drawable/ic_lan_24" />
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="tcp_protection_auto_close"
-            android:title="@string/settings_tcp_protection_auto_close"
-            android:summary="@string/settings_tcp_protection_auto_close_summary"
-            android:icon="@drawable/ic_warning_24" />
+        <af.shizuku.manager.settings.WirelessAdbPreference
+            android:key="wireless_adb_card"
+            android:title="@string/settings_wireless_adb_title"
+            android:icon="@drawable/ic_wadb_24" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="auto_disable_usb_debugging"
@@ -155,7 +115,7 @@
         android:key="category_adb_connection"
         android:title="@string/settings_root_category_adb_connection"
         android:icon="@drawable/ic_adb_24"
-        android:defaultValue="true">
+        android:defaultValue="false">
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="adb_proxy_enabled"
@@ -183,7 +143,7 @@
             android:title="@string/settings_usb_phone_switch_notify"
             android:summary="@string/settings_usb_phone_switch_notify_summary"
             android:icon="@drawable/ic_adb_24"
-            android:defaultValue="true" />
+            android:defaultValue="false" />
 
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 

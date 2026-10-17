@@ -8,7 +8,6 @@ import af.shizuku.manager.utils.ShizukuStateMachine
 import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
-import androidx.preference.TwoStatePreference
 import rikka.shizuku.Shizuku
 
 class SettingsFragment : BaseSettingsFragment() {
@@ -26,16 +25,6 @@ class SettingsFragment : BaseSettingsFragment() {
     ) {
         setPreferencesFromResource(R.xml.settings_main, rootKey)
         findPreference<Preference>("nav_about")?.setCustomSummary(BuildConfig.VERSION_NAME)
-
-        findPreference<TwoStatePreference>(ShizukuSettings.Keys.KEY_SHOW_ADVANCED_SETTINGS)?.apply {
-            isChecked = ShizukuSettings.isShowAdvancedSettingsEnabled()
-            setOnPreferenceChangeListener { _, newValue ->
-                if (newValue is Boolean) {
-                    ShizukuSettings.setShowAdvancedSettingsEnabled(newValue)
-                }
-                true
-            }
-        }
 
         updateStatusBanner()
     }

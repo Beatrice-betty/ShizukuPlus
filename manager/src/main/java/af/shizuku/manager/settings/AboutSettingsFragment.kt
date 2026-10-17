@@ -43,19 +43,19 @@ class AboutSettingsFragment : BaseSettingsFragment() {
         val context = requireContext()
 
         val navDevOptions = findPreference<Preference>("nav_developer_options")
-        navDevOptions?.let { setChildAvailable(it, ShizukuSettings.isVectorEnabled()) }
+        navDevOptions?.let { setChildAvailable(it, ShizukuSettings.isDevOptionsUnlocked()) }
 
         findPreference<Preference>("version")?.apply {
             setCustomSummary(BuildConfig.VERSION_NAME)
             setOnPreferenceClickListener {
-                if (ShizukuSettings.isVectorEnabled()) {
+                if (ShizukuSettings.isDevOptionsUnlocked()) {
                     Toast.makeText(context, R.string.settings_developer_options_revealed, Toast.LENGTH_SHORT).show()
                     return@setOnPreferenceClickListener true
                 }
 
                 versionClickCount++
                 if (versionClickCount >= 7) {
-                    ShizukuSettings.setVectorEnabled(true)
+                    ShizukuSettings.setDevOptionsUnlocked(true)
                     SettingsSearchEngine.reset()
                     navDevOptions?.let { setChildAvailable(it, true) }
                     Toast.makeText(context, R.string.settings_developer_options_revealed, Toast.LENGTH_SHORT).show()

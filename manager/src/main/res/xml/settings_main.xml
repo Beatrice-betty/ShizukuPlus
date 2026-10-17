@@ -8,21 +8,6 @@
         android:icon="@drawable/ic_server_ok_24" />
 
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
-        android:key="category_main_preferences"
-        android:title="@string/settings_main_category_preferences"
-        android:icon="@drawable/ic_settings_suggest_24"
-        app:collapsible="false">
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="show_advanced_settings"
-            android:title="@string/settings_show_advanced_title"
-            android:summary="@string/settings_show_advanced_summary"
-            android:icon="@drawable/ic_bolt_24"
-            android:defaultValue="false" />
-
-    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
-
-    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:title="@string/settings_main_category_personalization"
         android:icon="@drawable/ic_palette_24"
         app:collapsible="false">

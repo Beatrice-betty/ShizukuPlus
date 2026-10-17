@@ -1,13 +1,17 @@
 package af.shizuku.manager.home
 
+import af.shizuku.manager.R
+import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.databinding.HomeItemContainerBinding
 import af.shizuku.manager.databinding.HomeLearnMoreBinding
+import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.IconStyleHelper
 import af.shizuku.manager.utils.MotionUtils.applySpringTouch
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import rikka.recyclerview.BaseViewHolder
 import rikka.recyclerview.BaseViewHolder.Creator
 
@@ -53,5 +57,15 @@ class LearnMoreViewHolder(
     override fun onBind() {
         HomeEditMode.applyOverlay(containerBinding)
         IconStyleHelper.applyToCardIcon(binding.icon, originalIcon, "home_learn_more")
+
+        val sentryLimitReached = ShizukuSettings.isSentryLimitReached()
+        val sentrySection = itemView.findViewById<View>(R.id.sentry_offline_section)
+        sentrySection?.isVisible = sentryLimitReached
+        if (sentryLimitReached) {
+            val chipReport = itemView.findViewById<com.google.android.material.chip.Chip>(R.id.chip_report_issue)
+            chipReport?.setOnClickListener { v ->
+                CustomTabsHelper.launchUrlOrCopy(v.context, "https://github.com/thejaustin/ShizukuPlus/issues")
+            }
+        }
     }
 }

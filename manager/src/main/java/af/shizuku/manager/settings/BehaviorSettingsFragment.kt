@@ -14,17 +14,12 @@ import af.shizuku.manager.utils.LiveActivityNotificationManager
 import af.shizuku.manager.utils.NetworkTrust
 import af.shizuku.manager.utils.ShizukuStateMachine
 import af.shizuku.manager.utils.TcpNetworkGuard
-import android.Manifest
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.text.InputType
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.TwoStatePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -43,33 +38,13 @@ class BehaviorSettingsFragment :
     private lateinit var startOnBootPreference: TwoStatePreference
     private lateinit var watchdogPreference: TwoStatePreference
     private lateinit var deviceHardeningPreference: TwoStatePreference
-    private lateinit var tcpModePreference: TwoStatePreference
-    private lateinit var tcpPortPreference: EditTextPreference
-    private lateinit var tcpRandomizePreference: Preference
-    private lateinit var tcpAutoClosePreference: TwoStatePreference
-    private lateinit var tcpProtectionPreference: Preference
-    private lateinit var tcpTrustedPreference: Preference
+    private lateinit var wirelessAdbPreference: WirelessAdbPreference
     private lateinit var networkCategory: CollapsiblePreferenceCategory
     private lateinit var startupCategory: CollapsiblePreferenceCategory
 
-    // True when tcp_mode is logically available on this device (TLS-capable or TV).
-    // Used to gate syncTcpPortVisibility() so root-mode hides are not undone.
+    // True when TCP mode is logically available on this device (TLS-capable or TV).
+    // The Wireless ADB card is hidden otherwise, and always in root mode.
     private var tcpModeAvailable = false
-
-    private val stateListener: (ShizukuStateMachine.State) -> Unit = {
-        if (ShizukuStateMachine.isRunning()) {
-            tcpModePreference.icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
-                ?: tint(
-                    androidx.core.content.ContextCompat
-                        .getDrawable(requireContext(), R.drawable.ic_wadb_24),
-                )
-            tcpPortPreference.icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
-                ?: tint(
-                    androidx.core.content.ContextCompat
-                        .getDrawable(requireContext(), R.drawable.ic_lan_24),
-                )
-        }
-    }
 
     private val watchdogRunningListener: (Boolean) -> Unit = {
         syncWatchdogPreference()
@@ -86,18 +61,7 @@ class BehaviorSettingsFragment :
         startOnBootPreference = requireNotNull(findPreference(KEY_START_ON_BOOT))
         watchdogPreference = requireNotNull(findPreference(KEY_WATCHDOG))
         deviceHardeningPreference = requireNotNull(findPreference(KEY_DEVICE_HARDENING_ENABLED))
-        tcpModePreference = requireNotNull(findPreference(KEY_TCP_MODE))
-        tcpPortPreference = requireNotNull(findPreference(KEY_TCP_PORT))
-        tcpRandomizePreference = requireNotNull(findPreference("tcp_port_randomize"))
-        tcpAutoClosePreference = requireNotNull(findPreference(KEY_TCP_AUTO_CLOSE_PORT))
-        tcpProtectionPreference = requireNotNull(findPreference("tcp_network_protection"))
-        tcpTrustedPreference =
-            requireNotNull<Preference>(findPreference("tcp_trusted_networks")).apply {
-                setOnPreferenceClickListener {
-                    showTrustedNetworksDialog()
-                    true
-                }
-            }
+        wirelessAdbPreference = requireNotNull(findPreference("wireless_adb_card"))
         networkCategory = requireNotNull(findPreference("category_network_activity"))
         startupCategory = requireNotNull(findPreference("category_startup"))
 
@@ -171,98 +135,7 @@ class BehaviorSettingsFragment :
             }
         }
 
-        tcpModePreference.apply {
-            if (EnvironmentUtils.isTlsSupported()) {
-                tcpModeAvailable = true
-                setCustomSummary(context.getString(R.string.settings_tcp_mode_summary))
-                icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
-                    ?: tint(
-                        androidx.core.content.ContextCompat
-                            .getDrawable(context, R.drawable.ic_wadb_24),
-                    )
-                setOnPreferenceChangeListener { _, newValue ->
-                    if (newValue is Boolean) {
-                        val applyChange: () -> Unit = {
-                            ShizukuSettings.setTcpMode(newValue)
-                            isChecked = newValue
-                            isEnabled = true
-                            setCustomSummary(context.getString(R.string.settings_tcp_mode_summary))
-                            icon = maybeGetRestartIcon(KEY_TCP_MODE, R.drawable.ic_wadb_24)
-                                ?: tint(
-                                    androidx.core.content.ContextCompat
-                                        .getDrawable(context, R.drawable.ic_wadb_24),
-                                )
-                            syncTcpPortVisibility()
-                        }
-                        if (!newValue && !ShizukuStateMachine.isRunning() && needsRestart(KEY_TCP_MODE, newValue)) {
-                            promptStopTcp(tcpModePreference) { applyChange() }
-                        } else {
-                            maybePromptRestart(KEY_TCP_MODE, newValue) { applyChange() }
-                        }
-                    }
-                    false
-                }
-            } else if (EnvironmentUtils.isTelevision()) {
-                tcpModeAvailable = true
-                isEnabled = false
-                isChecked = true
-            } else {
-                // Non-TLS device: hide tcp_mode, tcp_port, randomize, and auto-close through the
-                // category so expand/collapse cycles don't accidentally restore them.
-                networkCategory.setChildAvailable(KEY_TCP_MODE, false)
-                networkCategory.setChildAvailable(KEY_TCP_PORT, false)
-                networkCategory.setChildAvailable("tcp_port_randomize", false)
-                networkCategory.setChildAvailable(KEY_TCP_AUTO_CLOSE_PORT, false)
-            }
-        }
-
-        tcpPortPreference.apply {
-            syncTcpPortVisibility()
-            icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
-                ?: tint(
-                    androidx.core.content.ContextCompat
-                        .getDrawable(context, R.drawable.ic_lan_24),
-                )
-            setOnBindEditTextListener { editText ->
-                editText.hint = context.getString(R.string.settings_tcp_port_hint)
-                editText.inputType = InputType.TYPE_CLASS_NUMBER
-                editText.setSelection(editText.text.length)
-            }
-            summaryProvider =
-                Preference.SummaryProvider<EditTextPreference> { pref ->
-                    val text = pref.text
-                    if (text.isNullOrEmpty()) context.getString(R.string.settings_tcp_port_default) else text
-                }
-            setOnPreferenceChangeListener { _, newValue ->
-                val port = (newValue as? String)?.toIntOrNull()
-                if (port == null || port in 1..65535) {
-                    val applyChange: () -> Unit = {
-                        ShizukuSettings.setTcpPort(port)
-                        text = port?.toString()
-                        icon = maybeGetRestartIcon(KEY_TCP_PORT, R.drawable.ic_lan_24)
-                    }
-                    maybePromptRestart(KEY_TCP_PORT, port ?: 5555) { applyChange() }
-                } else {
-                    SnackbarHelper.show(context, requireView(), context.getString(R.string.snackbar_invalid_port))
-                }
-                false
-            }
-        }
-
-        tcpRandomizePreference.setOnPreferenceClickListener {
-            val randomPort = (49152..65535).random()
-            val applyChange: () -> Unit = {
-                ShizukuSettings.setTcpPort(randomPort)
-                tcpPortPreference.text = randomPort.toString()
-                SnackbarHelper.show(
-                    requireContext(),
-                    requireView(),
-                    requireContext().getString(R.string.snackbar_tcp_port_randomized, randomPort),
-                )
-            }
-            maybePromptRestart(KEY_TCP_PORT, randomPort) { applyChange() }
-            true
-        }
+        setupWirelessAdbCard()
 
         findPreference<TwoStatePreference>(KEY_AUTO_DISABLE_USB_DEBUGGING)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
@@ -347,9 +220,54 @@ class BehaviorSettingsFragment :
     }
 
     /**
+     * Wires the Wireless ADB card's restart-sensitive changes (TCP mode, port) through the same
+     * restart / close-port prompts the individual rows used. Everything else the card writes
+     * straight to prefs; TcpNetworkGuard picks those up via onSharedPreferenceChanged.
+     */
+    private fun setupWirelessAdbCard() {
+        val context = requireContext()
+        wirelessAdbPreference.apply {
+            when {
+                EnvironmentUtils.isTlsSupported() -> tcpModeAvailable = true
+                EnvironmentUtils.isTelevision() -> {
+                    tcpModeAvailable = true
+                    tcpModeLocked = true
+                }
+                else -> tcpModeAvailable = false
+            }
+            onTcpModeChangeRequest = { enable, apply ->
+                if (!enable && !ShizukuStateMachine.isRunning() && needsRestart(KEY_TCP_MODE, enable)) {
+                    promptStopTcp(
+                        onClosing = { setClosingPort(true) },
+                        onFinished = { setClosingPort(false) },
+                        applyChange = apply,
+                    )
+                } else {
+                    maybePromptRestart(KEY_TCP_MODE, enable) { apply() }
+                }
+            }
+            onPortChangeRequest = { port, randomized, apply ->
+                maybePromptRestart(KEY_TCP_PORT, port ?: 5555) {
+                    apply()
+                    if (randomized && port != null) {
+                        SnackbarHelper.show(
+                            context,
+                            requireView(),
+                            context.getString(R.string.snackbar_tcp_port_randomized, port),
+                        )
+                    }
+                }
+            }
+            onInvalidPort = {
+                SnackbarHelper.show(context, requireView(), context.getString(R.string.snackbar_invalid_port))
+            }
+        }
+    }
+
+    /**
      * Show/hide preferences that are only relevant to the current connection mode (#433).
      *
-     * ADB-only: tcp_mode, tcp_port, auto_reconnect_mdns -- meaningless in root mode since root
+     * ADB-only: the Wireless ADB card and auto_reconnect_mdns -- meaningless in root mode since root
      *   starts the server directly without a TCP/wireless ADB connection.
      *
      * When in root mode the "Network" and "Startup & Recovery" category headers gain an
@@ -364,15 +282,7 @@ class BehaviorSettingsFragment :
 
         // Route through setChildAvailable so the category's expand/collapse cycle
         // does not restore preferences that should stay hidden in root mode.
-        if (isRootMode) {
-            networkCategory.setChildAvailable(KEY_TCP_MODE, false)
-            networkCategory.setChildAvailable(KEY_TCP_PORT, false)
-            networkCategory.setChildAvailable("tcp_port_randomize", false)
-            networkCategory.setChildAvailable(KEY_TCP_AUTO_CLOSE_PORT, false)
-        } else if (tcpModeAvailable) {
-            networkCategory.setChildAvailable(KEY_TCP_MODE, true)
-            syncTcpPortVisibility()
-        }
+        networkCategory.setChildAvailable("wireless_adb_card", tcpModeAvailable && !isRootMode)
         val mdnsSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
         startupCategory.setChildAvailable(KEY_AUTO_RECONNECT_MDNS, isAdbMode && mdnsSupported)
 
@@ -381,121 +291,22 @@ class BehaviorSettingsFragment :
         startupCategory.setCustomSummary(if (isRootMode) getString(R.string.settings_mode_indicator_root) else null)
     }
 
-    private fun syncTcpPortVisibility() {
-        val isRootMode =
-            EnvironmentUtils.isRooted() ||
-                ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT
-        if (tcpModeAvailable && !isRootMode) {
-            val tcpOn = tcpModePreference.isChecked
-            networkCategory.setChildAvailable(KEY_TCP_PORT, tcpOn)
-            networkCategory.setChildAvailable("tcp_port_randomize", tcpOn)
-            networkCategory.setChildAvailable(KEY_TCP_AUTO_CLOSE_PORT, tcpOn)
-        }
-        syncProtectionVisibility()
-    }
-
-    /**
-     * TCP network-protection rows (#518) follow the TCP rows' availability, and adapt further:
-     * the trusted-networks manager only matters in "trusted only" mode, and auto-close only when
-     * protection is on at all.
-     */
-    private fun syncProtectionVisibility() {
-        val isRootMode =
-            EnvironmentUtils.isRooted() ||
-                ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT
-        val base = tcpModeAvailable && !isRootMode && tcpModePreference.isChecked
-        val mode = NetworkTrust.mode()
-        networkCategory.setChildAvailable("tcp_network_protection", base)
-        networkCategory.setChildAvailable("tcp_trusted_networks", base && mode == NetworkTrust.MODE_TRUSTED)
-        networkCategory.setChildAvailable(NetworkTrust.KEY_AUTO_CLOSE, base && mode != NetworkTrust.MODE_OFF)
-        tcpTrustedPreference.setCustomSummary(trustedSummary())
-        // tcp_network_protection is a SimpleMenuPreference (ListPreference) with
-        // useSimpleSummaryProvider="true", so it already has a SummaryProvider installed;
-        // setSummary() throws "Preference already has a SummaryProvider set." if called while one
-        // is active (same root cause as #587). Toggle the provider itself instead of the text.
-        val limited = !NetworkTrust.canDetectOpenNetworks() && mode != NetworkTrust.MODE_OFF
-        (tcpProtectionPreference as? androidx.preference.ListPreference)?.apply {
-            if (limited) {
-                setCustomSummary(getString(R.string.tcp_protection_limited_summary))
-            } else if (summaryProvider == null) {
-                summaryProvider =
-                    androidx.preference.ListPreference.SimpleSummaryProvider
-                        .getInstance()
-            }
-        }
-    }
-
-    private fun trustedSummary(): String {
-        val count = NetworkTrust.trustedSsids().size
-        return if (count == 0) {
-            getString(R.string.settings_tcp_trusted_networks_none)
-        } else {
-            getString(R.string.settings_tcp_trusted_networks_summary, count)
-        }
-    }
-
-    private val locationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) trustCurrentNetwork()
-        }
-
-    private fun trustCurrentNetwork() {
-        val context = requireContext()
-        if (!af.shizuku.manager.utils.NetworkStateHelper
-                .isWifiConnected(context)
-        ) {
-            Toast.makeText(context, R.string.tcp_trusted_not_on_wifi, Toast.LENGTH_SHORT).show()
-            return
-        }
-        val ssid = NetworkTrust.currentSsid(context)
-        if (ssid != null) {
-            NetworkTrust.trustSsid(ssid)
-            Toast.makeText(context, getString(R.string.tcp_trusted_added, ssid), Toast.LENGTH_SHORT).show()
-            syncProtectionVisibility()
-            TcpNetworkGuard.enforce(context)
-        } else if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else {
-            Toast.makeText(context, R.string.tcp_trusted_ssid_hidden, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun showTrustedNetworksDialog() {
-        val context = requireContext()
-        val saved = NetworkTrust.trustedSsids().sorted()
-        val removed = mutableSetOf<String>()
-        val builder =
-            MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.settings_tcp_trusted_networks)
-                .setPositiveButton(R.string.tcp_trusted_add_current) { _, _ -> trustCurrentNetwork() }
-                .setNegativeButton(android.R.string.cancel, null)
-        if (saved.isEmpty()) {
-            builder.setMessage(R.string.tcp_trusted_dialog_empty)
-        } else {
-            builder
-                .setMultiChoiceItems(saved.toTypedArray(), null) { _, which, checked ->
-                    if (checked) removed += saved[which] else removed -= saved[which]
-                }.setNeutralButton(R.string.tcp_trusted_remove_selected) { _, _ ->
-                    removed.forEach { NetworkTrust.forgetSsid(it) }
-                    syncProtectionVisibility()
-                    TcpNetworkGuard.enforce(context)
-                }
-        }
-        showDialog(builder)
-    }
-
     override fun onResume() {
         super.onResume()
         preferenceScreen.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
-        ShizukuStateMachine.addListener(stateListener)
         WatchdogService.addRunningListener(watchdogRunningListener)
         syncModeVisibility()
         syncWatchdogPreference()
+        // Pick up changes made outside the card (e.g. TcpNetworkGuard, quick settings tile).
+        wirelessAdbPreference.reload()
+        // Ensure the external JSON file reflects current state on every resume, not just on
+        // preference change. Without this a new install never writes the file so external
+        // automation reads stale or missing data.
+        context?.let { syncUsbPhoneSwitchConfig(it, ShizukuSettings.isUsbPhoneSwitchNotifyEnabled()) }
     }
 
     override fun onPause() {
         WatchdogService.removeRunningListener(watchdogRunningListener)
-        ShizukuStateMachine.removeListener(stateListener)
         preferenceScreen.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
         super.onPause()
     }
@@ -510,12 +321,11 @@ class BehaviorSettingsFragment :
                 syncUsbPhoneSwitchConfig(ctx, ShizukuSettings.isUsbPhoneSwitchNotifyEnabled())
             }
         }
-        if (key == NetworkTrust.KEY_MODE || key == NetworkTrust.KEY_AUTO_CLOSE) {
+        if (key == NetworkTrust.KEY_MODE || key == NetworkTrust.KEY_AUTO_CLOSE || key == NetworkTrust.KEY_TRUSTED_SSIDS) {
             context?.let {
                 TcpNetworkGuard.sync(it)
                 TcpNetworkGuard.enforce(it)
             }
-            syncProtectionVisibility()
         }
     }
 

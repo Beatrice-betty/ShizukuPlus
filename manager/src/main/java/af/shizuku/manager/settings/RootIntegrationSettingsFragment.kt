@@ -172,8 +172,10 @@ class RootIntegrationSettingsFragment : BaseSettingsFragment() {
         }
 
         findPreference<TwoStatePreference>("samsung_system_uid_escalation_enabled")?.let { pref ->
-            setChildAvailable(pref, EnvironmentUtils.isSamsung())
-            if (EnvironmentUtils.isSamsung()) {
+            // Only show on Samsung OneUI 1–6; OneUI 7+ patched the system-UID elevation path.
+            val samsungSupported = EnvironmentUtils.isSamsung() && EnvironmentUtils.getOneUiVersion() in 1..6
+            setChildAvailable(pref, samsungSupported)
+            if (samsungSupported) {
                 pref.setOnPreferenceChangeListener { _, newValue ->
                     val enabled = newValue as? Boolean ?: false
                     if (enabled) {

@@ -15,6 +15,17 @@
         <attr name="emptyActionText" />
     </declare-styleable>
 
+    <!-- Compose-backed list preferences: same entries/entryValues contract as ListPreference. -->
+    <declare-styleable name="SegmentedControlPreference">
+        <attr name="android:entries" />
+        <attr name="android:entryValues" />
+    </declare-styleable>
+
+    <declare-styleable name="FilterChipPreference">
+        <attr name="android:entries" />
+        <attr name="android:entryValues" />
+    </declare-styleable>
+
     <declare-styleable name="PlusFeaturePreference">
         <attr name="infoTitle" format="reference|string" />
         <attr name="infoDetail" format="reference|string" />

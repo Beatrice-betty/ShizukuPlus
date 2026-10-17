@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -179,6 +180,7 @@ fun SettingsScreen(
                 )
             } else {
                 if (isExpandedHeaders) {
+                    Box {
                     LargeTopAppBar(
                         title = {
                             val fraction = scrollBehavior.state.collapsedFraction
@@ -227,7 +229,7 @@ fun SettingsScreen(
                                     ) {
                                         MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
                                     } else {
-                                        MaterialTheme.colorScheme.surfaceContainer
+                                        MaterialTheme.colorScheme.surface
                                     },
                                 titleContentColor = MaterialTheme.colorScheme.onSurface,
                                 navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
@@ -235,7 +237,20 @@ fun SettingsScreen(
                             ),
                         scrollBehavior = scrollBehavior,
                     )
+                    // Hairline divider fades in as the large bar collapses
+                    val dividerAlpha = scrollBehavior.state.collapsedFraction
+                    Box(
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth()
+                                .height(0.8.dp)
+                                .graphicsLayer { alpha = dividerAlpha }
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                    )
+                    } // end Box
                 } else {
+                    Box {
                     TopAppBar(
                         title = {
                             Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -265,10 +280,20 @@ fun SettingsScreen(
                                     ) {
                                         MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)
                                     } else {
-                                        MaterialTheme.colorScheme.surfaceContainer
+                                        MaterialTheme.colorScheme.surface
                                     },
                             ),
                     )
+                    // Hairline divider always visible (bar is always in collapsed appearance)
+                    Box(
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth()
+                                .height(0.8.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                    )
+                    } // end Box
                 }
             }
         },
@@ -343,6 +368,28 @@ fun SettingsScreen(
                             bottom = innerPadding.calculateBottomPadding().coerceAtLeast(0.dp),
                         ),
             )
+
+            // Gradient scrim — fades content into the top bar edge so the scroll transition
+            // from transparent to opaque surface doesn't produce a sharp boundary line.
+            val scrimBgColor = if (isBlackTheme) Color.Black else MaterialTheme.colorScheme.surface
+            val scrimHeight = innerPadding.calculateTopPadding() + 20.dp
+            // Skip scrim in blur mode — the frosted bar already provides visual separation,
+            // and an opaque surface gradient underneath it would negate the blur effect.
+            if (!isSearchActive && scrimHeight > 0.dp && !af.shizuku.manager.ShizukuSettings.isBlurUiEnabled()) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(scrimHeight)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(scrimBgColor, Color.Transparent),
+                                    startY = 0f,
+                                    endY = Float.POSITIVE_INFINITY,
+                                ),
+                            ),
+                )
+            }
 
             // Inline search results — appears below the search TopAppBar
             val searchFadeMs =

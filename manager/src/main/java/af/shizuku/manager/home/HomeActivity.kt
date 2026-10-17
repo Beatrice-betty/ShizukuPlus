@@ -530,29 +530,6 @@ open class HomeActivity :
 
         // Drag-to-reorder support
 
-        /** Slides [v] from [dy] to its real position with its own animator, so cancelling it never
-         *  disturbs other property animations (e.g. a card's entrance scale/alpha). */
-        fun shiftForReflow(
-            v: View,
-            dy: Float,
-        ) {
-            (v.getTag(R.id.tag_reflow_animator) as? android.animation.ObjectAnimator)?.cancel()
-            v.translationY = dy
-            val animator =
-                android.animation.ObjectAnimator.ofFloat(v, View.TRANSLATION_Y, dy, 0f).apply {
-                    duration = ShizukuSettings.scaledAnimationDuration(200)
-                    interpolator = android.view.animation.DecelerateInterpolator()
-                }
-            v.setTag(R.id.tag_reflow_animator, animator)
-            animator.start()
-        }
-
-        fun clearReflow(v: View) {
-            (v.getTag(R.id.tag_reflow_animator) as? android.animation.ObjectAnimator)?.cancel()
-            v.setTag(R.id.tag_reflow_animator, null)
-            v.translationY = 0f
-        }
-
         /** M3E shape morph: the held card's corners grow while lifted and settle back on drop. */
         fun morphCardRadius(
             itemView: View,
@@ -604,17 +581,6 @@ open class HomeActivity :
                     if (!adapter.isDraggable(target.bindingAdapterPosition)) return false
                     adapter.moveItem(src.bindingAdapterPosition, target.bindingAdapterPosition)
                     HapticUtils.segmentTick(src.itemView)
-                    // Live reflow: the adapter only updates cardOrder here and defers the real
-                    // rebuild to clearView() (so a mid-drag notifyItemMoved/rebuildItems can't
-                    // reintroduce the rebind flash from #475) - which otherwise leaves siblings
-                    // static until drop and reads as sluggish. Purely a View.translationY
-                    // illusion on top of that: slide the card being passed over into the gap the
-                    // dragged card just left, using each view's real layout position (getTop() is
-                    // unaffected by ItemTouchHelper's own translation on the dragged view).
-                    if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
-                        val dy = (src.itemView.top - target.itemView.top).toFloat()
-                        if (dy != 0f) shiftForReflow(target.itemView, dy)
-                    }
                     return true
                 }
 
@@ -624,7 +590,17 @@ open class HomeActivity :
                 ) {
                     super.onSelectedChanged(viewHolder, actionState)
                     if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                        // Block updateData's notifyDataSetChanged before entering edit mode so the
+                        // full rebind doesn't race with the active drag gesture.
                         adapter.isDragging = true
+                        HomeEditMode.enter()
+                        for (i in 0 until recyclerView.childCount) {
+                            val child = recyclerView.getChildAt(i)
+                            val pos = recyclerView.getChildAdapterPosition(child)
+                            if (pos != androidx.recyclerview.widget.RecyclerView.NO_POSITION && adapter.isDraggable(pos)) {
+                                HomeEditMode.applyOverlayDirect(child)
+                            }
+                        }
                         viewHolder?.itemView?.let { HapticUtils.gestureStart(it) }
                         if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
                             viewHolder?.itemView?.let { morphCardRadius(it, lifted = true) }
@@ -658,10 +634,6 @@ open class HomeActivity :
                     super.clearView(rv, vh)
                     adapter.isDragging = false
                     HapticUtils.gestureEnd(vh.itemView)
-                    // Reset only the live-reflow shift on every child (scoped animator, so other
-                    // animations such as a card's entrance scale are left to finish), so the
-                    // upcoming updateData() rebuild never lands on top of a stale translationY.
-                    for (i in 0 until rv.childCount) rv.getChildAt(i)?.let { clearReflow(it) }
                     morphCardRadius(vh.itemView, lifted = false)
                     if (ShizukuSettings.isExpressiveAnimationsEnabled()) {
                         val animator = vh.itemView.animate()
@@ -785,12 +757,16 @@ open class HomeActivity :
 
         HomeEditMode.onChanged = {
             if (HomeEditMode.isActive) HapticUtils.gestureStart(recyclerView) else HapticUtils.gestureEnd(recyclerView)
+            // Update Compose state and back callback immediately so the bar and handles
+            // animate in sync. The adapter updateData() keeps its 150ms guard so that a
+            // long-press-to-drag gesture has time to set isDragging = true before the
+            // notifyDataSetChanged fires (preventing a mid-drag full rebind).
+            isEditMode = HomeEditMode.isActive
+            backCallback.isEnabled = HomeEditMode.isActive
             lifecycleScope.launch {
                 delay(150)
-                isEditMode = HomeEditMode.isActive
                 homeModel.setEditMode(HomeEditMode.isActive)
                 adapter.updateData()
-                backCallback.isEnabled = HomeEditMode.isActive
             }
         }
 

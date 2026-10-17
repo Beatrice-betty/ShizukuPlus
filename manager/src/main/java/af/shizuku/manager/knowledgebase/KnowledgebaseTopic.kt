@@ -83,7 +83,7 @@ object KnowledgebaseRegistry {
             "category_su_bridge", "category_dhizuku_admin", "category_ghost_bridge",
             -> TOPIC_ROOT_COMPAT
 
-            "auto_reconnect_mdns", "tcp_mode", "tcp_port", "randomize_tcp_port", "start_wireless_adb",
+            "auto_reconnect_mdns", "wireless_adb_card", "tcp_mode", "tcp_port", "randomize_tcp_port", "start_wireless_adb",
             "wireless_debugging", "network_governor_plus", "reconnect_wifi",
             -> TOPIC_WIRELESS_ADB
 

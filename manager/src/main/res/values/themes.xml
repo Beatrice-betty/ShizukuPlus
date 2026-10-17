@@ -63,6 +63,10 @@
 
     <style name="Preference.SwitchPreferenceCompat.M3Expressive" parent="@style/Preference.SwitchPreferenceCompat.Material">
         <item name="android:widgetLayout">@layout/preference_widget_material_switch</item>
+        <!-- Use rikka's m3 layout so the icon frame (48dp min-width) matches SimpleMenuPreference
+             and all other rikka-styled preferences, preventing the "title closer to icon" mismatch. -->
+        <item name="layout">@layout/m3_preference</item>
+        <item name="iconSpaceReserved">false</item>
     </style>
     
     <style name="Preference.Category.M3Expressive" parent="@style/Preference.Category.Material">

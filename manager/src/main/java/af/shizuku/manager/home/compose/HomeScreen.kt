@@ -6,7 +6,16 @@ import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.utils.EnvironmentUtils
 import android.content.Context
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -55,6 +64,9 @@ fun HomeScreen(
     val screenHeightDp = configuration.screenHeightDp.dp
     val context = LocalContext.current
     val isDropIn = remember(context) { EnvironmentUtils.isDropIn(context) }
+    val animationsEnabled = ShizukuSettings.isExpressiveAnimationsEnabled()
+    val motionDur = ShizukuSettings.scaledAnimationDuration(220).toInt()
+    val motionEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
 
     // Status bar height — must be included in the Surface height so content sits below it,
     // not behind it. The inner Box gets windowInsetsPadding(statusBars) to push all content
@@ -134,7 +146,7 @@ fun HomeScreen(
                         if (ShizukuSettings.isBlurUiEnabled()) {
                             MaterialTheme.colorScheme.surface.copy(alpha = 0.82f * barAlpha)
                         } else {
-                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = barAlpha)
+                            MaterialTheme.colorScheme.surface.copy(alpha = barAlpha)
                         }
                     },
             ) {
@@ -158,52 +170,78 @@ fun HomeScreen(
                             ),
                 ) {
                     // Action icons pinned at top-end inside the 64dp collapsed row
-                    Row(
+                    AnimatedContent(
+                        targetState = isEditMode,
+                        transitionSpec = {
+                            val enter = if (animationsEnabled)
+                                fadeIn(tween(motionDur, easing = motionEasing))
+                            else EnterTransition.None
+                            val exit = if (animationsEnabled)
+                                fadeOut(tween((motionDur * 0.7f).toInt()))
+                            else ExitTransition.None
+                            (enter togetherWith exit) using SizeTransform(
+                                clip = false,
+                                sizeAnimationSpec = { _, _ -> tween(motionDur, easing = motionEasing) },
+                            )
+                        },
+                        contentAlignment = Alignment.CenterEnd,
                         modifier =
                             Modifier
                                 .align(Alignment.TopEnd)
                                 .height(collapsedHeight)
-                                .padding(end = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (isEditMode) {
-                            IconButton(onClick = onRestoreHomeCards) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_restore_24),
-                                    contentDescription = stringResource(id = R.string.home_restore_default),
-                                )
-                            }
-                            TextButton(onClick = onDoneClick) {
-                                Text(
-                                    text = stringResource(R.string.home_edit_mode_done),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        } else {
-                            IconButton(onClick = onRestoreHomeCards) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_restore_24),
-                                    contentDescription = stringResource(id = R.string.home_restore_default),
-                                )
-                            }
-                            IconButton(onClick = onStopClick) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_close_24),
-                                    contentDescription = stringResource(id = R.string.action_stop),
-                                )
-                            }
-                            IconButton(onClick = onSettingsClick) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_settings_outline_24),
-                                    contentDescription = stringResource(id = R.string.settings_title),
-                                )
-                            }
-                            IconButton(onClick = onHelpClick) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_help_outline_24),
-                                    contentDescription = stringResource(id = R.string.settings_plus_learn_more),
-                                )
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            androidx.compose.ui.graphics.Color.Transparent,
+                                            MaterialTheme.colorScheme.surface,
+                                        ),
+                                    ),
+                                ),
+                        label = "topBarActions",
+                    ) { editMode ->
+                        Row(
+                            modifier = Modifier.padding(end = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (editMode) {
+                                IconButton(onClick = onRestoreHomeCards) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_restore_24),
+                                        contentDescription = stringResource(id = R.string.home_restore_default),
+                                    )
+                                }
+                                TextButton(onClick = onDoneClick) {
+                                    Text(
+                                        text = stringResource(R.string.home_edit_mode_done),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = onRestoreHomeCards) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_restore_24),
+                                        contentDescription = stringResource(id = R.string.home_restore_default),
+                                    )
+                                }
+                                IconButton(onClick = onStopClick) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_close_24),
+                                        contentDescription = stringResource(id = R.string.action_stop),
+                                    )
+                                }
+                                IconButton(onClick = onSettingsClick) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_settings_outline_24),
+                                        contentDescription = stringResource(id = R.string.settings_title),
+                                    )
+                                }
+                                IconButton(onClick = onHelpClick) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_help_outline_24),
+                                        contentDescription = stringResource(id = R.string.settings_plus_learn_more),
+                                    )
+                                }
                             }
                         }
                     }
@@ -212,7 +250,12 @@ fun HomeScreen(
                     // horizontalBias: 0 = center, -1 = start.
                     val horizontalBias = -curvedFraction
                     val startPadding = lerp(start = 24.dp, stop = 20.dp, fraction = curvedFraction)
-                    val endPadding = lerp(start = 24.dp, stop = if (isEditMode) 120.dp else 196.dp, fraction = curvedFraction)
+                    val endPaddingStop by animateDpAsState(
+                        targetValue = if (isEditMode) 120.dp else 196.dp,
+                        animationSpec = tween(motionDur, easing = motionEasing),
+                        label = "titleEndPaddingStop",
+                    )
+                    val endPadding = lerp(start = 24.dp, stop = endPaddingStop, fraction = curvedFraction)
                     val titleFontSize =
                         lerp(
                             start = if (isOneUi) 32.sp else 28.sp,
@@ -243,7 +286,12 @@ fun HomeScreen(
                                 ),
                         contentAlignment = BiasAlignment(horizontalBias, 0f),
                     ) {
-                        if (isEditMode) {
+                        Crossfade(
+                            targetState = isEditMode,
+                            animationSpec = if (animationsEnabled) tween(motionDur, easing = motionEasing) else tween(0),
+                            label = "titleContent",
+                        ) { editMode ->
+                        if (editMode) {
                             Text(
                                 text = stringResource(R.string.home_edit_mode_title),
                                 style =
@@ -312,6 +360,7 @@ fun HomeScreen(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
+                        } // end Crossfade
                     }
 
                     // Hairline divider fades in as the bar collapses
@@ -393,6 +442,30 @@ fun HomeScreen(
                         update = { view -> recyclerViewProvider(view.context, adjustedPadding) },
                         modifier = Modifier.fillMaxSize(),
                     )
+                    // Bottom nav scrim: fades the card list into the navigation bar zone.
+                    // Skipped in blur mode — the blurred window already creates the boundary,
+                    // and an opaque band would show as a visible strip over the glass effect.
+                    if (!ShizukuSettings.isBlurUiEnabled()) {
+                        val scrimColor = MaterialTheme.colorScheme.surface
+                        val scrimHeight = innerPadding.calculateBottomPadding() + 24.dp
+                        if (scrimHeight > 0.dp) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(scrimHeight)
+                                        .align(Alignment.BottomCenter)
+                                        .background(
+                                            Brush.verticalGradient(
+                                                colors = listOf(
+                                                    androidx.compose.ui.graphics.Color.Transparent,
+                                                    scrimColor.copy(alpha = 0.85f),
+                                                ),
+                                            ),
+                                        ),
+                            )
+                        }
+                    }
                 }
             }
         }

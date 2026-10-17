@@ -14,6 +14,7 @@ import af.shizuku.manager.utils.SettingsHelper
 import af.shizuku.manager.utils.ShizukuStateMachine
 import android.content.Context
 import android.content.Intent
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.TypedValue
@@ -465,8 +466,14 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         return icon
     }
 
+    /**
+     * Confirms closing the live ADB TCP port, then closes it. [onClosing] fires while the port is
+     * being closed (so the UI can show progress), [onFinished] always fires afterwards, and
+     * [applyChange] only runs when the port actually closed.
+     */
     protected fun promptStopTcp(
-        tcpModePref: androidx.preference.TwoStatePreference,
+        onClosing: () -> Unit,
+        onFinished: () -> Unit,
         applyChange: () -> Unit,
     ) {
         val context = requireContext()
@@ -476,12 +483,13 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
                 .setMessage(context.getString(R.string.settings_tcp_mode_dialog_close_port))
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     lifecycleScope.launch {
-                        tcpModePref.apply {
-                            isEnabled = false
-                            setCustomSummary(context.getString(R.string.settings_tcp_mode_closing_port))
+                        onClosing()
+                        try {
+                            AdbStarter.stopTcp(context, EnvironmentUtils.getAdbTcpPort())
+                            if (EnvironmentUtils.getAdbTcpPort() <= 0) applyChange()
+                        } finally {
+                            onFinished()
                         }
-                        AdbStarter.stopTcp(context, EnvironmentUtils.getAdbTcpPort())
-                        if (EnvironmentUtils.getAdbTcpPort() <= 0) applyChange()
                     }
                 }.setNegativeButton(android.R.string.cancel, null),
         )
@@ -583,9 +591,15 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
                     else -> cornerRadius
                 }
             }
-        private val gap = 2f * density
-        private val innerRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else minOf(4f * density, effectiveCornerRadius)
-        private val pressedRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else maxOf(20f * density, effectiveCornerRadius)
+        private val gap = context.resources.getDimension(R.dimen.settings_row_gap)
+        private val innerRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else minOf(context.resources.getDimension(R.dimen.settings_inner_radius), effectiveCornerRadius)
+        private val pressedRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else maxOf(context.resources.getDimension(R.dimen.settings_pressed_radius), effectiveCornerRadius)
+        // Status banner (pos 0) gets a tinted card so it reads as "status" not "navigation".
+        private val statusPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
+            val tv = android.util.TypedValue()
+            context.theme.resolveAttribute(R.attr.colorSecondaryContainer, tv, true)
+            it.color = tv.data
+        }
         private val progress = java.util.WeakHashMap<View, Float>()
         private val shapes = java.util.WeakHashMap<View, FloatArray>()
         private val path = android.graphics.Path()
@@ -625,8 +639,7 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
             if (pos == 0) {
                 outRect.top = 0
             } else if (isHeader(view)) {
-                // 16dp spacing above subsequent category headers to cleanly separate groups
-                outRect.top = (16 * density).toInt()
+                outRect.top = context.resources.getDimensionPixelSize(R.dimen.settings_section_top_offset)
             } else {
                 outRect.top = gap.toInt()
             }
@@ -695,7 +708,9 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
                     floatArrayOf(radii[0], radii[0], radii[1], radii[1], radii[2], radii[2], radii[3], radii[3]),
                     android.graphics.Path.Direction.CW,
                 )
-                c.drawPath(path, cardPaint)
+                // Position 0 is the status banner — draw it with the secondary container
+                // color so it reads as "live status" rather than a plain navigation card.
+                c.drawPath(path, if (pos == 0 && !isHeader(child)) statusPaint else cardPaint)
             }
             if (animating) parent.postInvalidateOnAnimation()
         }

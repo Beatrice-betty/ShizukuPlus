@@ -22,6 +22,8 @@ class ServerMetricsFragment : Fragment() {
     private val updateRunnable =
         object : Runnable {
             override fun run() {
+                // Guard: view may have been destroyed between postDelayed scheduling and execution.
+                if (_binding == null) return
                 updateStats()
                 handler.postDelayed(this, 1000)
             }
@@ -117,6 +119,9 @@ class ServerMetricsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Safety net: if the Runnable rescheduled itself after onPause's removeCallbacks,
+        // clear it here before nulling _binding to prevent an NPE in updateStats().
+        handler.removeCallbacks(updateRunnable)
         _binding = null
     }
 }

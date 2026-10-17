@@ -8,6 +8,7 @@ import af.shizuku.manager.model.ServiceStatus
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.HapticUtils
 import android.os.Build
+import androidx.core.view.isVisible
 import com.airbnb.mvrx.withState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +79,17 @@ class HomeAdapter(
 
     // Cached inputs from the last successful updateData() render, so moveItem() can rebuild the
     // adapter's real backing list synchronously mid-drag instead of only reordering cardOrder.
+    private data class RebuildArgs(
+        val status: ServiceStatus,
+        val grantedCount: Int?,
+        val isEditMode: Boolean,
+        val companionInstalled: Boolean,
+        val compatHubInstalled: Boolean,
+        val isOriginalShizukuRunning: Boolean,
+        val hidden: Set<String>,
+    )
+
+    private var lastRebuildArgs: RebuildArgs? = null
 
     /**
      * Callback to notify when the empty state should be shown/hidden.
@@ -206,6 +218,7 @@ class HomeAdapter(
         isOriginalShizukuRunning: Boolean,
         hidden: Set<String>,
     ): Int {
+        lastRebuildArgs = RebuildArgs(status, grantedCount, isEditMode, companionInstalled, compatHubInstalled, isOriginalShizukuRunning, hidden)
         val adbPermission = status.permission
         val running = status.isRunning
         val isPrimaryUser = UserHandleCompat.myUserId() == 0
@@ -326,13 +339,23 @@ class HomeAdapter(
             }
         }
 
+        // Fixed cards (status, apps bar) never participate in edit mode — ensure handles stay hidden.
+        if (!isDraggable(position)) {
+            holder.itemView.findViewById<android.view.View>(R.id.remove_btn)?.isVisible = false
+            holder.itemView.findViewById<android.view.View>(R.id.drag_handle)?.isVisible = false
+        }
+
         // M3E entrance animation — only on first appearance per card id, not every recycle.
         if (!animatedIds.add(id)) {
-            holder.itemView.alpha = 1f
-            holder.itemView.translationY = 0f
-            holder.itemView.scaleX = 1f
-            holder.itemView.scaleY = 1f
-            holder.itemView.translationZ = 0f
+            // During drag, RecyclerView owns translationX/Y for the move animation; resetting them
+            // here would kill the in-flight slide and make displaced cards snap/vanish.
+            if (!isDragging) {
+                holder.itemView.alpha = 1f
+                holder.itemView.translationY = 0f
+                holder.itemView.scaleX = 1f
+                holder.itemView.scaleY = 1f
+                holder.itemView.translationZ = 0f
+            }
             return
         }
         val view = holder.itemView
@@ -376,16 +399,17 @@ class HomeAdapter(
         val toId = getItemId(toPos)
         val fromIdx = cardOrder.indexOf(fromId)
         val toIdx = cardOrder.indexOf(toId)
-        if (fromIdx >= 0 && toIdx >= 0) {
-            cardOrder.removeAt(fromIdx)
-            cardOrder.add(toIdx, fromId)
-        }
-        // ItemTouchHelper owns the visual drag animation — calling notifyItemMoved() during an
-        // active drag conflicts with it and causes a brief re-bind flash (#475). The backing
-        // adapter list only needs to be in the right order when clearView() fires (at which point
-        // updateData() → notifyDataSetChanged() rebuilds everything cleanly from cardOrder).
-        // Calling rebuildItems() here would also re-trigger onBindViewHolder on adjacent items and
-        // reset their translationY to 0 mid-animation, causing the visible flash.
+        if (fromIdx < 0 || toIdx < 0) return
+        cardOrder.removeAt(fromIdx)
+        cardOrder.add(toIdx, fromId)
+        // Rebuild the backing list so the adapter's item order matches cardOrder, then notify
+        // with notifyItemMoved so RecyclerView's item animator slides siblings natively.
+        // rebuildItems() calls only clear()/addItem() (no notify), so it's safe mid-drag.
+        // The updateData() isDragging guard (L169) still blocks full notifyDataSetChanged
+        // rebuilds during drag; notifyItemMoved is the lightweight per-step notify instead.
+        val args = lastRebuildArgs ?: return
+        rebuildItems(args.status, args.grantedCount, args.isEditMode, args.companionInstalled, args.compatHubInstalled, args.isOriginalShizukuRunning, args.hidden)
+        notifyItemMoved(fromPos, toPos)
     }
 
     fun persistCardOrder() {

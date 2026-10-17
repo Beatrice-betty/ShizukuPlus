@@ -303,8 +303,8 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
         // package name, or ComponentName construction throws "Component class ... does not exist"
         // (SHIZUKUPLUS-7R).
         val launcherAlias = ComponentName(context, "af.shizuku.manager.LauncherAlias")
-        findPreference<TwoStatePreference>("stealth_mode")?.apply {
-            isChecked = ShizukuSettings.isStealthModeEnabled()
+        findPreference<TwoStatePreference>("hide_launcher_icon")?.apply {
+            isChecked = ShizukuSettings.isHideLauncherIconEnabled()
             setOnPreferenceChangeListener { pref, newValue ->
                 val enable = newValue as Boolean
                 if (enable) {
@@ -313,7 +313,7 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
                         .setMessage(getString(R.string.stealth_mode_enable_message, context.packageName))
                         .setPositiveButton(R.string.stealth_mode_enable_button) { _, _ ->
                             context.packageManager.setComponentEnabled(launcherAlias, false)
-                            ShizukuSettings.setStealthModeEnabled(true)
+                            ShizukuSettings.setHideLauncherIconEnabled(true)
                             (pref as? TwoStatePreference)?.isChecked = true
                         }.setNegativeButton(android.R.string.cancel) { _, _ ->
                             (pref as? TwoStatePreference)?.isChecked = false
@@ -321,7 +321,7 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
                     false
                 } else {
                     context.packageManager.setComponentEnabled(launcherAlias, true)
-                    ShizukuSettings.setStealthModeEnabled(false)
+                    ShizukuSettings.setHideLauncherIconEnabled(false)
                     true
                 }
             }

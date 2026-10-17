@@ -45,7 +45,6 @@ class ServerStatusViewHolder(
     private inline val iconView get() = binding.icon
     private inline val logChip get() = binding.btnActivityLog
     private inline val diagnosticsChip get() = binding.btnDiagnostics
-    private inline val sentryButton get() = binding.btnSentryOffline
 
     override fun onBind() {
         val context = itemView.context
@@ -54,27 +53,6 @@ class ServerStatusViewHolder(
         val state =
             af.shizuku.manager.utils.ShizukuStateMachine
                 .get()
-
-        // Show Sentry offline button only if limit is reached
-        sentryButton.visibility =
-            if (af.shizuku.manager.ShizukuSettings
-                    .isSentryLimitReached()
-            ) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-        sentryButton.setOnClickListener {
-            com.google.android.material.dialog
-                .MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.sentry_offline_notice_title)
-                .setMessage(R.string.sentry_offline_notice_learn_more)
-                .setPositiveButton(android.R.string.ok, null)
-                .setNeutralButton(R.string.update_view_on_github) { _, _ ->
-                    af.shizuku.manager.utils.CustomTabsHelper
-                        .launchUrlOrCopy(context, "https://github.com/thejaustin/ShizukuPlus/issues")
-                }.show()
-        }
 
         // S-Pen / DeX Mouse Hover Effect (Expressive Polish)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {

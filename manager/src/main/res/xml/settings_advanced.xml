@@ -11,13 +11,6 @@
         android:icon="@drawable/ic_bolt_24"
         app:collapsible="false">
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="hide_disabled_plus_features"
-            android:title="@string/settings_hide_disabled_plus_features"
-            android:summary="@string/settings_hide_disabled_plus_features_summary"
-            android:icon="@drawable/ic_visibility_off_24"
-            android:defaultValue="false" />
-
         <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="custom_api_enabled"
             android:title="@string/settings_enhanced_api"
@@ -124,6 +117,20 @@
             android:summary="@string/settings_update_app_database_summary"
             android:icon="@drawable/ic_autorenew" />
 
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="hide_launcher_icon"
+            android:title="@string/settings_hide_launcher_icon"
+            android:summary="@string/settings_hide_launcher_icon_summary"
+            android:icon="@drawable/ic_visibility_off_24"
+            android:defaultValue="false" />
+
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="hide_backup_settings"
+            android:title="@string/settings_hide_backup_settings"
+            android:summary="@string/settings_hide_backup_settings_summary"
+            android:icon="@drawable/ic_folder_24"
+            android:defaultValue="false" />
+
         <Preference
             android:key="scripting"
             android:title="@string/scripting_title"
@@ -147,20 +154,6 @@
         android:title="@string/settings_advanced_category_adb_tools"
         android:icon="@drawable/ic_adb_24"
         android:defaultValue="false">
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="stealth_mode"
-            android:title="@string/settings_stealth_mode"
-            android:summary="@string/settings_stealth_mode_summary"
-            android:icon="@drawable/ic_visibility_off_24"
-            android:defaultValue="false" />
-
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="hide_backup_settings"
-            android:title="@string/settings_hide_backup_settings"
-            android:summary="@string/settings_hide_backup_settings_summary"
-            android:icon="@drawable/ic_folder_24"
-            android:defaultValue="false" />
 
         <Preference
             android:key="package_identity_info"

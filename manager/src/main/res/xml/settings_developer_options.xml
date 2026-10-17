@@ -52,6 +52,7 @@
             android:entries="@array/spoof_targets"
             android:entryValues="@array/spoof_targets_values"
             android:defaultValue="pixel_8_pro"
+            android:dependency="spoof_device_enabled"
             app:useSimpleSummaryProvider="true"
             android:icon="@drawable/ic_smartphone_24" />
 
@@ -86,7 +87,7 @@
 
         <af.shizuku.manager.settings.PlusFeaturePreference
             android:key="ai_core_plus_enabled"
-            android:title="AI Bridge &amp; NPU"
+            android:title="@string/settings_ai_bridge_title"
             android:summary="@string/settings_ai_core_plus_summary"
             android:icon="@drawable/ic_integration_instructions_24"
             android:defaultValue="false"

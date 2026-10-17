@@ -125,6 +125,8 @@ if not os.path.exists(libcpp):
 print(f"  Injecting {libcpp} into lib/arm64-v8a/libc++_shared.so …")
 with zipfile.ZipFile(src, 'r') as zin, zipfile.ZipFile(dst, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
     for item in zin.infolist():
+        if item.filename == 'lib/arm64-v8a/libc++_shared.so':
+            continue  # will be replaced below
         zout.writestr(item, zin.read(item.filename))
     with open(libcpp, 'rb') as f:
         zout.writestr('lib/arm64-v8a/libc++_shared.so', f.read())

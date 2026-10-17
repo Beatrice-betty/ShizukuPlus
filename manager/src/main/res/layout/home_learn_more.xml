@@ -35,6 +35,51 @@
             android:duplicateParentState="true"
             android:text="@string/home_learn_more_description" />
 
+        <!-- Shown only when Sentry quota is reached -->
+        <LinearLayout
+            android:id="@+id/sentry_offline_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            xmlns:tools="http://schemas.android.com/tools"
+            tools:visibility="visible">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?colorOutlineVariant"
+                android:alpha="0.4" />
+
+            <TextView
+                android:id="@+id/sentry_offline_title"
+                style="@style/CardTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/sentry_offline_notice_title"
+                android:textColor="?colorError" />
+
+            <TextView
+                android:id="@+id/sentry_offline_summary"
+                style="@style/CardSummary.Brief"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sentry_offline_notice_summary" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_report_issue"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/sentry_offline_report_github"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                app:chipIconResource="@drawable/ic_outline_info_24" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>
