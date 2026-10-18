@@ -3,12 +3,14 @@ package af.shizuku.manager.settings
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.AttributeSet
 import androidx.core.view.ViewCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceViewHolder
+import androidx.preference.TwoStatePreference
 
 class CollapsiblePreferenceCategory
     @JvmOverloads
@@ -27,6 +29,16 @@ class CollapsiblePreferenceCategory
         // based on OS version or another setting). Such children must stay hidden even when the
         // category is expanded, and the collapse toggle must not resurrect them.
         private val unavailableChildKeys = mutableSetOf<String>()
+
+        // Refreshes the active-count chip when a child switch is toggled while the category
+        // is collapsed, so the count is never stale the next time the header rebinds.
+        private val childChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (!expanded && key != null) {
+                val childKeys = (0 until preferenceCount).mapNotNull { getPreference(it).key }.toSet()
+                if (key in childKeys) notifyChanged()
+            }
+        }
+        private var prefListenerRegistered = false
 
         init {
             layoutResource = R.layout.collapsible_preference_category_card
@@ -65,25 +77,74 @@ class CollapsiblePreferenceCategory
                 }
             }
 
+            val (activeCount, totalSwitches) = countActiveSwitches()
+            val ctx = holder.itemView.context
+            val density = ctx.resources.displayMetrics.density
+
+            // M3E icon pill: when a section has active switches, enclose the icon in a filled
+            // colorPrimaryContainer oval so users can scan section state without expanding.
             val iconView = holder.findViewById(android.R.id.icon) as? android.widget.ImageView
             if (iconView != null) {
                 val catIcon = icon
                 if (catIcon != null) {
                     iconView.setImageDrawable(catIcon)
                     iconView.visibility = android.view.View.VISIBLE
+                    if (activeCount > 0 && collapsible) {
+                        val bgColor = com.google.android.material.color.MaterialColors.getColor(
+                            ctx, com.google.android.material.R.attr.colorPrimaryContainer, 0xFFE8DEF8.toInt(),
+                        )
+                        val fgColor = com.google.android.material.color.MaterialColors.getColor(
+                            ctx, com.google.android.material.R.attr.colorOnPrimaryContainer, 0xFF21005D.toInt(),
+                        )
+                        val pill = android.graphics.drawable.GradientDrawable().apply {
+                            shape = android.graphics.drawable.GradientDrawable.OVAL
+                            setColor(bgColor)
+                        }
+                        val pad = (5 * density).toInt()
+                        iconView.setPadding(pad, pad, pad, pad)
+                        iconView.background = pill
+                        iconView.imageTintList = android.content.res.ColorStateList.valueOf(fgColor)
+                    } else {
+                        iconView.setPadding(0, 0, 0, 0)
+                        iconView.background = null
+                        val primaryColor = com.google.android.material.color.MaterialColors.getColor(
+                            ctx, R.attr.colorPrimary, android.graphics.Color.BLUE,
+                        )
+                        iconView.imageTintList = android.content.res.ColorStateList.valueOf(primaryColor)
+                    }
                 } else {
                     iconView.visibility = android.view.View.GONE
                 }
             }
 
+            // M3E active-count chip: "X / Y on" shown as a rounded pill in the summary row
+            // when the category is collapsed and at least one switch is on — gives users a
+            // live status at a glance without needing to open the section.
             val summaryView = holder.findViewById(android.R.id.summary) as? android.widget.TextView
             if (summaryView != null) {
-                val catSummary = summary
-                if (!catSummary.isNullOrEmpty()) {
-                    summaryView.text = catSummary
-                    summaryView.visibility = android.view.View.VISIBLE
-                } else {
+                if (!collapsible || expanded || activeCount == 0) {
                     summaryView.visibility = android.view.View.GONE
+                    summaryView.background = null
+                    summaryView.setPadding(0, 0, 0, 0)
+                } else {
+                    val chipBgColor = com.google.android.material.color.MaterialColors.getColor(
+                        ctx, com.google.android.material.R.attr.colorSecondaryContainer, 0xFFE8DEF8.toInt(),
+                    )
+                    val chipTextColor = com.google.android.material.color.MaterialColors.getColor(
+                        ctx, com.google.android.material.R.attr.colorOnSecondaryContainer, 0xFF1D192B.toInt(),
+                    )
+                    val chipBg = android.graphics.drawable.GradientDrawable().apply {
+                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                        cornerRadius = 100f * density  // fully rounded pill
+                        setColor(chipBgColor)
+                    }
+                    val padH = (7 * density).toInt()
+                    val padV = (2 * density).toInt()
+                    summaryView.background = chipBg
+                    summaryView.setPadding(padH, padV, padH, padV)
+                    summaryView.setTextColor(chipTextColor)
+                    summaryView.text = if (totalSwitches > 1) "$activeCount / $totalSwitches on" else "$activeCount on"
+                    summaryView.visibility = android.view.View.VISIBLE
                 }
             }
 
@@ -145,6 +206,20 @@ class CollapsiblePreferenceCategory
             }
         }
 
+        /** Returns (activeCount, totalSwitchCount) for TwoState (switch/checkbox) direct children. */
+        private fun countActiveSwitches(): Pair<Int, Int> {
+            var active = 0
+            var total = 0
+            for (i in 0 until preferenceCount) {
+                val child = getPreference(i)
+                if (child is TwoStatePreference && !unavailableChildKeys.contains(child.key)) {
+                    total++
+                    if (child.isChecked) active++
+                }
+            }
+            return active to total
+        }
+
         /** The rotating arrow is the only visual cue this header is an expand/collapse toggle -
          *  TalkBack users get neither that affordance nor a state change announcement without this. */
         private fun updateExpandedStateDescription(itemView: android.view.View) {
@@ -185,6 +260,18 @@ class CollapsiblePreferenceCategory
                 expanded = getPersistedBoolean(defaultExpanded)
             }
             updateChildren()
+            if (collapsible && !prefListenerRegistered) {
+                preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(childChangeListener)
+                prefListenerRegistered = true
+            }
+        }
+
+        override fun onPrepareForRemoval() {
+            super.onPrepareForRemoval()
+            if (prefListenerRegistered) {
+                preferenceManager?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(childChangeListener)
+                prefListenerRegistered = false
+            }
         }
 
         fun expand() {

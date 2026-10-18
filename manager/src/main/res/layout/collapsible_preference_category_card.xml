@@ -9,7 +9,7 @@
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingStart="16dp"
     android:paddingEnd="16dp"
-    android:paddingVertical="14dp"
+    android:paddingVertical="11dp"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
@@ -46,11 +46,13 @@
             android:id="@android:id/summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:layout_marginTop="3dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
             android:textColor="?colorOnSurfaceVariant"
             android:visibility="gone"
-            tools:text="Category Summary"
+            tools:text="3 / 5 on"
             tools:visibility="visible" />
 
     </LinearLayout>
