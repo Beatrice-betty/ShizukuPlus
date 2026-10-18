@@ -303,11 +303,17 @@ object ShizukuStateMachine {
                 currentState == State.CRASHED -> State.CRASHED
                 // Was RUNNING (or, thanks to loadPersistedSettledState(), a freshly cold-started
                 // process that persisted RUNNING before it died) and the binder isn't answering: that's
-                // a crash, not a stop. Previously fell into the `else -> STOPPED` branch below, which
-                // WatchdogService's flow collector (only listens for CRASHED) silently ignores - the
-                // watchdog's external re-arm (#417) never restarted anything because every unexpected
-                // death got misreported as an intentional stop.
-                currentState == State.RUNNING -> State.CRASHED
+                // a crash, not a stop. Re-verify pingBinder() to prevent a false crash transition if
+                // the server attached between our initial check and reading currentState.
+                currentState == State.RUNNING -> {
+                    val verifiedAlive =
+                        try {
+                            Shizuku.pingBinder()
+                        } catch (_: Exception) {
+                            false
+                        }
+                    if (verifiedAlive) State.RUNNING else State.CRASHED
+                }
                 else -> State.STOPPED
             }
         set(state)

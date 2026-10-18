@@ -15,7 +15,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
@@ -181,118 +181,118 @@ fun SettingsScreen(
             } else {
                 if (isExpandedHeaders) {
                     Box {
-                    LargeTopAppBar(
-                        title = {
-                            val fraction = scrollBehavior.state.collapsedFraction
-                            val currentFontSize =
-                                lerp(
-                                    start = 28.sp,
-                                    stop = 20.sp,
-                                    fraction = fraction,
+                        LargeTopAppBar(
+                            title = {
+                                val fraction = scrollBehavior.state.collapsedFraction
+                                val currentFontSize =
+                                    lerp(
+                                        start = 28.sp,
+                                        stop = 20.sp,
+                                        fraction = fraction,
+                                    )
+                                val currentFontWeight = if (fraction > 0.65f) FontWeight.Bold else FontWeight.ExtraBold
+                                val currentLetterSpacing = lerp((-0.5).sp, (-0.2).sp, fraction)
+                                Text(
+                                    text = title,
+                                    style =
+                                        MaterialTheme.typography.headlineLarge.copy(
+                                            fontWeight = currentFontWeight,
+                                            fontSize = currentFontSize,
+                                            letterSpacing = currentLetterSpacing,
+                                        ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
-                            val currentFontWeight = if (fraction > 0.65f) FontWeight.Bold else FontWeight.ExtraBold
-                            val currentLetterSpacing = lerp((-0.5).sp, (-0.2).sp, fraction)
-                            Text(
-                                text = title,
-                                style =
-                                    MaterialTheme.typography.headlineLarge.copy(
-                                        fontWeight = currentFontWeight,
-                                        fontSize = currentFontSize,
-                                        letterSpacing = currentLetterSpacing,
-                                    ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { onNavigateUp() }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_back_24),
-                                    contentDescription = stringResource(R.string.cd_navigate_back),
-                                )
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { isSearchActive = true }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_search_24),
-                                    contentDescription = stringResource(R.string.cd_settings_search),
-                                )
-                            }
-                        },
-                        colors =
-                            TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor =
-                                    if (af.shizuku.manager.ShizukuSettings
-                                            .isBlurUiEnabled()
-                                    ) {
-                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surface
-                                    },
-                                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                                navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                                actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
-                        scrollBehavior = scrollBehavior,
-                    )
-                    // Hairline divider fades in as the large bar collapses
-                    val dividerAlpha = scrollBehavior.state.collapsedFraction
-                    Box(
-                        modifier =
-                            Modifier
-                                .align(Alignment.BottomStart)
-                                .fillMaxWidth()
-                                .height(0.8.dp)
-                                .graphicsLayer { alpha = dividerAlpha }
-                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
-                    )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { onNavigateUp() }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_back_24),
+                                        contentDescription = stringResource(R.string.cd_navigate_back),
+                                    )
+                                }
+                            },
+                            actions = {
+                                IconButton(onClick = { isSearchActive = true }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_search_24),
+                                        contentDescription = stringResource(R.string.cd_settings_search),
+                                    )
+                                }
+                            },
+                            colors =
+                                TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                    scrolledContainerColor =
+                                        if (af.shizuku.manager.ShizukuSettings
+                                                .isBlurUiEnabled()
+                                        ) {
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surface
+                                        },
+                                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                                    actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            scrollBehavior = scrollBehavior,
+                        )
+                        // Hairline divider fades in as the large bar collapses
+                        val dividerAlpha = scrollBehavior.state.collapsedFraction
+                        Box(
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                                    .height(0.8.dp)
+                                    .graphicsLayer { alpha = dividerAlpha }
+                                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                        )
                     } // end Box
                 } else {
                     Box {
-                    TopAppBar(
-                        title = {
-                            Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { onNavigateUp() }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_back_24),
-                                    contentDescription = stringResource(R.string.cd_navigate_back),
-                                )
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { isSearchActive = true }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_search_24),
-                                    contentDescription = stringResource(R.string.cd_settings_search),
-                                )
-                            }
-                        },
-                        colors =
-                            TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor =
-                                    if (af.shizuku.manager.ShizukuSettings
-                                            .isBlurUiEnabled()
-                                    ) {
-                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surface
-                                    },
-                            ),
-                    )
-                    // Hairline divider always visible (bar is always in collapsed appearance)
-                    Box(
-                        modifier =
-                            Modifier
-                                .align(Alignment.BottomStart)
-                                .fillMaxWidth()
-                                .height(0.8.dp)
-                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
-                    )
+                        TopAppBar(
+                            title = {
+                                Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { onNavigateUp() }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_back_24),
+                                        contentDescription = stringResource(R.string.cd_navigate_back),
+                                    )
+                                }
+                            },
+                            actions = {
+                                IconButton(onClick = { isSearchActive = true }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_search_24),
+                                        contentDescription = stringResource(R.string.cd_settings_search),
+                                    )
+                                }
+                            },
+                            colors =
+                                TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                    scrolledContainerColor =
+                                        if (af.shizuku.manager.ShizukuSettings
+                                                .isBlurUiEnabled()
+                                        ) {
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surface
+                                        },
+                                ),
+                        )
+                        // Hairline divider always visible (bar is always in collapsed appearance)
+                        Box(
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                                    .height(0.8.dp)
+                                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                        )
                     } // end Box
                 }
             }
@@ -375,7 +375,10 @@ fun SettingsScreen(
             val scrimHeight = innerPadding.calculateTopPadding() + 20.dp
             // Skip scrim in blur mode — the frosted bar already provides visual separation,
             // and an opaque surface gradient underneath it would negate the blur effect.
-            if (!isSearchActive && scrimHeight > 0.dp && !af.shizuku.manager.ShizukuSettings.isBlurUiEnabled()) {
+            if (!isSearchActive && scrimHeight > 0.dp &&
+                !af.shizuku.manager.ShizukuSettings
+                    .isBlurUiEnabled()
+            ) {
                 Box(
                     modifier =
                         Modifier

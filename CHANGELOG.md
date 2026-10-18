@@ -2,11 +2,13 @@
 
 All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md](AI_ATTRIBUTIONS.md) for full AI pair-programming provenance and commit mapping.
 
-## [Unreleased]
+## [v13.7.0.r2852 — Stable Release] - 2026-10-18
 
 ### 🌟 Highlights & What's New for You (In Plain English)
+- **Material 3 Expressive (M3E) Settings Consolidation** — Segmented control pill selectors for Icon Style, Icon Color Mode, and Animation Intensity. The Two-Tone icon color options are now placed directly beneath the Two-Tone icon selector in Shape & Style, appearing dynamically only when Two-Tone is active.
 - **Instant & Smarter Wireless ADB Reconnect** — Shizuku+ now connects to Wireless Debugging in a fraction of a second on boot and when switching Wi-Fi networks. It automatically discovers active loopback and network interface ports in parallel and never queues duplicate "Allow USB debugging?" popups.
 - **Rock-Solid Settings Stability** — Toggling themes, resizing system fonts, or changing languages no longer crashes the app. Every settings screen is thoroughly protected against Android 16 and 17 system layout changes and preference summary conflicts ([#587](https://github.com/thejaustin/ShizukuPlus/issues/587)).
+- **Dual-Stack Port & Network Guard Security** — Hardened `TcpNetworkGuard` to check and close Android 11+ `adb_wifi_enabled` alongside raw TCP sockets, preventing unauthorized remote execution when entering untrusted networks ([#518](https://github.com/thejaustin/ShizukuPlus/issues/518)).
 - **Experimental Floating Navigation Bar** — A sleek floating pill bar lets you jump effortlessly between Home, Apps, Feature Hub, and Settings with fluid slide animations that tuck away when you scroll down ([#498](https://github.com/thejaustin/ShizukuPlus/issues/498)). Off by default; toggle anytime in Settings → Personalization.
 - **Butter-Smooth Home Card Reordering** — Long-press to edit and reorder cards with natural spring physics, real-time sibling sliding, corner-radius morphing on pickup, and tactile haptic ticks on every move.
 - **One-Tap Service Doctor Fixes & Modern Diagnostic Dashboard** — Service Doctor features a containerized Material 3 diagnostic status card with dynamic system health overview ("All Systems Healthy" vs detected issues counter), 1-tap "Re-run Diagnostics" with haptic feedback, and containerized diagnostic check cards with tonal quick-fix buttons ([#476](https://github.com/thejaustin/ShizukuPlus/issues/476)).
@@ -53,6 +55,10 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 - **Improved search highlight animation** — the previous animation used `alpha(1.0f)` which is a no-op (view starts at full alpha). Replaced with a `ValueAnimator` that fades a `ColorDrawable` from full opacity to transparent over 700 ms (after a 350 ms hold), with `DecelerateInterpolator` for a natural feel.
 - **Fixed Settings top bar briefly showing preference name instead of section name after tapping a search result** — `navigateToSetting()` was setting `currentTitle = item.title` (e.g. "Blur UI") before committing the fragment transaction. The fragment's `onResume → updateTitle()` already sets the correct section title ("Personalization"), making the preemptive assignment both redundant and wrong. Removed the early assignment; the fragment now owns the title update entirely.
 - **Modernized Service Doctor Diagnostic Dashboard** — Added an Material 3 summary status card that displays real-time overall health ("All Systems Healthy" with tertiary accent or detected issues counter with error styling), tactile "Re-run" diagnostic action button, and upgraded diagnostic check rows to containerized M3 surface cards with tonal "Fix" buttons ([#476](https://github.com/thejaustin/ShizukuPlus/issues/476)).
+- **Material 3 Expressive Segmented Controls & Dynamic Two-Tone Nesting** — Upgraded `icon_style`, `icon_color_mode`, and `animation_intensity` to `SegmentedControlPreference`. Relocated the Two-Tone icon color options directly underneath `icon_style` inside `category_shape_style` and dynamically reveal/hide it based on the Two-Tone toggle.
+- **Collapsible Category Lifecycle & Tint Cleanup** — Added `onDetached()` override to `CollapsiblePreferenceCategory` to unregister child change listeners and prevent memory leaks. Corrected expander chevron tint to `app:tint="?colorOnSurfaceVariant"`.
+- **Dual-Stack TCP Network Guard** — Hardened `TcpNetworkGuard` to verify and disable Android 11+ `adb_wifi_enabled` global setting alongside TCP sockets when entering untrusted networks.
+- **Wireless ADB Port Commit & Sentry Quota Reordering** — Restricted Wireless ADB preference commits to explicit `ImeAction.Done` actions. Reordered Sentry crash filtering so daily quota increments occur strictly after exception filtering.
 - **Resolved AAPT2 Barrier Syntax in Extra Steps Layout** — Replaced direct resource identifiers with unscoped syntax in `home_extra_step_required.xml` barrier references to prevent packaging failures during AAPT2 resource linking.
 
 #### Manager App (Home)

@@ -100,6 +100,10 @@ class AdbStartWorker(
                 }
             }
 
+            if (NetworkTrust.shouldBlockTcp(applicationContext)) {
+                throw SecurityException("Wireless debugging start blocked: current network is untrusted")
+            }
+
             Settings.Global.putInt(cr, Settings.Global.ADB_ENABLED, 1)
             Settings.Global.putLong(cr, "adb_allowed_connection_time", 0L)
 

@@ -55,7 +55,7 @@
     <string name="settings_follow_system_haptics_summary">Disable in-app haptics when system haptic feedback is turned off</string>
 
     <string-array name="icon_styles">
-        <item>Standard (Filled)</item>
+        <item>Filled</item>
         <item>Outlined</item>
         <item>Two-Tone</item>
     </string-array>
@@ -68,9 +68,9 @@
     <string name="settings_icon_color_mode">Two-tone icon colors</string>
     <string name="settings_icon_color_mode_summary">How the Two-Tone icon background is colored</string>
     <string-array name="icon_color_modes">
-        <item>No color (monochrome)</item>
-        <item>Same color for all</item>
-        <item>Different color for each</item>
+        <item>Monochrome</item>
+        <item>Uniform</item>
+        <item>Dynamic</item>
     </string-array>
     <string-array name="icon_color_modes_value">
         <item>none</item>
@@ -1753,7 +1753,7 @@
     <string name="settings_tcp_auto_close_untrusted">Auto-close on untrusted networks</string>
     <string name="settings_tcp_add_network_dialog_title">Add trusted network</string>
     <string name="settings_tcp_ssid_label">Network name (SSID)</string>
-    <string name="settings_tcp_remove_network">Remove %s</string>
+    <string name="settings_tcp_remove_network">Remove %1$s</string>
     <string name="settings_tcp_protection">Protect TCP on shared networks</string>
     <string name="tcp_protection_off">Off</string>
     <string name="tcp_protection_open">Open and public Wi-Fi</string>

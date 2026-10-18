@@ -594,12 +594,14 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
         private val gap = context.resources.getDimension(R.dimen.settings_row_gap)
         private val innerRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else minOf(context.resources.getDimension(R.dimen.settings_inner_radius), effectiveCornerRadius)
         private val pressedRadius = if (!ShizukuSettings.isRoundedEdgesEnabled()) 0f else maxOf(context.resources.getDimension(R.dimen.settings_pressed_radius), effectiveCornerRadius)
+
         // Status banner (pos 0) gets a tinted card so it reads as "status" not "navigation".
-        private val statusPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-            val tv = android.util.TypedValue()
-            context.theme.resolveAttribute(R.attr.colorSecondaryContainer, tv, true)
-            it.color = tv.data
-        }
+        private val statusPaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).also {
+                val tv = android.util.TypedValue()
+                context.theme.resolveAttribute(R.attr.colorSecondaryContainer, tv, true)
+                it.color = tv.data
+            }
         private val progress = java.util.WeakHashMap<View, Float>()
         private val shapes = java.util.WeakHashMap<View, FloatArray>()
         private val path = android.graphics.Path()

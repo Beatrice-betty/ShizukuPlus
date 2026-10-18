@@ -70,7 +70,7 @@
             android:layout_height="20dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_outline_expand_more_24"
-            android:tint="?colorOnSurfaceVariant"
+            app:tint="?colorOnSurfaceVariant"
             android:contentDescription="@null"
             android:importantForAccessibility="no" />
 

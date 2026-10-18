@@ -359,6 +359,7 @@ class HomeAdapter(
             return
         }
         val view = holder.itemView
+        view.animate().cancel()
         view.alpha = 0f
         view.translationY = 24f
         view.scaleX = 0.92f
@@ -389,6 +390,11 @@ class HomeAdapter(
             view.scaleX = 1f
             view.scaleY = 1f
         }
+    }
+
+    override fun onViewRecycled(holder: BaseViewHolder<*>) {
+        super.onViewRecycled(holder)
+        holder.itemView.animate().cancel()
     }
 
     fun moveItem(

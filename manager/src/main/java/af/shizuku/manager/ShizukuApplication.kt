@@ -187,28 +187,6 @@ class ShizukuApplication :
 
                 // Add context about the app
                 options.setBeforeSend { event, _ ->
-                    // 0. Session event cap — stop a crash/error loop from draining the quota. The
-                    // first events already capture the bug; further identical ones add cost, not signal.
-                    if (sentrySessionEventCount.incrementAndGet() > MAX_SENTRY_EVENTS_PER_SESSION) {
-                        return@setBeforeSend null
-                    }
-
-                    // 0a. Daily persistent event cap — hard stop at device daily limit (max 10/day)
-                    if (!af.shizuku.manager.utils.SentryEventDeduper
-                            .checkDailyLimitAndIncrement()
-                    ) {
-                        return@setBeforeSend null
-                    }
-
-                    // 0b. Crash deduplication — drop repeated occurrences of identical errors within 15 mins
-                    val eventTag = event.exceptions?.firstOrNull()?.type ?: event.throwable?.javaClass?.simpleName ?: "Error"
-                    val eventMsg = event.exceptions?.firstOrNull()?.value ?: event.message?.formatted ?: event.throwable?.message ?: ""
-                    if (!af.shizuku.manager.utils.SentryEventDeduper
-                            .shouldSend(eventTag, eventMsg)
-                    ) {
-                        return@setBeforeSend null
-                    }
-
                     // 1. Drop coroutine cancellations
                     val throwable = event.throwable
                     if (throwable is kotlinx.coroutines.CancellationException) return@setBeforeSend null
@@ -316,6 +294,27 @@ class ShizukuApplication :
 
                     // 12. Drop SecurityException for non-changeable system permissions
                     if (throwable is SecurityException && throwable.message?.contains("is not a changeable permission type") == true) {
+                        return@setBeforeSend null
+                    }
+
+                    // 13. Crash deduplication — drop repeated occurrences of identical errors within 15 mins
+                    val eventTag = event.exceptions?.firstOrNull()?.type ?: event.throwable?.javaClass?.simpleName ?: "Error"
+                    val eventMsg = event.exceptions?.firstOrNull()?.value ?: event.message?.formatted ?: event.throwable?.message ?: ""
+                    if (!af.shizuku.manager.utils.SentryEventDeduper
+                            .shouldSend(eventTag, eventMsg)
+                    ) {
+                        return@setBeforeSend null
+                    }
+
+                    // 14. Session event cap — stop a crash/error loop from draining the quota
+                    if (sentrySessionEventCount.incrementAndGet() > MAX_SENTRY_EVENTS_PER_SESSION) {
+                        return@setBeforeSend null
+                    }
+
+                    // 15. Daily persistent event cap — hard stop at device daily limit (max 10/day)
+                    if (!af.shizuku.manager.utils.SentryEventDeduper
+                            .checkDailyLimitAndIncrement()
+                    ) {
                         return@setBeforeSend null
                     }
 

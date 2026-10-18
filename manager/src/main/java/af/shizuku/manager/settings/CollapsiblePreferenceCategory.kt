@@ -32,12 +32,13 @@ class CollapsiblePreferenceCategory
 
         // Refreshes the active-count chip when a child switch is toggled while the category
         // is collapsed, so the count is never stale the next time the header rebinds.
-        private val childChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (!expanded && key != null) {
-                val childKeys = (0 until preferenceCount).mapNotNull { getPreference(it).key }.toSet()
-                if (key in childKeys) notifyChanged()
+        private val childChangeListener =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (!expanded && key != null) {
+                    val childKeys = (0 until preferenceCount).mapNotNull { getPreference(it).key }.toSet()
+                    if (key in childKeys) notifyChanged()
+                }
             }
-        }
         private var prefListenerRegistered = false
 
         init {
@@ -90,27 +91,41 @@ class CollapsiblePreferenceCategory
                     iconView.setImageDrawable(catIcon)
                     iconView.visibility = android.view.View.VISIBLE
                     if (activeCount > 0 && collapsible) {
-                        val bgColor = com.google.android.material.color.MaterialColors.getColor(
-                            ctx, com.google.android.material.R.attr.colorPrimaryContainer, 0xFFE8DEF8.toInt(),
-                        )
-                        val fgColor = com.google.android.material.color.MaterialColors.getColor(
-                            ctx, com.google.android.material.R.attr.colorOnPrimaryContainer, 0xFF21005D.toInt(),
-                        )
-                        val pill = android.graphics.drawable.GradientDrawable().apply {
-                            shape = android.graphics.drawable.GradientDrawable.OVAL
-                            setColor(bgColor)
-                        }
+                        val bgColor =
+                            com.google.android.material.color.MaterialColors.getColor(
+                                ctx,
+                                com.google.android.material.R.attr.colorPrimaryContainer,
+                                0xFFE8DEF8.toInt(),
+                            )
+                        val fgColor =
+                            com.google.android.material.color.MaterialColors.getColor(
+                                ctx,
+                                com.google.android.material.R.attr.colorOnPrimaryContainer,
+                                0xFF21005D.toInt(),
+                            )
+                        val pill =
+                            android.graphics.drawable.GradientDrawable().apply {
+                                shape = android.graphics.drawable.GradientDrawable.OVAL
+                                setColor(bgColor)
+                            }
                         val pad = (5 * density).toInt()
                         iconView.setPadding(pad, pad, pad, pad)
                         iconView.background = pill
-                        iconView.imageTintList = android.content.res.ColorStateList.valueOf(fgColor)
+                        iconView.imageTintList =
+                            android.content.res.ColorStateList
+                                .valueOf(fgColor)
                     } else {
                         iconView.setPadding(0, 0, 0, 0)
                         iconView.background = null
-                        val primaryColor = com.google.android.material.color.MaterialColors.getColor(
-                            ctx, R.attr.colorPrimary, android.graphics.Color.BLUE,
-                        )
-                        iconView.imageTintList = android.content.res.ColorStateList.valueOf(primaryColor)
+                        val primaryColor =
+                            com.google.android.material.color.MaterialColors.getColor(
+                                ctx,
+                                R.attr.colorPrimary,
+                                android.graphics.Color.BLUE,
+                            )
+                        iconView.imageTintList =
+                            android.content.res.ColorStateList
+                                .valueOf(primaryColor)
                     }
                 } else {
                     iconView.visibility = android.view.View.GONE
@@ -127,17 +142,24 @@ class CollapsiblePreferenceCategory
                     summaryView.background = null
                     summaryView.setPadding(0, 0, 0, 0)
                 } else {
-                    val chipBgColor = com.google.android.material.color.MaterialColors.getColor(
-                        ctx, com.google.android.material.R.attr.colorSecondaryContainer, 0xFFE8DEF8.toInt(),
-                    )
-                    val chipTextColor = com.google.android.material.color.MaterialColors.getColor(
-                        ctx, com.google.android.material.R.attr.colorOnSecondaryContainer, 0xFF1D192B.toInt(),
-                    )
-                    val chipBg = android.graphics.drawable.GradientDrawable().apply {
-                        shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                        cornerRadius = 100f * density  // fully rounded pill
-                        setColor(chipBgColor)
-                    }
+                    val chipBgColor =
+                        com.google.android.material.color.MaterialColors.getColor(
+                            ctx,
+                            com.google.android.material.R.attr.colorSecondaryContainer,
+                            0xFFE8DEF8.toInt(),
+                        )
+                    val chipTextColor =
+                        com.google.android.material.color.MaterialColors.getColor(
+                            ctx,
+                            com.google.android.material.R.attr.colorOnSecondaryContainer,
+                            0xFF1D192B.toInt(),
+                        )
+                    val chipBg =
+                        android.graphics.drawable.GradientDrawable().apply {
+                            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                            cornerRadius = 100f * density // fully rounded pill
+                            setColor(chipBgColor)
+                        }
                     val padH = (7 * density).toInt()
                     val padV = (2 * density).toInt()
                     summaryView.background = chipBg
@@ -268,6 +290,14 @@ class CollapsiblePreferenceCategory
 
         override fun onPrepareForRemoval() {
             super.onPrepareForRemoval()
+            if (prefListenerRegistered) {
+                preferenceManager?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(childChangeListener)
+                prefListenerRegistered = false
+            }
+        }
+
+        override fun onDetached() {
+            super.onDetached()
             if (prefListenerRegistered) {
                 preferenceManager?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(childChangeListener)
                 prefListenerRegistered = false

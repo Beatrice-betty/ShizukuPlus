@@ -106,6 +106,11 @@ class WatchdogWorker(
 
         if (!WatchdogService.isRunning()) {
             Timber.tag("WatchdogWorker").w("WatchdogService was DEAD! Restarting...")
+            try {
+                setForeground(getForegroundInfo())
+            } catch (e: Exception) {
+                Timber.tag("WatchdogWorker").w(e, "Could not elevate to foreground before service start")
+            }
             WatchdogService.start(applicationContext)
         } else {
             Timber.tag("WatchdogWorker").d("WatchdogService is healthy.")

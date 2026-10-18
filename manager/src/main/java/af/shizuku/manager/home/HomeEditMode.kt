@@ -65,7 +65,8 @@ object HomeEditMode {
                 view.scaleX = 0.5f
                 view.scaleY = 0.5f
                 view.alpha = 0f
-                view.animate()
+                view
+                    .animate()
                     .scaleX(1f)
                     .scaleY(1f)
                     .alpha(1f)
@@ -79,7 +80,8 @@ object HomeEditMode {
             val interp = android.view.animation.AccelerateInterpolator()
             listOf(dragHandle, removeBtn).forEach { view ->
                 view.animate().cancel()
-                view.animate()
+                view
+                    .animate()
                     .scaleX(0.5f)
                     .scaleY(0.5f)
                     .alpha(0f)
@@ -90,8 +92,7 @@ object HomeEditMode {
                         view.scaleX = 1f
                         view.scaleY = 1f
                         view.alpha = 1f
-                    }
-                    .start()
+                    }.start()
             }
         } else if (!isActive) {
             removeBtn.isVisible = false
@@ -133,7 +134,8 @@ object HomeEditMode {
             val interp = android.view.animation.AccelerateInterpolator()
             listOf(binding.dragHandle, binding.removeBtn).forEach { view ->
                 view.animate().cancel()
-                view.animate()
+                view
+                    .animate()
                     .scaleX(0.5f)
                     .scaleY(0.5f)
                     .alpha(0f)
@@ -144,8 +146,7 @@ object HomeEditMode {
                         view.scaleX = 1f
                         view.scaleY = 1f
                         view.alpha = 1f
-                    }
-                    .start()
+                    }.start()
             }
         } else if (!isActive) {
             binding.removeBtn.isVisible = false

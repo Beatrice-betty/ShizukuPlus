@@ -29,12 +29,15 @@ open class GrayableIconSwitchPreference
             if (isChecked == willBeChecked) {
                 lastItemView?.get()?.let { v ->
                     if (isChecked) {
-                        af.shizuku.manager.utils.HapticUtils.toggleOn(v)
+                        af.shizuku.manager.utils.HapticUtils
+                            .toggleOn(v)
                     } else {
-                        af.shizuku.manager.utils.HapticUtils.toggleOff(v)
+                        af.shizuku.manager.utils.HapticUtils
+                            .toggleOff(v)
                     }
                     // Smooth icon alpha transition on toggle instead of a snap rebind.
-                    v.findViewById<ImageView>(android.R.id.icon)
+                    v
+                        .findViewById<ImageView>(android.R.id.icon)
                         ?.animate()
                         ?.alpha(if (isChecked) 1.0f else 0.38f)
                         ?.setDuration(ShizukuSettings.scaledAnimationDuration(200))

@@ -6,4 +6,5 @@
     <item name="action_move_card_up" type="id" />
     <item name="action_move_card_down" type="id" />
     <item name="tag_card_rest_radius" type="id" />
+    <item name="tag_home_scroll_listener" type="id" />
 </resources>

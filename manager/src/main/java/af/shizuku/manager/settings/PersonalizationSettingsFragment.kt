@@ -40,10 +40,10 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
     private lateinit var translationPreference: Preference
     private lateinit var expressiveShapesPreference: TwoStatePreference
     private lateinit var expressiveAnimationsPreference: TwoStatePreference
-    private lateinit var iconStylePreference: ListPreference
-    private lateinit var iconColorModePreference: Preference
+    private lateinit var iconStylePreference: SegmentedControlPreference
+    private lateinit var iconColorModePreference: SegmentedControlPreference
     private lateinit var shapeStylePreference: ListPreference
-    private lateinit var animationIntensityPreference: ListPreference
+    private lateinit var animationIntensityPreference: SegmentedControlPreference
     private lateinit var edgeToEdgePreference: TwoStatePreference
     private lateinit var blurUiPreference: TwoStatePreference
     private lateinit var oneUiThemePreference: TwoStatePreference

@@ -42,9 +42,12 @@ object EnvironmentUtils {
         af.shizuku.common.util.EnvironmentUtils
             .isTlsSupported(appContext)
 
-    fun isWifiRequired(): Boolean {
+    fun isWifiRequired(allowNetworkProbe: Boolean = true): Boolean {
         if (ShizukuSettings.getTcpMode()) return false
         if (getAdbTcpPort() > 0) return false
+        if (!allowNetworkProbe || android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+            return true
+        }
         if (af.shizuku.manager.adb.AdbPortProber
                 .isPortOpen(5555, 50)
         ) {

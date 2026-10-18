@@ -115,9 +115,9 @@ class ShizukuTileService : TileService() {
             }
         } else {
             val hasWriteSecure = checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            val isWifiOk = !EnvironmentUtils.isWifiRequired() || ShizukuSettings.isForceStartWadbEnabled()
             // Port probes are blocking I/O — move them off the main thread
             CoroutineScope(Dispatchers.IO).launch {
+                val isWifiOk = !EnvironmentUtils.isWifiRequired() || ShizukuSettings.isForceStartWadbEnabled()
                 val hasLoopback =
                     AdbPortProber.isPortOpen(5555, 50) ||
                         (ShizukuSettings.getLastPort() in 1..65535 && AdbPortProber.isPortOpen(ShizukuSettings.getLastPort(), 50))

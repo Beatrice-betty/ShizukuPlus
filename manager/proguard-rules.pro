@@ -99,6 +99,26 @@
 -keep class af.shizuku.manager.settings.AppPickerPreference {
     public <init>(android.content.Context, android.util.AttributeSet);
 }
+-keep class af.shizuku.manager.settings.WirelessAdbPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.SegmentedControlPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+-keep class af.shizuku.manager.settings.FilterChipPreference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+
+# Blanket guard for all Preference subclasses inflated from XML screens
+-keep class * extends androidx.preference.Preference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+    public <init>(android.content.Context, android.util.AttributeSet, int, int);
+}
+
+# Koin dependency injection keep rules
+-dontwarn org.koin.**
+-keep class org.koin.** { *; }
 
 # Keep WorkManager workers instantiated by name via reflection.
 # Both RemoteDbSyncWorker and AdbStartWorker must maintain their class names.

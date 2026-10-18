@@ -12,10 +12,10 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -170,19 +170,40 @@ fun HomeScreen(
                             ),
                 ) {
                     // Action icons pinned at top-end inside the 64dp collapsed row
+                    val isRtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
+                    val topBarGradientColors =
+                        if (isRtl) {
+                            listOf(
+                                MaterialTheme.colorScheme.surface,
+                                androidx.compose.ui.graphics.Color.Transparent,
+                            )
+                        } else {
+                            listOf(
+                                androidx.compose.ui.graphics.Color.Transparent,
+                                MaterialTheme.colorScheme.surface,
+                            )
+                        }
+
                     AnimatedContent(
                         targetState = isEditMode,
                         transitionSpec = {
-                            val enter = if (animationsEnabled)
-                                fadeIn(tween(motionDur, easing = motionEasing))
-                            else EnterTransition.None
-                            val exit = if (animationsEnabled)
-                                fadeOut(tween((motionDur * 0.7f).toInt()))
-                            else ExitTransition.None
-                            (enter togetherWith exit) using SizeTransform(
-                                clip = false,
-                                sizeAnimationSpec = { _, _ -> tween(motionDur, easing = motionEasing) },
-                            )
+                            val enter =
+                                if (animationsEnabled) {
+                                    fadeIn(tween(motionDur, easing = motionEasing))
+                                } else {
+                                    EnterTransition.None
+                                }
+                            val exit =
+                                if (animationsEnabled) {
+                                    fadeOut(tween((motionDur * 0.7f).toInt()))
+                                } else {
+                                    ExitTransition.None
+                                }
+                            (enter togetherWith exit) using
+                                SizeTransform(
+                                    clip = false,
+                                    sizeAnimationSpec = { _, _ -> tween(motionDur, easing = motionEasing) },
+                                )
                         },
                         contentAlignment = Alignment.CenterEnd,
                         modifier =
@@ -190,12 +211,7 @@ fun HomeScreen(
                                 .align(Alignment.TopEnd)
                                 .height(collapsedHeight)
                                 .background(
-                                    Brush.horizontalGradient(
-                                        colors = listOf(
-                                            androidx.compose.ui.graphics.Color.Transparent,
-                                            MaterialTheme.colorScheme.surface,
-                                        ),
-                                    ),
+                                    Brush.horizontalGradient(colors = topBarGradientColors),
                                 ),
                         label = "topBarActions",
                     ) { editMode ->
@@ -291,27 +307,9 @@ fun HomeScreen(
                             animationSpec = if (animationsEnabled) tween(motionDur, easing = motionEasing) else tween(0),
                             label = "titleContent",
                         ) { editMode ->
-                        if (editMode) {
-                            Text(
-                                text = stringResource(R.string.home_edit_mode_title),
-                                style =
-                                    MaterialTheme.typography.headlineLarge.copy(
-                                        fontWeight = titleFontWeight,
-                                        fontSize = titleFontSize,
-                                        letterSpacing = titleLetterSpacing,
-                                    ),
-                                textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        } else if (isDropIn) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = if (curvedFraction > 0.5f) Arrangement.Start else Arrangement.Center,
-                            ) {
+                            if (editMode) {
                                 Text(
-                                    text = stringResource(R.string.brand_shizuku_plus),
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = stringResource(R.string.home_edit_mode_title),
                                     style =
                                         MaterialTheme.typography.headlineLarge.copy(
                                             fontWeight = titleFontWeight,
@@ -322,44 +320,62 @@ fun HomeScreen(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
-                                Spacer(modifier = Modifier.width(lerp(8.dp, 6.dp, curvedFraction)))
-                                Surface(
-                                    shape = RoundedCornerShape(100),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    tonalElevation = 1.dp,
+                            } else if (isDropIn) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = if (curvedFraction > 0.5f) Arrangement.Start else Arrangement.Center,
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.brand_drop_in),
+                                        text = stringResource(R.string.brand_shizuku_plus),
+                                        modifier = Modifier.weight(1f, fill = false),
                                         style =
-                                            MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                letterSpacing = 0.4.sp,
-                                                fontSize = lerp(11.sp, 9.5.sp, curvedFraction),
+                                            MaterialTheme.typography.headlineLarge.copy(
+                                                fontWeight = titleFontWeight,
+                                                fontSize = titleFontSize,
+                                                letterSpacing = titleLetterSpacing,
                                             ),
-                                        modifier =
-                                            Modifier.padding(
-                                                horizontal = lerp(8.dp, 6.dp, curvedFraction),
-                                                vertical = lerp(3.dp, 2.dp, curvedFraction),
-                                            ),
+                                        textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
                                         maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                     )
+                                    Spacer(modifier = Modifier.width(lerp(8.dp, 6.dp, curvedFraction)))
+                                    Surface(
+                                        shape = RoundedCornerShape(100),
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        tonalElevation = 1.dp,
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.brand_drop_in),
+                                            style =
+                                                MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 0.4.sp,
+                                                    fontSize = lerp(11.sp, 9.5.sp, curvedFraction),
+                                                ),
+                                            modifier =
+                                                Modifier.padding(
+                                                    horizontal = lerp(8.dp, 6.dp, curvedFraction),
+                                                    vertical = lerp(3.dp, 2.dp, curvedFraction),
+                                                ),
+                                            maxLines = 1,
+                                        )
+                                    }
                                 }
+                            } else {
+                                Text(
+                                    text = stringResource(R.string.app_name),
+                                    style =
+                                        MaterialTheme.typography.headlineLarge.copy(
+                                            fontWeight = titleFontWeight,
+                                            fontSize = titleFontSize,
+                                            letterSpacing = titleLetterSpacing,
+                                        ),
+                                    textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
                             }
-                        } else {
-                            Text(
-                                text = stringResource(R.string.app_name),
-                                style =
-                                    MaterialTheme.typography.headlineLarge.copy(
-                                        fontWeight = titleFontWeight,
-                                        fontSize = titleFontSize,
-                                        letterSpacing = titleLetterSpacing,
-                                    ),
-                                textAlign = if (curvedFraction > 0.5f) TextAlign.Start else TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
                         } // end Crossfade
                     }
 
@@ -409,7 +425,10 @@ fun HomeScreen(
                         factory = { context ->
                             recyclerViewProvider(context, adjustedPadding).also { rv ->
                                 (rv.parent as? android.view.ViewGroup)?.removeView(rv)
-                                rv.addOnScrollListener(
+                                (rv.getTag(R.id.tag_home_scroll_listener) as? RecyclerView.OnScrollListener)?.let { oldListener ->
+                                    rv.removeOnScrollListener(oldListener)
+                                }
+                                val newListener =
                                     object : RecyclerView.OnScrollListener() {
                                         override fun onScrolled(
                                             recyclerView: RecyclerView,
@@ -435,8 +454,9 @@ fun HomeScreen(
                                         ) {
                                             isScrollIdle.value = (newState == RecyclerView.SCROLL_STATE_IDLE)
                                         }
-                                    },
-                                )
+                                    }
+                                rv.addOnScrollListener(newListener)
+                                rv.setTag(R.id.tag_home_scroll_listener, newListener)
                             }
                         },
                         update = { view -> recyclerViewProvider(view.context, adjustedPadding) },
@@ -457,10 +477,11 @@ fun HomeScreen(
                                         .align(Alignment.BottomCenter)
                                         .background(
                                             Brush.verticalGradient(
-                                                colors = listOf(
-                                                    androidx.compose.ui.graphics.Color.Transparent,
-                                                    scrimColor.copy(alpha = 0.85f),
-                                                ),
+                                                colors =
+                                                    listOf(
+                                                        androidx.compose.ui.graphics.Color.Transparent,
+                                                        scrimColor.copy(alpha = 0.85f),
+                                                    ),
                                             ),
                                         ),
                             )

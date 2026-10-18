@@ -77,15 +77,23 @@ object TcpNetworkGuard {
         }
         CoroutineScope(Dispatchers.IO).launch {
             val port = EnvironmentUtils.getAdbTcpPort()
-            if (port <= 0) {
+            val isWirelessAdbOn =
+                try {
+                    android.provider.Settings.Global
+                        .getInt(ctx.contentResolver, "adb_wifi_enabled", 0) == 1
+                } catch (_: Exception) {
+                    false
+                }
+            if (port <= 0 && !isWirelessAdbOn) {
                 nm?.cancel(NOTIFICATION_ID)
                 return@launch
             }
             val assessment = NetworkTrust.assess(ctx)
+            val effectivePort = if (port > 0) port else 5555
             if (NetworkTrust.isAutoCloseEnabled()) {
                 closePort(ctx, port)
             } else {
-                notifyOpenPort(ctx, port, assessment)
+                notifyOpenPort(ctx, effectivePort, assessment)
             }
         }
     }
@@ -94,9 +102,16 @@ object TcpNetworkGuard {
         context: Context,
         port: Int,
     ) {
-        Timber.tag(TAG).i("Closing ADB TCP port %d on untrusted network", port)
-        ActivityLogManager.log("Shizuku", context.packageName, "Closed TCP port $port on untrusted network")
-        AdbStarter.stopTcp(context, port)
+        Timber.tag(TAG).i("Closing ADB TCP/wireless on untrusted network")
+        ActivityLogManager.log("Shizuku", context.packageName, "Closed ADB port/wireless debugging on untrusted network")
+        if (port > 0) {
+            AdbStarter.stopTcp(context, port)
+        }
+        try {
+            android.provider.Settings.Global
+                .putInt(context.contentResolver, "adb_wifi_enabled", 0)
+        } catch (_: Exception) {
+        }
         context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
     }
 

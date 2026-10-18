@@ -351,13 +351,21 @@ class WirelessAdbPreference
                     isError = invalid,
                     placeholder = { Text("5555") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                    keyboardActions =
+                        KeyboardActions(
+                            onDone = {
+                                focusManager.clearFocus()
+                                if (text != committed) {
+                                    if (!commitPort(text)) text = committed
+                                }
+                            },
+                        ),
                     modifier =
                         Modifier
                             .weight(1f)
                             .onFocusChanged { state ->
                                 if (!state.isFocused && text != committed) {
-                                    if (!commitPort(text)) text = committed
+                                    text = committed
                                 }
                             },
                 )

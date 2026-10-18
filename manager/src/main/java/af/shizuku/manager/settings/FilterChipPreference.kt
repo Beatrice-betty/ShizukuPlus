@@ -55,7 +55,7 @@ class FilterChipPreference
                 selected.value = newValues
                 if (changed) {
                     persistStringSet(newValues)
-                    notifyChanged()
+                    notifyDependencyChange(shouldDisableDependents())
                 }
             }
 
@@ -91,7 +91,7 @@ class FilterChipPreference
                         selected = keys.indices.filter { keys[it] in selected.value }.toSet(),
                         enabled = enabled,
                         onToggle = { index ->
-                            val key = keys[index]
+                            val key = keys.getOrNull(index) ?: return@FilterChipGroup
                             val newValues = if (key in selected.value) selected.value - key else selected.value + key
                             if (callChangeListener(newValues)) values = newValues
                         },

@@ -120,6 +120,22 @@ Things discussed or sketched that we never formally decided to build.
 
 ## Session History (newest first)
 
+### 2026-10-18 — Antigravity (Advanced Multi-Agent Review & M3E UX Consolidation) [Stable Release Prep]
+
+- **Multi-Agent Review & Final Stabilization Pass (v13.7.0.r2852)**:
+  - **ProGuard / R8 Hardening**: Added keep rules for custom preferences (`af.shizuku.manager.settings.**`) and Koin DI (`org.koin.**`) in `manager/proguard-rules.pro`.
+  - **Core Security & Dual-Stack Network Guard**: Hardened `TcpNetworkGuard` to check and close `adb_wifi_enabled` global setting alongside TCP socket ports. Enforced `NetworkTrust.shouldBlockTcp` in `AdbStartWorker.attemptStart()`.
+  - **State Machine Concurrency**: Re-verified `pingBinder()` before committing `State.CRASHED` in `ShizukuStateMachine.kt` to prevent false crash status transitions under concurrent binder calls.
+  - **Sentry Quota & Exception Ordering**: Reordered `ShizukuApplication.setBeforeSend` so daily persistent event caps increment strictly *after* exception filtering and deduplication pass.
+  - **Android 15+ Foreground Service Compliance**: Added `setForeground(getForegroundInfo())` before `startForegroundService` in `WatchdogWorker.kt`.
+  - **Platform & Architecture Compatibility**: Fixed OneUI fallback mapping in `EnvironmentUtils.java` for API 33–35. Offloaded synchronous socket probing from the UI thread in `EnvironmentUtils.kt` and `ShizukuTileService.kt`.
+- **UI/UX & Material 3 Expressive (M3E) Settings Consolidation**:
+  - **Segmented Control Upgrades**: Upgraded `icon_style`, `icon_color_mode`, and `animation_intensity` to `SegmentedControlPreference` with segmented pill choices.
+  - **Intuitive Hierarchy**: Moved `icon_color_mode` out of Color & Theme and directly nested under `icon_style` inside Shape & Style, appearing dynamically only when Two-Tone is selected.
+  - **Lifecycle & Tint Cleanup**: Implemented `onDetached()` in `CollapsiblePreferenceCategory.kt` to unregister child listeners and prevent memory retention. Fixed card expander chevron tint to `app:tint="?colorOnSurfaceVariant"`.
+  - **Compose & Home Polish**: Deduplicated compounding scroll listeners via `tag_home_scroll_listener` in `HomeScreen.kt`. Resolved RTL horizontal gradient inversion by evaluating `LocalLayoutDirection.current` in Composable scope. Canceled in-flight `ViewPropertyAnimator` on bind and recycle in `HomeAdapter.kt`. Added bounds guards to `SegmentedControlPreference` and `FilterChipPreference`.
+  - **Device Verification**: Built, libc++ patched, signed, and installed on `emulator-5554` (Galaxy S24 Ultra Android 17); verified SettingsActivity and PersonalizationSettingsFragment live on device with spotless formatting.
+
 ### 2026-10-12 — Antigravity (Gemini 3.8 Flash) [Service Doctor Redesign, Notification Anti-Fatigue & Build Resilience]
 
 - **Service Doctor Modernization & Layout Polish**:

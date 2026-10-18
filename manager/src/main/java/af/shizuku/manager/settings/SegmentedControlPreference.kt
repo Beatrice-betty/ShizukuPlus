@@ -51,7 +51,7 @@ class SegmentedControlPreference
                 selected.value = newValue
                 if (changed) {
                     persistString(newValue)
-                    notifyChanged()
+                    notifyDependencyChange(shouldDisableDependents())
                 }
             }
 
@@ -86,7 +86,7 @@ class SegmentedControlPreference
                         selectedIndex = values.indexOf(selected.value),
                         enabled = enabled,
                         onSelect = { index ->
-                            val newValue = values[index]
+                            val newValue = values.getOrNull(index) ?: return@SegmentedChoiceRow
                             if (newValue != selected.value && callChangeListener(newValue)) {
                                 value = newValue
                             }

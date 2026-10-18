@@ -51,29 +51,29 @@
             android:icon="@drawable/ic_palette_24"
             app:badgeType="oneui" />
 
-        <rikka.preference.SimpleMenuPreference
-            android:key="icon_color_mode"
-            android:title="@string/settings_icon_color_mode"
-            app:useSimpleSummaryProvider="true"
-            android:defaultValue="uniform"
-            android:entries="@array/icon_color_modes"
-            android:entryValues="@array/icon_color_modes_value"
-            android:icon="@drawable/ic_palette_24" />
-
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:key="category_shape_style"
         android:title="@string/settings_personalization_category_shape_style"
         android:icon="@drawable/ic_window_24"
-        android:defaultValue="false">
+        android:defaultValue="true">
 
-        <af.shizuku.manager.settings.GrayableIconSwitchPreference
-            android:key="rounded_edges_enabled"
-            android:title="@string/settings_rounded_edges"
-            android:summary="@string/settings_rounded_edges_summary"
-            android:defaultValue="true"
-            android:icon="@drawable/ic_window_24" />
+        <af.shizuku.manager.settings.SegmentedControlPreference
+            android:key="icon_style"
+            android:title="@string/settings_icon_style"
+            android:defaultValue="twotone"
+            android:entries="@array/icon_styles"
+            android:entryValues="@array/icon_styles_value" />
+
+        <af.shizuku.manager.settings.SegmentedControlPreference
+            android:key="icon_color_mode"
+            android:title="@string/settings_icon_color_mode"
+            android:summary="@string/settings_icon_color_mode_summary"
+            android:defaultValue="uniform"
+            android:entries="@array/icon_color_modes"
+            android:entryValues="@array/icon_color_modes_value"
+            android:dependency="icon_style" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="expressive_shapes"
@@ -92,14 +92,12 @@
             android:dependency="expressive_shapes"
             android:icon="@drawable/ic_settings_suggest_24" />
 
-        <rikka.preference.SimpleMenuPreference
-            android:key="icon_style"
-            android:title="@string/settings_icon_style"
-            app:useSimpleSummaryProvider="true"
-            android:defaultValue="twotone"
-            android:entries="@array/icon_styles"
-            android:entryValues="@array/icon_styles_value"
-            android:icon="@drawable/ic_settings_suggest_24" />
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="rounded_edges_enabled"
+            android:title="@string/settings_rounded_edges"
+            android:summary="@string/settings_rounded_edges_summary"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_window_24" />
 
         <rikka.preference.SimpleMenuPreference
             android:key="corner_rounding_override"
@@ -150,15 +148,13 @@
             android:defaultValue="true"
             android:icon="@drawable/ic_outline_play_arrow_24" />
 
-        <rikka.preference.SimpleMenuPreference
+        <af.shizuku.manager.settings.SegmentedControlPreference
             android:key="animation_intensity"
             android:title="@string/settings_animation_intensity"
-            app:useSimpleSummaryProvider="true"
             android:defaultValue="2"
             android:entries="@array/animation_intensities"
             android:entryValues="@array/animation_intensities_value"
-            android:dependency="expressive_animations"
-            android:icon="@drawable/ic_bolt_24" />
+            android:dependency="expressive_animations" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="haptic_feedback"
