@@ -1,21 +1,25 @@
 <div align="center">
-NOTICE: 
+UPDATE! Stable Release is heading your way tonight!
 
-I'm in the process of simplifying, restructuring, and improving the code quality, and visual quality of the app locally. 
+I've been in the process of simplifying, restructuring, and improving the code quality, and visual quality of the app locally. 
 
-Releases are less frequent as I'm doing more local tests before pushing a release.
-Nightly releases may return in the future, but I'm learning to create checkpoints for myself and this project.
+Releases have been, and will be less frequent as I'm doing more local testing before pushing releases.
+Pre-releases will return for simple things like bugs, crashes, issues and such. 
 
-It's time to truly stabilize things before developing at the speed of light.
+I'm creating more checkpoints for myself and this project as I shift my focus to stability and improvement in visual quality & user experience ahead of new feature implementation.
+
+It's time to truly stabilize things instead of simply moving forward with development at lightspeed
 Thank you for your patience, and much love to you all!
 
 # Shizuku+
 
 The advanced privileged-process manager for Android.
 
-An enhanced version of [Shizuku](https://github.com/RikkaApps/Shizuku) built on top of [thedjchi/Shizuku](https://github.com/thedjchi/Shizuku), with quality-of-life improvements, backported optimizations, and exclusive Plus APIs.
+Shizuku+ is an enhanced version of [Shizuku](https://github.com/RikkaApps/Shizuku) built on top of [thedjchi/Shizuku](https://github.com/thedjchi/Shizuku), with quality-of-life improvements, backported optimizations, exclusive Plus APIs, M3E theming & TCP connectivity improvements, and more. 
 
-Shizuku lets normal apps use system-level APIs directly via a privileged process started with adb or root. Shizuku+ keeps full compatibility while adding features for power users and developers.
+ℹ️ Shizuku lets normal apps use system-level APIs directly via a privileged process started with adb or root. Shizuku+ keeps full compatibility while adding features for power users and developers through the API and in-app with advanced settings and experimental developments.
+
+✨ Check out everything else this fork offers in the feature section further below!
 
 [![Stars](https://img.shields.io/github/stars/thejaustin/ShizukuPlus?style=for-the-badge&color=bfb330&labelColor=807820)](https://github.com/thejaustin/ShizukuPlus/stargazers)
 [![Downloads](https://img.shields.io/github/downloads/thejaustin/ShizukuPlus/total?style=for-the-badge&color=bf7830&labelColor=805020)](https://github.com/thejaustin/ShizukuPlus/releases)
