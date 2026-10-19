@@ -1,6 +1,8 @@
 <div align="center">
 UPDATE! 
+
 Stable Release is heading your way tonight!
+
 
 I've been in the process of simplifying, restructuring, and improving the code quality, and visual quality of the app locally. 
 
