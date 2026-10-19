@@ -1,5 +1,5 @@
 <div align="center">
-UPDATE! 
+# UPDATE! 
 
 Stable Release is heading your way tonight!
 
@@ -21,7 +21,7 @@ The advanced privileged-process manager for Android.
 
 Shizuku+ is an enhanced version of [Shizuku](https://github.com/RikkaApps/Shizuku) built on top of [thedjchi/Shizuku](https://github.com/thedjchi/Shizuku), with quality-of-life improvements, backported optimizations, exclusive Plus APIs, M3E theming & TCP connectivity improvements, and more. 
 
-ℹ️ Shizuku lets normal apps use system-level APIs directly via a privileged process started with adb or root. Shizuku+ keeps full compatibility while adding features for power users and developers through the API and in-app with advanced settings and experimental developments.
+Shizuku lets normal apps use system-level APIs directly via a privileged process started with adb or root. Shizuku+ keeps full compatibility while adding features for power users and developers through the API and in-app with advanced settings and experimental developments.
 
 ✨ Check out everything else this fork offers in the feature section further below!
 
