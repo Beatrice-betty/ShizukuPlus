@@ -1,5 +1,5 @@
 <div align="center">
-# UPDATE! 
+[[[ UPDATE! ]]]
 
 Stable Release is heading your way tonight!
 
