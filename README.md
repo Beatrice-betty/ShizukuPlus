@@ -1,5 +1,6 @@
 <div align="center">
-UPDATE! Stable Release is heading your way tonight!
+UPDATE! 
+Stable Release is heading your way tonight!
 
 I've been in the process of simplifying, restructuring, and improving the code quality, and visual quality of the app locally. 
 
@@ -10,6 +11,7 @@ I'm creating more checkpoints for myself and this project as I shift my focus to
 
 It's time to truly stabilize things instead of simply moving forward with development at lightspeed
 Thank you for your patience, and much love to you all!
+
 
 # Shizuku+
 
