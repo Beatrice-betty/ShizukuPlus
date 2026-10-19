@@ -173,6 +173,8 @@ public class ShizukuSettings {
         public static final String KEY_SHOW_ADVANCED_SETTINGS = "show_advanced_settings";
         public static final String KEY_FLOATING_NAV_BAR_ENABLED = "floating_nav_enabled";
         public static final String KEY_HIDE_LAUNCHER_ICON = "hide_launcher_icon";
+        public static final String KEY_APP_ICON_ALIAS = "app_icon_alias";
+        public static final String KEY_SHOW_HOME_CARDS_OUTLINE = "show_home_cards_outline";
         public static final String KEY_DEV_OPTIONS_UNLOCKED = "dev_options_unlocked";
 
         // Migration (Shizuku+ additions)
@@ -911,6 +913,26 @@ public class ShizukuSettings {
         if (p != null) p.edit().putBoolean(Keys.KEY_SHOW_STATUS_CARD_OUTLINE, enabled).apply();
     }
 
+    public static boolean isShowHomeCardsOutlineEnabled() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_SHOW_HOME_CARDS_OUTLINE, false);
+    }
+
+    public static void setShowHomeCardsOutlineEnabled(boolean enabled) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_SHOW_HOME_CARDS_OUTLINE, enabled).apply();
+    }
+
+    public static String getAppIconAlias() {
+        SharedPreferences p = getPreferences();
+        return p != null ? p.getString(Keys.KEY_APP_ICON_ALIAS, "default") : "default";
+    }
+
+    public static void setAppIconAlias(String alias) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putString(Keys.KEY_APP_ICON_ALIAS, alias).apply();
+    }
+
     /** "material" (default) = theme colorPrimary/colorError; "status" = green/amber/red semantic colors. */
     public static String getStatusCardOutlineStyle() {
         SharedPreferences p = getPreferences();
@@ -978,9 +1000,24 @@ public class ShizukuSettings {
         if (p != null) p.edit().putBoolean("enh_" + packageName + "_" + enhancementKey, enabled).apply();
     }
 
+    public static boolean isOnboardingSeen() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean("onboarding_seen", false);
+    }
+
     public static void setOnboardingSeen() {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putBoolean("onboarding_seen", true).apply();
+    }
+
+    public static boolean isOnboardingV2Seen() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean("onboarding_v2_seen", false);
+    }
+
+    public static void setOnboardingV2Seen() {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean("onboarding_v2_seen", true).apply();
     }
 
     public static Locale getLocale() {

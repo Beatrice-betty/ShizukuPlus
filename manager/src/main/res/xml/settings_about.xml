@@ -2,9 +2,9 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Version & Updates -->
+    <!-- App Info -->
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
-        android:title="@string/settings_about_category_version_updates"
+        android:title="@string/settings_about_category_app_info"
         android:key="category_about_info"
         android:icon="@drawable/ic_info_24"
         android:defaultValue="true">
@@ -15,16 +15,31 @@
             android:icon="@drawable/ic_info_24" />
 
         <Preference
-            android:key="check_for_update"
-            android:title="@string/settings_check_for_update_title"
-            android:summary="@string/settings_check_for_update_summary"
-            android:icon="@drawable/ic_refresh_24" />
-
-        <Preference
             android:key="changelog"
             android:title="@string/changelog_title"
             android:summary="@string/changelog_earlier_releases"
             android:icon="@drawable/ic_history_24" />
+
+        <Preference
+            android:key="feature_tour"
+            android:title="@string/onboarding_take_tour"
+            android:summary="@string/onboarding_take_tour_summary"
+            android:icon="@drawable/ic_sparkle_24" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <!-- Updates -->
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:title="@string/settings_about_category_updates"
+        android:key="category_about_updates"
+        android:icon="@drawable/ic_update_24"
+        android:defaultValue="true">
+
+        <Preference
+            android:key="check_for_update"
+            android:title="@string/settings_check_for_update_title"
+            android:summary="@string/settings_check_for_update_summary"
+            android:icon="@drawable/ic_refresh_24" />
 
         <af.shizuku.manager.settings.GrayableIconSwitchPreference
             android:key="auto_update_enabled"
@@ -52,8 +67,7 @@
 
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
-
-    <!-- Project & Legal -->
+    <!-- Project Info -->
     <af.shizuku.manager.settings.CollapsiblePreferenceCategory
         android:title="@string/settings_about_category_project"
         android:key="category_about_links"

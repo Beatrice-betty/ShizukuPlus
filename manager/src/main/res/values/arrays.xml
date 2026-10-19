@@ -159,4 +159,22 @@
         <item>trusted</item>
     </string-array>
 
+    <string-array name="app_icon_alias_entries">
+        <item>Shizuku+ (Default)</item>
+        <item>Shizuku (Classic)</item>
+        <item>System Service (Camouflage)</item>
+        <item>Tools (Camouflage)</item>
+        <item>Files (Camouflage)</item>
+        <item>Notes (Camouflage)</item>
+    </string-array>
+
+    <string-array name="app_icon_alias_values">
+        <item>default</item>
+        <item>classic</item>
+        <item>system</item>
+        <item>tools</item>
+        <item>files</item>
+        <item>notes</item>
+    </string-array>
+
 </resources>

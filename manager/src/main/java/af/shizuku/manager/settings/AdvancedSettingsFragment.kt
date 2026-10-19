@@ -7,13 +7,11 @@ import af.shizuku.manager.backup.BackupKeyUnavailableException
 import af.shizuku.manager.backup.BackupRestoreManager
 import af.shizuku.manager.backup.CryptoUtils
 import af.shizuku.manager.database.AppContextManager
-import af.shizuku.manager.ktx.setComponentEnabled
 import af.shizuku.manager.security.BiometricLock
 import af.shizuku.manager.utils.CustomTabsHelper
 import af.shizuku.manager.utils.EnvironmentUtils
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.security.keystore.KeyPermanentlyInvalidatedException
@@ -302,7 +300,6 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
         // (context.packageName), so ".LauncherAlias" must resolve against the namespace, not the
         // package name, or ComponentName construction throws "Component class ... does not exist"
         // (SHIZUKUPLUS-7R).
-        val launcherAlias = ComponentName(context, "af.shizuku.manager.LauncherAlias")
         findPreference<TwoStatePreference>("hide_launcher_icon")?.apply {
             isChecked = ShizukuSettings.isHideLauncherIconEnabled()
             setOnPreferenceChangeListener { pref, newValue ->
@@ -312,16 +309,18 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
                         .setTitle(R.string.stealth_mode_enable_title)
                         .setMessage(getString(R.string.stealth_mode_enable_message, context.packageName))
                         .setPositiveButton(R.string.stealth_mode_enable_button) { _, _ ->
-                            context.packageManager.setComponentEnabled(launcherAlias, false)
                             ShizukuSettings.setHideLauncherIconEnabled(true)
+                            af.shizuku.manager.utils.AppAliasManager
+                                .applyAlias(context, "")
                             (pref as? TwoStatePreference)?.isChecked = true
                         }.setNegativeButton(android.R.string.cancel) { _, _ ->
                             (pref as? TwoStatePreference)?.isChecked = false
                         }.show()
                     false
                 } else {
-                    context.packageManager.setComponentEnabled(launcherAlias, true)
                     ShizukuSettings.setHideLauncherIconEnabled(false)
+                    af.shizuku.manager.utils.AppAliasManager
+                        .applyAlias(context, ShizukuSettings.getAppIconAlias())
                     true
                 }
             }

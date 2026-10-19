@@ -189,7 +189,7 @@ class ServerStatusViewHolder(
                         } else {
                             com.google.android.material.color.MaterialColors.getColor(
                                 context,
-                                androidx.appcompat.R.attr.colorPrimary,
+                                R.attr.colorPrimary,
                                 ContextCompat.getColor(context, R.color.status_ok),
                             )
                         }
@@ -199,7 +199,7 @@ class ServerStatusViewHolder(
                         } else {
                             com.google.android.material.color.MaterialColors.getColor(
                                 context,
-                                androidx.appcompat.R.attr.colorError,
+                                R.attr.colorError,
                                 ContextCompat.getColor(context, R.color.status_error),
                             )
                         }

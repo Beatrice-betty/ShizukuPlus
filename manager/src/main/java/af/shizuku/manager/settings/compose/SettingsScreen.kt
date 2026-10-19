@@ -375,7 +375,8 @@ fun SettingsScreen(
             val scrimHeight = innerPadding.calculateTopPadding() + 20.dp
             // Skip scrim in blur mode — the frosted bar already provides visual separation,
             // and an opaque surface gradient underneath it would negate the blur effect.
-            if (!isSearchActive && scrimHeight > 0.dp &&
+            if (!isSearchActive &&
+                scrimHeight > 0.dp &&
                 !af.shizuku.manager.ShizukuSettings
                     .isBlurUiEnabled()
             ) {

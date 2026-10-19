@@ -6,7 +6,10 @@ import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.databinding.ActivityOnboardingBinding
 import af.shizuku.manager.databinding.PageOnboardingGesturesBinding
+import af.shizuku.manager.databinding.PageOnboardingLayoutNavBinding
 import af.shizuku.manager.databinding.PageOnboardingLongpressBinding
+import af.shizuku.manager.databinding.PageOnboardingM3eBinding
+import af.shizuku.manager.databinding.PageOnboardingSecurityDoctorBinding
 import af.shizuku.manager.databinding.PageOnboardingSetupBinding
 import af.shizuku.manager.databinding.PageOnboardingSwipeBinding
 import af.shizuku.manager.databinding.PageOnboardingWelcomeBinding
@@ -18,6 +21,7 @@ import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.starter.StarterActivity
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.HapticUtils
+import af.shizuku.manager.utils.NetworkTrust
 import af.shizuku.manager.utils.ShizukuStateMachine
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
@@ -36,10 +40,47 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import rikka.core.util.ClipboardUtils
 
 class OnboardingActivity : AppActivity() {
+    companion object {
+        const val EXTRA_NEW_FEATURES_ONLY = "extra_new_features_only"
+    }
+
+    enum class PageType {
+        WELCOME,
+        SETUP,
+        M3E,
+        LAYOUT_NAV,
+        SECURITY_DOCTOR,
+        SWIPE,
+        GESTURES,
+        LONG_PRESS,
+    }
+
     private lateinit var binding: ActivityOnboardingBinding
-    private val pageCount = 5
+    private var isNewFeaturesOnly = false
     private val dots = mutableListOf<View>()
     private val onboardingAdapter = OnboardingPagerAdapter()
+
+    private val pages: List<PageType> by lazy {
+        if (isNewFeaturesOnly) {
+            listOf(
+                PageType.M3E,
+                PageType.LAYOUT_NAV,
+                PageType.SECURITY_DOCTOR,
+                PageType.LONG_PRESS,
+            )
+        } else {
+            listOf(
+                PageType.WELCOME,
+                PageType.SETUP,
+                PageType.M3E,
+                PageType.LAYOUT_NAV,
+                PageType.SECURITY_DOCTOR,
+                PageType.SWIPE,
+                PageType.GESTURES,
+                PageType.LONG_PRESS,
+            )
+        }
+    }
 
     // Setup page live refs
     private var setupStatusRunning: View? = null
@@ -56,11 +97,12 @@ class OnboardingActivity : AppActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        isNewFeaturesOnly = intent.getBooleanExtra(EXTRA_NEW_FEATURES_ONLY, false)
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.pager.adapter = onboardingAdapter
-        binding.pager.offscreenPageLimit = 4 // keep all pages in memory
+        binding.pager.offscreenPageLimit = pages.size
 
         setupDots()
 
@@ -69,7 +111,8 @@ class OnboardingActivity : AppActivity() {
                 override fun onPageSelected(position: Int) {
                     updateDots(position)
                     updateButtons(position)
-                    if (position == 2) {
+                    val currentPage = pages.getOrNull(position)
+                    if (currentPage == PageType.SWIPE) {
                         binding.pager.postDelayed({ animateSwipeIcons() }, 300)
                     }
                 }
@@ -78,7 +121,7 @@ class OnboardingActivity : AppActivity() {
 
         binding.btnNext.setOnClickListener {
             val current = binding.pager.currentItem
-            if (current < pageCount - 1) {
+            if (current < pages.size - 1) {
                 binding.pager.currentItem = current + 1
             } else {
                 completeOnboarding()
@@ -101,17 +144,22 @@ class OnboardingActivity : AppActivity() {
     private fun updateSetupPageState(state: ShizukuStateMachine.State) {
         val isRunning = state == ShizukuStateMachine.State.RUNNING
         setupStatusRunning?.visibility = if (isRunning) View.VISIBLE else View.GONE
-        if (isRunning && binding.pager.currentItem == 1 && !isFinishing) {
+        val setupIdx = pages.indexOf(PageType.SETUP)
+        if (setupIdx >= 0 && isRunning && binding.pager.currentItem == setupIdx && !isFinishing) {
             binding.pager.postDelayed({
-                if (!isFinishing && binding.pager.currentItem == 1) binding.pager.currentItem = 2
+                if (!isFinishing && binding.pager.currentItem == setupIdx && setupIdx + 1 < pages.size) {
+                    binding.pager.currentItem = setupIdx + 1
+                }
             }, 1800)
         }
     }
 
     private fun setupDots() {
+        binding.dotsContainer.removeAllViews()
+        dots.clear()
         val sizePx = dpToPx(8)
         val marginPx = dpToPx(5)
-        repeat(pageCount) {
+        repeat(pages.size) {
             val dot =
                 View(this).apply {
                     val lp = LinearLayout.LayoutParams(sizePx, sizePx)
@@ -140,9 +188,9 @@ class OnboardingActivity : AppActivity() {
     }
 
     private fun updateButtons(position: Int) {
-        binding.btnSkip.visibility = if (position < pageCount - 1) View.VISIBLE else View.INVISIBLE
+        binding.btnSkip.visibility = if (position < pages.size - 1) View.VISIBLE else View.INVISIBLE
         binding.btnNext.text =
-            if (position < pageCount - 1) {
+            if (position < pages.size - 1) {
                 getString(R.string.onboarding_next)
             } else {
                 getString(R.string.onboarding_get_started)
@@ -189,7 +237,10 @@ class OnboardingActivity : AppActivity() {
 
     private fun completeOnboarding() {
         ShizukuSettings.setOnboardingSeen()
-        startActivity(Intent(this, MainActivity::class.java))
+        ShizukuSettings.setOnboardingV2Seen()
+        if (!isNewFeaturesOnly) {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
         finish()
     }
 
@@ -200,21 +251,24 @@ class OnboardingActivity : AppActivity() {
     // ---- Adapter ----
 
     inner class OnboardingPagerAdapter : RecyclerView.Adapter<OnboardingPageViewHolder>() {
-        override fun getItemCount() = pageCount
+        override fun getItemCount() = pages.size
 
-        override fun getItemViewType(position: Int) = position
+        override fun getItemViewType(position: Int) = pages[position].ordinal
 
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int,
         ): OnboardingPageViewHolder {
             val inflater = LayoutInflater.from(parent.context)
-            return when (viewType) {
-                0 -> OnboardingPageViewHolder.Welcome(PageOnboardingWelcomeBinding.inflate(inflater, parent, false))
-                1 -> OnboardingPageViewHolder.Setup(PageOnboardingSetupBinding.inflate(inflater, parent, false))
-                2 -> OnboardingPageViewHolder.Swipe(PageOnboardingSwipeBinding.inflate(inflater, parent, false))
-                3 -> OnboardingPageViewHolder.Gestures(PageOnboardingGesturesBinding.inflate(inflater, parent, false))
-                else -> OnboardingPageViewHolder.LongPress(PageOnboardingLongpressBinding.inflate(inflater, parent, false))
+            return when (PageType.values()[viewType]) {
+                PageType.WELCOME -> OnboardingPageViewHolder.Welcome(PageOnboardingWelcomeBinding.inflate(inflater, parent, false))
+                PageType.SETUP -> OnboardingPageViewHolder.Setup(PageOnboardingSetupBinding.inflate(inflater, parent, false))
+                PageType.M3E -> OnboardingPageViewHolder.M3E(PageOnboardingM3eBinding.inflate(inflater, parent, false))
+                PageType.LAYOUT_NAV -> OnboardingPageViewHolder.LayoutNav(PageOnboardingLayoutNavBinding.inflate(inflater, parent, false))
+                PageType.SECURITY_DOCTOR -> OnboardingPageViewHolder.SecurityDoctor(PageOnboardingSecurityDoctorBinding.inflate(inflater, parent, false))
+                PageType.SWIPE -> OnboardingPageViewHolder.Swipe(PageOnboardingSwipeBinding.inflate(inflater, parent, false))
+                PageType.GESTURES -> OnboardingPageViewHolder.Gestures(PageOnboardingGesturesBinding.inflate(inflater, parent, false))
+                PageType.LONG_PRESS -> OnboardingPageViewHolder.LongPress(PageOnboardingLongpressBinding.inflate(inflater, parent, false))
             }
         }
 
@@ -224,6 +278,9 @@ class OnboardingActivity : AppActivity() {
         ) {
             when (holder) {
                 is OnboardingPageViewHolder.Setup -> bindSetupPage(holder.binding)
+                is OnboardingPageViewHolder.M3E -> bindM3ePage(holder.binding)
+                is OnboardingPageViewHolder.LayoutNav -> bindLayoutNavPage(holder.binding)
+                is OnboardingPageViewHolder.SecurityDoctor -> bindSecurityDoctorPage(holder.binding)
                 is OnboardingPageViewHolder.Swipe -> {
                     swipeIconRight = holder.binding.hintIconRight
                     swipeIconLeft = holder.binding.hintIconLeft
@@ -282,11 +339,133 @@ class OnboardingActivity : AppActivity() {
 
             // Skip
             binding.btnSetupLater.setOnClickListener {
-                this@OnboardingActivity.binding.pager.currentItem = 2
+                val setupIdx = pages.indexOf(PageType.SETUP)
+                if (setupIdx >= 0 && setupIdx + 1 < pages.size) {
+                    this@OnboardingActivity.binding.pager.currentItem = setupIdx + 1
+                }
             }
 
             // Apply current state immediately
             updateSetupPageState(ShizukuStateMachine.get())
+        }
+
+        private fun bindM3ePage(binding: PageOnboardingM3eBinding) {
+            val currentStyle = ShizukuSettings.getIconStyle()
+            when (currentStyle) {
+                "filled" -> binding.toggleGroupIconStyle.check(R.id.btn_icon_filled)
+                "outlined" -> binding.toggleGroupIconStyle.check(R.id.btn_icon_outlined)
+                else -> binding.toggleGroupIconStyle.check(R.id.btn_icon_twotone)
+            }
+            binding.toggleGroupIconStyle.addOnButtonCheckedListener { group, checkedId, isChecked ->
+                if (isChecked) {
+                    HapticUtils.segmentTick(group)
+                    val style =
+                        when (checkedId) {
+                            R.id.btn_icon_filled -> "filled"
+                            R.id.btn_icon_outlined -> "outlined"
+                            else -> "twotone"
+                        }
+                    ShizukuSettings
+                        .getPreferences()
+                        ?.edit()
+                        ?.putString(ShizukuSettings.Keys.KEY_ICON_STYLE, style)
+                        ?.apply()
+                }
+            }
+
+            binding.switchAmoledPlus.apply {
+                isChecked = ShizukuSettings.isAmoledPlusEnabled()
+                setOnCheckedChangeListener { view, checked ->
+                    if (checked) HapticUtils.toggleOn(view) else HapticUtils.toggleOff(view)
+                    ShizukuSettings
+                        .getPreferences()
+                        ?.edit()
+                        ?.putBoolean(ShizukuSettings.Keys.KEY_AMOLED_PLUS, checked)
+                        ?.apply()
+                }
+            }
+
+            binding.switchExpressiveAnimations.apply {
+                isChecked = ShizukuSettings.isExpressiveAnimationsEnabled()
+                setOnCheckedChangeListener { view, checked ->
+                    if (checked) HapticUtils.toggleOn(view) else HapticUtils.toggleOff(view)
+                    ShizukuSettings
+                        .getPreferences()
+                        ?.edit()
+                        ?.putBoolean(ShizukuSettings.Keys.KEY_EXPRESSIVE_ANIMATIONS, checked)
+                        ?.apply()
+                }
+            }
+        }
+
+        private fun bindLayoutNavPage(binding: PageOnboardingLayoutNavBinding) {
+            binding.switchFloatingNav.apply {
+                isChecked = ShizukuSettings.isFloatingNavBarEnabled()
+                setOnCheckedChangeListener { view, checked ->
+                    if (checked) HapticUtils.toggleOn(view) else HapticUtils.toggleOff(view)
+                    ShizukuSettings.setFloatingNavBarEnabled(checked)
+                }
+            }
+
+            binding.switchActivityLogHome.apply {
+                isChecked =
+                    ShizukuSettings.getPreferences()?.getBoolean(
+                        ShizukuSettings.Keys.KEY_SHOW_ACTIVITY_LOG_HOME,
+                        false,
+                    ) ?: false
+                setOnCheckedChangeListener { view, checked ->
+                    if (checked) HapticUtils.toggleOn(view) else HapticUtils.toggleOff(view)
+                    ShizukuSettings
+                        .getPreferences()
+                        ?.edit()
+                        ?.putBoolean(ShizukuSettings.Keys.KEY_SHOW_ACTIVITY_LOG_HOME, checked)
+                        ?.apply()
+                }
+            }
+
+            binding.btnPreviewDrag.setOnClickListener {
+                HapticUtils.gestureStart(it)
+                binding.cardPreviewHome
+                    .animate()
+                    .translationY(-16f)
+                    .scaleX(1.02f)
+                    .scaleY(1.02f)
+                    .setDuration(150)
+                    .withEndAction {
+                        binding.cardPreviewHome
+                            .animate()
+                            .translationY(0f)
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(200)
+                            .start()
+                    }.start()
+            }
+        }
+
+        private fun bindSecurityDoctorPage(binding: PageOnboardingSecurityDoctorBinding) {
+            val currentMode = NetworkTrust.mode()
+            binding.switchNetworkGuard.apply {
+                isChecked = currentMode != NetworkTrust.MODE_OFF
+                setOnCheckedChangeListener { view, checked ->
+                    if (checked) HapticUtils.toggleOn(view) else HapticUtils.toggleOff(view)
+                    val mode = if (checked) NetworkTrust.MODE_OPEN else NetworkTrust.MODE_OFF
+                    ShizukuSettings
+                        .getPreferences()
+                        ?.edit()
+                        ?.putString(NetworkTrust.KEY_MODE, mode)
+                        ?.putBoolean(NetworkTrust.KEY_AUTO_CLOSE, checked)
+                        ?.apply()
+                }
+            }
+
+            binding.switchWatchdog.apply {
+                isChecked = ShizukuSettings.getWatchdog()
+                setOnCheckedChangeListener { view, checked ->
+                    if (checked) HapticUtils.toggleOn(view) else HapticUtils.toggleOff(view)
+                    ShizukuSettings.setWatchdog(this@OnboardingActivity, checked)
+                }
+            }
         }
 
         private fun bindLongPressPage(binding: PageOnboardingLongpressBinding) {
@@ -371,6 +550,18 @@ class OnboardingActivity : AppActivity() {
 
         class Setup(
             val binding: PageOnboardingSetupBinding,
+        ) : OnboardingPageViewHolder(binding.root)
+
+        class M3E(
+            val binding: PageOnboardingM3eBinding,
+        ) : OnboardingPageViewHolder(binding.root)
+
+        class LayoutNav(
+            val binding: PageOnboardingLayoutNavBinding,
+        ) : OnboardingPageViewHolder(binding.root)
+
+        class SecurityDoctor(
+            val binding: PageOnboardingSecurityDoctorBinding,
         ) : OnboardingPageViewHolder(binding.root)
 
         class Swipe(

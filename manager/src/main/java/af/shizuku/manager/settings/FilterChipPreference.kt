@@ -81,10 +81,17 @@ class FilterChipPreference
 
         override fun onBindViewHolder(holder: PreferenceViewHolder) {
             super.onBindViewHolder(holder)
+            val cv =
+                (holder.itemView as? ComposeView)
+                    ?: (holder.findViewById(R.id.preference_compose_view) as? ComposeView)
+            if (cv == null) {
+                timber.log.Timber.w("FilterChipPreference: ComposeView not found in holder (itemView is %s)", holder.itemView.javaClass.name)
+                return
+            }
             val labels = entries.map { it.toString() }
             val keys = entryValues.map { it.toString() }
             val enabled = isEnabled
-            (holder.findViewById(R.id.preference_compose_view) as ComposeView).setPreferenceContent {
+            cv.setPreferenceContent {
                 ComposePreferenceRow(title = title, summary = summary, enabled = enabled) {
                     FilterChipGroup(
                         labels = labels,

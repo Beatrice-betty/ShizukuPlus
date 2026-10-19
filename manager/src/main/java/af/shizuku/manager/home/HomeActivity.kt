@@ -523,10 +523,11 @@ open class HomeActivity :
 
         val itemSpacing = cardSpacing / 2f
         val edgeSpacingH = marginHorizontal
-        val edgeSpacingV = marginVertical - itemSpacing
+        val edgeSpacingTop = marginVertical + itemSpacing
+        val edgeSpacingBottom = marginVertical
 
         recyclerView.addItemSpacing(top = itemSpacing, bottom = itemSpacing)
-        recyclerView.addEdgeSpacing(top = edgeSpacingV, bottom = edgeSpacingV, left = edgeSpacingH, right = edgeSpacingH)
+        recyclerView.addEdgeSpacing(top = edgeSpacingTop, bottom = edgeSpacingBottom, left = edgeSpacingH, right = edgeSpacingH)
 
         // Drag-to-reorder support
 

@@ -59,6 +59,16 @@
         android:icon="@drawable/ic_window_24"
         android:defaultValue="true">
 
+        <rikka.preference.SimpleMenuPreference
+            android:key="app_icon_alias"
+            android:title="@string/settings_app_icon_name_title"
+            android:summary="@string/settings_app_icon_name_summary"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="default"
+            android:entries="@array/app_icon_alias_entries"
+            android:entryValues="@array/app_icon_alias_values"
+            android:icon="@drawable/ic_launcher" />
+
         <af.shizuku.manager.settings.SegmentedControlPreference
             android:key="icon_style"
             android:title="@string/settings_icon_style"
@@ -245,6 +255,13 @@
             android:summary="@string/settings_show_status_card_outline_summary"
             android:icon="@drawable/ic_palette_24"
             android:defaultValue="true" />
+
+        <af.shizuku.manager.settings.GrayableIconSwitchPreference
+            android:key="show_home_cards_outline"
+            android:title="@string/settings_show_home_cards_outline"
+            android:summary="@string/settings_show_home_cards_outline_summary"
+            android:icon="@drawable/ic_window_24"
+            android:defaultValue="false" />
 
         <rikka.preference.SimpleMenuPreference
             android:key="status_card_outline_style"

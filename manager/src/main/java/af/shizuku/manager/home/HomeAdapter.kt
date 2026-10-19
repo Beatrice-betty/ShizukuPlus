@@ -339,6 +339,23 @@ class HomeAdapter(
             }
         }
 
+        // Apply home cards outline if enabled
+        val showHomeOutlines = ShizukuSettings.isShowHomeCardsOutlineEnabled()
+        val card = holder.itemView as? com.google.android.material.card.MaterialCardView
+        if (card != null && id != ID_STATUS) {
+            if (showHomeOutlines) {
+                val density = card.context.resources.displayMetrics.density
+                card.strokeWidth = (1.5f * density + 0.5f).toInt()
+                card.strokeColor =
+                    com.google.android.material.color.MaterialColors.getColor(
+                        card,
+                        com.google.android.material.R.attr.colorOutlineVariant,
+                    )
+            } else {
+                card.strokeWidth = 0
+            }
+        }
+
         // Fixed cards (status, apps bar) never participate in edit mode — ensure handles stay hidden.
         if (!isDraggable(position)) {
             holder.itemView.findViewById<android.view.View>(R.id.remove_btn)?.isVisible = false
@@ -360,41 +377,49 @@ class HomeAdapter(
         }
         val view = holder.itemView
         view.animate().cancel()
-        view.alpha = 0f
-        view.translationY = 24f
-        view.scaleX = 0.92f
-        view.scaleY = 0.92f
-        val animator = view.animate()
-        if (animator != null) {
+        view.scaleX = 1f
+        view.scaleY = 1f
+        view.translationZ = 0f
+
+        val animationsEnabled =
+            af.shizuku.manager.ShizukuSettings
+                .isExpressiveAnimationsEnabled() &&
+                (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O || android.animation.ValueAnimator.areAnimatorsEnabled())
+
+        if (animationsEnabled) {
+            view.alpha = 0f
+            view.translationY = 16f
             val interp =
                 android.view.animation.AnimationUtils.loadInterpolator(
                     view.context,
                     android.R.interpolator.fast_out_slow_in,
                 )
-            animator
-                .alpha(1f)
-                .translationY(0f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(
+            view
+                .animate()
+                ?.alpha(1f)
+                ?.translationY(0f)
+                ?.setDuration(
                     af.shizuku.manager.ShizukuSettings
-                        .scaledAnimationDuration(400),
-                ).setStartDelay(
+                        .scaledAnimationDuration(350),
+                )?.setStartDelay(
                     af.shizuku.manager.ShizukuSettings
-                        .scaledAnimationDuration(position * 50L),
-                ).setInterpolator(interp)
-                .start()
+                        .scaledAnimationDuration(position * 40L),
+                )?.setInterpolator(interp)
+                ?.start()
         } else {
             view.alpha = 1f
             view.translationY = 0f
-            view.scaleX = 1f
-            view.scaleY = 1f
         }
     }
 
     override fun onViewRecycled(holder: BaseViewHolder<*>) {
         super.onViewRecycled(holder)
         holder.itemView.animate().cancel()
+        holder.itemView.scaleX = 1f
+        holder.itemView.scaleY = 1f
+        holder.itemView.translationZ = 0f
+        holder.itemView.translationY = 0f
+        holder.itemView.alpha = 1f
     }
 
     fun moveItem(

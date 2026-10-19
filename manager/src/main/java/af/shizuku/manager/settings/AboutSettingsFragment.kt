@@ -93,6 +93,15 @@ class AboutSettingsFragment : BaseSettingsFragment() {
             true
         }
 
+        findPreference<Preference>("feature_tour")?.setOnPreferenceClickListener {
+            val intent =
+                Intent(requireContext(), af.shizuku.manager.onboarding.OnboardingActivity::class.java).apply {
+                    putExtra(af.shizuku.manager.onboarding.OnboardingActivity.EXTRA_NEW_FEATURES_ONLY, true)
+                }
+            startActivity(intent)
+            true
+        }
+
         findPreference<Preference>("source_code")?.setOnPreferenceClickListener {
             CustomTabsHelper.launchUrlOrCopy(context, "https://github.com/thejaustin/ShizukuPlus")
             true

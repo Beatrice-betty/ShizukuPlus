@@ -108,6 +108,15 @@
         android:gravity="end">
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_tour"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="@string/onboarding_take_tour"
+            app:icon="@drawable/ic_sparkle_24" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_github"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"

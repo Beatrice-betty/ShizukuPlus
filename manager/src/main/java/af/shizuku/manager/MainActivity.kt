@@ -4,6 +4,7 @@ import af.shizuku.manager.home.ChangelogDialogFragment
 import af.shizuku.manager.home.HomeActivity
 import af.shizuku.manager.update.UpdateChecker
 import af.shizuku.manager.utils.ShizukuStateMachine
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +35,11 @@ class MainActivity : HomeActivity() {
 
             Timber.d("Checking onboarding status")
             Sentry.addBreadcrumb(Breadcrumb("Checking onboarding status"))
+            if (!ShizukuSettings.isOnboardingSeen()) {
+                startActivity(Intent(this, af.shizuku.manager.onboarding.OnboardingActivity::class.java))
+                finish()
+                return
+            }
 
             // Auto-restore settings if a force-update backup exists
             checkAndRestoreBackup()

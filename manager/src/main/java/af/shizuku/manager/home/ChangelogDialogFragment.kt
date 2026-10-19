@@ -395,6 +395,15 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
             }
         }
 
+        view.findViewById<MaterialButton>(R.id.btn_tour)?.setOnClickListener {
+            dismissAllowingStateLoss()
+            val intent =
+                Intent(requireContext(), af.shizuku.manager.onboarding.OnboardingActivity::class.java).apply {
+                    putExtra(af.shizuku.manager.onboarding.OnboardingActivity.EXTRA_NEW_FEATURES_ONLY, true)
+                }
+            startActivity(intent)
+        }
+
         view.findViewById<MaterialButton>(R.id.btn_close).setOnClickListener {
             dismissAllowingStateLoss()
         }
@@ -478,6 +487,14 @@ class ChangelogDialogFragment : BottomSheetDialogFragment() {
             } catch (e: Exception) {
                 Timber.w(e, "Failed to open release page for $tag")
             }
+        }
+        view.findViewById<MaterialButton>(R.id.btn_tour)?.setOnClickListener {
+            dismissAllowingStateLoss()
+            val intent =
+                Intent(requireContext(), af.shizuku.manager.onboarding.OnboardingActivity::class.java).apply {
+                    putExtra(af.shizuku.manager.onboarding.OnboardingActivity.EXTRA_NEW_FEATURES_ONLY, true)
+                }
+            startActivity(intent)
         }
         view.findViewById<MaterialButton>(R.id.btn_close).setOnClickListener { dismissAllowingStateLoss() }
     }

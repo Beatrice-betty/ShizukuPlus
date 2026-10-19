@@ -209,10 +209,22 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
             true
         }
 
+        findPreference<ListPreference>("app_icon_alias")?.apply {
+            value = ShizukuSettings.getAppIconAlias()
+            setOnPreferenceChangeListener { _, newValue ->
+                if (newValue is String) {
+                    ShizukuSettings.setAppIconAlias(newValue)
+                    af.shizuku.manager.utils.AppAliasManager
+                        .applyAlias(requireContext(), newValue)
+                }
+                true
+            }
+        }
+
         val simulatorPref = findPreference<HomeLayoutSimulatorPreference>("home_layout_simulator")
         simulatorPref?.setFragment(this)
 
-        val switchKeys = listOf("show_activity_log_home")
+        val switchKeys = listOf("show_activity_log_home", "show_status_card_outline", "show_home_cards_outline")
 
         for (prefKey in switchKeys) {
             findPreference<TwoStatePreference>(prefKey)?.setOnPreferenceChangeListener { _, newValue ->

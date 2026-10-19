@@ -2,9 +2,13 @@
 
 All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md](AI_ATTRIBUTIONS.md) for full AI pair-programming provenance and commit mapping.
 
-## [v13.7.0.r2852 — Stable Release] - 2026-10-18
+## [v13.7.0 — Major Stable Release] - 2026-10-19
 
 ### 🌟 Highlights & What's New for You (In Plain English)
+- **App Icon & Name Camouflage (Issue #615)** — Personalize your launcher presence! Choose between Shizuku+, Shizuku Classic, Android System, Dev Tools, Files & Storage, or Quick Notes from Settings → Personalization, fully coordinated with stealth mode.
+- **Interactive Multi-Card Onboarding & Feature Tour** — Fresh installs now welcome you with an 8-card interactive walkthrough highlighting M3 Expressive theming, gestures, Network Trust Shield, and layout controls. Existing users can launch the interactive tour anytime via What's New or Settings → About.
+- **Normalized Home Card Margins & Fluid Breathing Room** — Completely eradicated entrance scaling distortion that caused cards to display uneven margins on launch as if already held. The Server Status card now has proper top breathing room and an optional outline stroke.
+- **Fixed Settings Appearance Crash on Android 16 (Issue #616)** — Resolved a NullPointerException in Compose-backed preference views on Android 16 devices like OnePlus PMB110.
 - **Material 3 Expressive (M3E) Settings Consolidation** — Segmented control pill selectors for Icon Style, Icon Color Mode, and Animation Intensity. The Two-Tone icon color options are now placed directly beneath the Two-Tone icon selector in Shape & Style, appearing dynamically only when Two-Tone is active.
 - **Instant & Smarter Wireless ADB Reconnect** — Shizuku+ now connects to Wireless Debugging in a fraction of a second on boot and when switching Wi-Fi networks. It automatically discovers active loopback and network interface ports in parallel and never queues duplicate "Allow USB debugging?" popups.
 - **Rock-Solid Settings Stability** — Toggling themes, resizing system fonts, or changing languages no longer crashes the app. Every settings screen is thoroughly protected against Android 16 and 17 system layout changes and preference summary conflicts ([#587](https://github.com/thejaustin/ShizukuPlus/issues/587)).
@@ -16,6 +20,7 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 - **Network-Aware Security Shield** — Automatically protects your active TCP debugging port when connected to open or untrusted public Wi-Fi networks according to your chosen policy ([#518](https://github.com/thejaustin/ShizukuPlus/issues/518)).
 - **Overwhelm-Free Notifications** — Background service restarts, download progress bars, and pairing prompts stay completely silent and never bombard your status bar with repetitive sounds, vibrations, or heads-up alerts. You can also turn off watchdog crash notifications anytime in Settings.
 - **Full Compatibility Restored** — Fixed transaction proxy regressions so third-party tools like Total Commander, Installer X Revived, and color customizers work seamlessly ([#566](https://github.com/thejaustin/ShizukuPlus/issues/566)).
+- **Consolidated Release Updates** — Consolidated incremental pre-releases and README updates into this unified, tested major stable release.
 
 ---
 
@@ -58,6 +63,10 @@ All notable changes to ShizukuPlus are documented here. See [AI_ATTRIBUTIONS.md]
 - **Material 3 Expressive Segmented Controls & Dynamic Two-Tone Nesting** — Upgraded `icon_style`, `icon_color_mode`, and `animation_intensity` to `SegmentedControlPreference`. Relocated the Two-Tone icon color options directly underneath `icon_style` inside `category_shape_style` and dynamically reveal/hide it based on the Two-Tone toggle.
 - **Collapsible Category Lifecycle & Tint Cleanup** — Added `onDetached()` override to `CollapsiblePreferenceCategory` to unregister child change listeners and prevent memory leaks. Corrected expander chevron tint to `app:tint="?colorOnSurfaceVariant"`.
 - **Dual-Stack TCP Network Guard** — Hardened `TcpNetworkGuard` to verify and disable Android 11+ `adb_wifi_enabled` global setting alongside TCP sockets when entering untrusted networks.
+- **Fixed NPE crash in Compose-backed preferences on Android 16 (Issue #616)** — `SegmentedControlPreference` and `FilterChipPreference` previously cast `holder.findViewById(R.id.preference_compose_view)` directly to `ComposeView`. On devices where `itemView` itself serves as the root `ComposeView` or where ViewHolder caching returns null, this threw a `NullPointerException` on `setContent`. Both preferences now safely check `holder.itemView as? ComposeView` and `findViewById` with null-safety fallbacks. ([#616](https://github.com/thejaustin/ShizukuPlus/issues/616))
+- **App Icon & Name Camouflage (Issue #615)** — Introduced `AppAliasManager` with 5 selectable launcher aliases (`.LauncherAliasClassic`, `.LauncherAliasSystem`, `.LauncherAliasTools`, `.LauncherAliasFiles`, `.LauncherAliasNotes`) paired with custom adaptive vector icons and labels, fully integrated into Settings → Personalization and synchronized with stealth mode (`hide_launcher_icon`). ([#615](https://github.com/thejaustin/ShizukuPlus/issues/615))
+- **Interactive Multi-Slide Onboarding & Feature Tour** — Added an 8-slide onboarding experience (`OnboardingActivity`) for fresh installations and returning users via What's New dialog or Settings → About, highlighting M3 Expressive theming, swipe gestures, Network Trust Shield, and home layout controls.
+- **Card Margin Normalization & Status Card Spacing** — Replaced initial `scaleX(0.92f)` / `scaleY(0.92f)` entrance transitions in `HomeAdapter` with linear translation and alpha fade, ensuring cards render with consistent, uniform margins on launch. Added `edgeSpacingTop` breathing room below the top app bar and independent outline stroke controls for the Server Status card and home cards.
 - **Wireless ADB Port Commit & Sentry Quota Reordering** — Restricted Wireless ADB preference commits to explicit `ImeAction.Done` actions. Reordered Sentry crash filtering so daily quota increments occur strictly after exception filtering.
 - **Resolved AAPT2 Barrier Syntax in Extra Steps Layout** — Replaced direct resource identifiers with unscoped syntax in `home_extra_step_required.xml` barrier references to prevent packaging failures during AAPT2 resource linking.
 

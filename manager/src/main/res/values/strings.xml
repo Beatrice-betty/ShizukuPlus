@@ -65,6 +65,11 @@
         <item>twotone</item>
     </string-array>
 
+    <string name="icon_style_filled">Filled</string>
+    <string name="icon_style_outlined">Outlined</string>
+    <string name="icon_style_twotone">Two-Tone</string>
+    <string name="home_edit_mode_banner">Hold and drag cards to customize your home layout</string>
+
     <string name="settings_icon_color_mode">Two-tone icon colors</string>
     <string name="settings_icon_color_mode_summary">How the Two-Tone icon background is colored</string>
     <string-array name="icon_color_modes">
@@ -373,12 +378,45 @@
     <string name="onboarding_setup_wadb_desc">Android 11+, no computer needed. Uses wireless debugging.</string>
     <string name="onboarding_setup_root_desc">Your device is rooted. Start Shizuku with root access.</string>
     <string name="onboarding_setup_adb_desc">Any device. Run one ADB command from a computer to get started.</string>
+    <string name="onboarding_m3e_title">Expressive Look &amp; Feel</string>
+    <string name="onboarding_m3e_desc">Personalize your experience with adaptive icon styles, AMOLED+ contrast, and fluid motion.</string>
+    <string name="onboarding_icon_style_title">Icon Style</string>
+    <string name="onboarding_amoled_title">AMOLED+ True Black</string>
+    <string name="onboarding_amoled_desc">Pure black backgrounds in dark mode</string>
+    <string name="onboarding_animations_title">Expressive Animations</string>
+    <string name="onboarding_animations_desc">Fluid spring physics and tactile motion</string>
+    <string name="onboarding_layout_nav_title">Home &amp; Navigation</string>
+    <string name="onboarding_layout_nav_desc">Tailor your daily workspace. Drag to reorder cards on Home, or use the floating pill navigation bar.</string>
+    <string name="onboarding_floating_nav_title">Floating Navigation Bar</string>
+    <string name="onboarding_floating_nav_desc">Pill-style bottom bar that tucks away on scroll</string>
+    <string name="onboarding_activity_log_title">History on Home Screen</string>
+    <string name="onboarding_activity_log_desc">View recent starts and app activations at a glance</string>
+    <string name="onboarding_security_doctor_title">Network Shield &amp; Doctor</string>
+    <string name="onboarding_security_doctor_desc">Automatic dual-stack protection secures your active debugging port on untrusted Wi-Fi, while Service Doctor monitors background health.</string>
+    <string name="onboarding_network_guard_title">Network Trust Shield</string>
+    <string name="onboarding_network_guard_desc">Block TCP starts on open or untrusted networks</string>
+    <string name="onboarding_watchdog_title">Watchdog Background Keepalive</string>
+    <string name="onboarding_watchdog_desc">Automatically heal and revive the server if killed</string>
+    <string name="onboarding_tour_title">What\'s New Tour</string>
+    <string name="onboarding_take_tour">Feature Tour</string>
+    <string name="onboarding_take_tour_summary">Explore the new M3 Expressive look, home layout, and network trust shield</string>
 
     <!-- Swipe hint overlay -->
     <string name="swipe_hint_title">Swipe gestures</string>
     <string name="swipe_hint_right">Swipe right for quick action</string>
     <string name="swipe_hint_left">Swipe left for quick action</string>
     <string name="swipe_hint_dismiss">Tap anywhere to dismiss</string>
+
+    <!-- App Name & Icon Customization / Camouflage (Issue #615) -->
+    <string name="app_name_classic">Shizuku</string>
+    <string name="app_name_system">System Service</string>
+    <string name="app_name_tools">Tools</string>
+    <string name="app_name_files">Files</string>
+    <string name="app_name_notes">Notes</string>
+    <string name="settings_app_icon_name_title">App Icon &amp; Name</string>
+    <string name="settings_app_icon_name_summary">Customize launcher icon and application label</string>
+    <string name="settings_show_home_cards_outline">Home card borders</string>
+    <string name="settings_show_home_cards_outline_summary">Show subtle outline stroke around home screen cards</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -865,8 +903,10 @@
 
     <!-- About -->
     <string name="settings_about">About</string>
+    <string name="settings_about_category_app_info">App info</string>
+    <string name="settings_about_category_updates">Updates</string>
     <string name="settings_about_category_version_updates">Version &amp; updates</string>
-    <string name="settings_about_category_project">Project &amp; legal</string>
+    <string name="settings_about_category_project">Project info</string>
     <string name="action_about">About</string>
     <string name="about_dialog_button_close">Close</string>
     <string name="about_view_source_code_title">Source code</string>

@@ -184,6 +184,17 @@
 -keep class af.shizuku.manager.utils.EmptyStateView { public <init>(android.content.Context, android.util.AttributeSet); }
 -keep class af.shizuku.manager.home.changelog.TimelineRailView { public <init>(android.content.Context, android.util.AttributeSet); }
 
+# Custom Preference subclasses inflated from XML by class name
+-keep class * extends androidx.preference.Preference {
+    public <init>(android.content.Context, android.util.AttributeSet);
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+    public <init>(android.content.Context, android.util.AttributeSet, int, int);
+}
+
+# Koin dependency injection
+-dontwarn org.koin.**
+-keep class org.koin.** { *; }
+
 -keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,AnnotationDefault
 
 
